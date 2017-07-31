@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<module>
+    <id>VirtoCommerce.CatalogCsvImportModule</id>
+    <version>1.0.0</version>
+    <platformVersion>2.13.9</platformVersion>
+    <dependencies>
+        <dependency id="VirtoCommerce.Core" version="2.24.1" />
+        <dependency id="VirtoCommerce.Catalog" version="2.18.7" />
+    </dependencies>
+
+    <title>VirtoCommerce.CatalogCsvImportModule.Web</title>
+    <description>Enter your module description here.</description>
+    <authors>
+        <author>ksa</author>
+    </authors>
+
+    <assemblyFile>VirtoCommerce.CatalogCsvImportModule.Web.dll</assemblyFile>
+    <moduleType>VirtoCommerce.CatalogCsvImportModule.Web.Module, VirtoCommerce.CatalogCsvImportModule.Web</moduleType>
+
+    <scripts>
+        <directory virtualPath="$/Scripts" searchPattern="*.js" searchSubdirectories="true" />
+    </scripts>
+
+</module>
