@@ -199,7 +199,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             }
             set
             {
-                Code = value != null ? value.Trim() : value;
+                Code = value?.Trim();
             }
         }
 
@@ -270,6 +270,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             Reviews = Reviews.Concat(product.Reviews).Distinct(reviewsComparer).ToList();
 
             var properyValueComparer = AnonymousComparer.Create((PropertyValue x) => x.PropertyName);
+            foreach (var propertyValue in PropertyValues)
+            {
+                foreach (var productPropertyValue in product.PropertyValues.Where(x => properyValueComparer.Equals(x, propertyValue)).ToArray())
+                {
+                    product.PropertyValues.Remove(productPropertyValue);
+                }
+            }
             PropertyValues = product.PropertyValues.Concat(PropertyValues).Distinct(properyValueComparer).ToList();
 
             var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode));

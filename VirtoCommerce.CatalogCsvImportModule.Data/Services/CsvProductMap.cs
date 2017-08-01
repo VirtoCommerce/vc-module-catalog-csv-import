@@ -29,10 +29,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         newMap.Name(mappingItem.CsvColumnName);
                     }
                     //And default values if it specified
-                    if (mappingItem.CustomValue != null)
+                    else if (mappingItem.CustomValue != null)
                     {
                         var typeConverter = TypeDescriptor.GetConverter(propertyInfo.PropertyType);
-                         newMap.Default(typeConverter.ConvertFromString(mappingItem.CustomValue));
+                        newMap.ConvertUsing(row => typeConverter.ConvertFromString(mappingItem.CustomValue));
+                        newMap.Default(mappingItem.CustomValue);
                     }
                     PropertyMaps.Add(newMap);
                 }

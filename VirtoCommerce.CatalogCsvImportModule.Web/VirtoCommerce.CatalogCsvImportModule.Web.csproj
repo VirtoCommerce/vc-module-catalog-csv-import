@@ -160,6 +160,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Localizations\de.VirtoCommerce.Catalog.json" />
+    <Content Include="Localizations\en.VirtoCommerce.Catalog.json" />
     <None Include="module.ignore" />
     <None Include="packages.config" />
     <None Include="app.config" />
@@ -215,7 +217,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\" />
-    <Folder Include="Localizations\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
