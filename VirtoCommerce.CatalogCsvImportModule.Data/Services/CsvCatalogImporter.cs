@@ -87,12 +87,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 }
             }
 
-            var catalog = _catalogService.GetById(importInfo.CatalogId);
+            DoImport(csvProducts, importInfo, progressInfo, progressCallback);
+        }
 
+        public void DoImport(List<CsvProduct> csvProducts, CsvImportInfo importInfo, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
+        {
+            var catalog = _catalogService.GetById(importInfo.CatalogId);
             SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
             SaveProducts(catalog, csvProducts, progressInfo, progressCallback);
         }
-
 
         private void SaveCategoryTree(Catalog catalog, IEnumerable<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
@@ -247,10 +250,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 if (propValue.Value != null && propValue.Property != null && propValue.Property.Multivalue)
                 {
                     var multivalue = propValue.Value.ToString();
-                    var values = multivalue.Split(',').Select(x => x.Trim()).Distinct().ToArray();
+                    var chars = new[] {','}; 
+                    var values = multivalue.Split(chars, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Distinct().ToArray();
 
                     foreach (var value in values)
                     {
+                        if (string.IsNullOrEmpty(value))
+                            continue;
+
                         var multiPropValue = propValue.Clone() as PropertyValue;
                         multiPropValue.Value = value;
                         if (propValue.Property.Dictionary)

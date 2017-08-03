@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtoCommerce.CatalogCsvImp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtoCommerce.CatalogCsvImportModule.Data", "VirtoCommerce.CatalogCsvImportModule.Data\VirtoCommerce.CatalogCsvImportModule.Data.csproj", "{BC38F00B-687E-4DF7-9718-3B0A1AE0C92F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtoCommerce.CatalogCsvImportModule.Test", "VirtoCommerce.CatalogCsvImportModule.Test\VirtoCommerce.CatalogCsvImportModule.Test.csproj", "{B2951BE0-1583-481F-B9DA-B9E094DE4C04}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BC38F00B-687E-4DF7-9718-3B0A1AE0C92F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC38F00B-687E-4DF7-9718-3B0A1AE0C92F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC38F00B-687E-4DF7-9718-3B0A1AE0C92F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2951BE0-1583-481F-B9DA-B9E094DE4C04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2951BE0-1583-481F-B9DA-B9E094DE4C04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2951BE0-1583-481F-B9DA-B9E094DE4C04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2951BE0-1583-481F-B9DA-B9E094DE4C04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

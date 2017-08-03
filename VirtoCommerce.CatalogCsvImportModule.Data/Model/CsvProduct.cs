@@ -272,12 +272,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             var properyValueComparer = AnonymousComparer.Create((PropertyValue x) => x.PropertyName);
             foreach (var propertyValue in PropertyValues)
             {
-                foreach (var productPropertyValue in product.PropertyValues.Where(x => properyValueComparer.Equals(x, propertyValue)).ToArray())
+                var array = product.PropertyValues.Where(x => properyValueComparer.Equals(x, propertyValue)).ToArray();
+                foreach (var productPropertyValue in array)
                 {
                     product.PropertyValues.Remove(productPropertyValue);
                 }
             }
-            PropertyValues = product.PropertyValues.Concat(PropertyValues).Distinct(properyValueComparer).ToList();
+            PropertyValues = product.PropertyValues.Concat(PropertyValues).ToList();
 
             var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode));
             SeoInfos = SeoInfos.Concat(product.SeoInfos).Distinct(seoComparer).ToList();
