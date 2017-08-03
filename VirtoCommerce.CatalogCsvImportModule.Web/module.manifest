@@ -8,8 +8,8 @@
         <dependency id="VirtoCommerce.Catalog" version="2.18.7" />
     </dependencies>
 
-    <title>VirtoCommerce.CatalogCsvImportModule.Web</title>
-    <description>Enter your module description here.</description>
+    <title>Csv Catalog Import Module</title>
+    <description>Adds CSV import functionality to catalog</description>
     <authors>
         <author>ksa</author>
     </authors>
@@ -21,4 +21,16 @@
         <directory virtualPath="$/Scripts" searchPattern="*.js" searchSubdirectories="true" />
     </scripts>
 
+    <settings>
+        <group name="CsvCatalogImport|General">
+            <setting>
+                <name>CsvCatalogImport.CreateDictionaryValues</name>
+                <valueType>boolean</valueType>
+                <defaultValue>false</defaultValue>
+                <title>Create new Dictionary Values</title>
+                <description>Enable or disable creation of new Property Dictionary Values during import</description>
+            </setting>
+        </group>
+    </settings>
+    
 </module>

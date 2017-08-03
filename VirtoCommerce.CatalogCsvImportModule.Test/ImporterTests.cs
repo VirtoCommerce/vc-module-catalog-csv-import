@@ -17,6 +17,7 @@ using VirtoCommerce.Domain.Pricing.Model.Search;
 using VirtoCommerce.Domain.Pricing.Services;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
+using VirtoCommerce.Platform.Core.Settings;
 using Xunit;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Test
@@ -31,6 +32,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         private List<Price> _pricesInternal = new List<Price>();
         private List<FulfillmentCenter> _fulfillmentCentersInternal = new List<FulfillmentCenter>();
         private List<InventoryInfo> _inventoryInfosInternal = new List<InventoryInfo>();
+        private bool _createDictionatyValues = false;
 
         [Fact]
         public void DoImport_NewProductMultivalueDictionaryProperties_PropertiesCreated()
@@ -80,6 +82,29 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
+        public void DoImport_NewProductDictionaryMultivaluePropertyWithNewValue_NewPropertyCreated()
+        {
+            //Arrange
+            var product = GetCsvProductBase();
+            product.PropertyValues = new List<PropertyValue>
+            {
+                new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "NewValue", ValueType = PropertyValueType.ShortText }
+            };
+
+            _createDictionatyValues = true;
+
+            var target = GetImporter();
+
+            var exportInfo = new ExportImportProgressInfo();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
+
+            //Assert
+            Assert.True(!exportInfo.Errors.Any());
+        }
+
+        [Fact]
         public void DoImport_UpdateProductDictionaryMultivalueProperties_PropertiesMerged()
         {
             //Arrange
@@ -121,6 +146,51 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.Collection(product.PropertyValues, inspectors);
         }
 
+        [Fact]
+        public void DoImport_UpdateProductCategory_CategoryIsNotUpdated()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+            existingProduct.PropertyValues = new List<PropertyValue>();
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var product = GetCsvProductBase();
+            product.Category = null;
+            
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Assert.True(product.Category.Id == existingProduct.Category.Id);
+        }
+
+        [Fact]
+        public void DoImport_UpdateProductNameIsNull_NameIsNotUpdated()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+            existingProduct.PropertyValues = new List<PropertyValue>();
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var product = GetCsvProductBase();
+            product.Name = null;
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Assert.True(product.Name == existingProduct.Name);
+        }
 
         [Fact]
         public void DoImport_NewProductMultivalueProperties_PropertiesCreated()
@@ -234,6 +304,29 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             //Assert
             Assert.True(exportInfo.Errors.Any());
+        }
+
+        [Fact]
+        public void DoImport_NewProductDictionaryPropertyWithNewValue_NewPropertyCreated()
+        {
+            //Arrange
+            var product = GetCsvProductBase();
+            product.PropertyValues = new List<PropertyValue>
+            {
+                new PropertyValue{ PropertyName = "CatalogProductProperty_1_Dictionary", Value = "NewValue", ValueType = PropertyValueType.ShortText }
+            };
+
+            _createDictionatyValues = true;
+
+            var target = GetImporter();
+
+            var exportInfo = new ExportImportProgressInfo();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
+
+            //Assert
+            Assert.True(!exportInfo.Errors.Any());
         }
 
         [Fact]
@@ -405,6 +498,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             #endregion
 
+            #region settingsManager
+
+            var settingsManager = new Mock<ISettingsManager>();
+            settingsManager.Setup(x => x.GetValue(It.Is<string>(name => name == "CsvCatalogImport.CreateDictionaryValues"), false)).Returns((string name, bool defaultValue) => _createDictionatyValues);
+
+            #endregion
+
             var target = new CsvCatalogImporter(catalogService.Object,
                 categoryService.Object,
                 itemService.Object,
@@ -415,7 +515,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 propertyService.Object,
                 catalogSearchService.Object,
                 repositoryFactory,
-                pricingSearchService.Object
+                pricingSearchService.Object,
+                settingsManager.Object
             );
 
             return target;

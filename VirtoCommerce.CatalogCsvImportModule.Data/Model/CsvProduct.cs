@@ -209,7 +209,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         {
             get
             {
-                return Category != null ? string.Join("/", Category.Parents.Select(x => x.Name).Concat(new[] { Category.Name })) : null;
+                if (Category == null)
+                    return null;
+
+                var parents = Category.Parents ?? new Category[] { };
+                return string.Join("/", parents.Select(x => x.Name).Concat(new[] { Category.Name }));
             }
             set
             {
@@ -259,6 +263,21 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         public void MergeFrom(CatalogProduct product)
         {
             Id = product.Id;
+
+            if (string.IsNullOrEmpty(Name))
+            {
+                Name = product.Name;
+            }
+
+            if (string.IsNullOrEmpty(CategoryId))
+            {
+                CategoryId = product.CategoryId;
+            }
+
+            if (Category == null || (Category != null && string.IsNullOrEmpty(Category.Path)))
+            {
+                Category = product.Category;
+            }
 
             var imgComparer = AnonymousComparer.Create((Image x) => x.Url);
             Images = Images.Concat(product.Images).Distinct(imgComparer).ToList();
