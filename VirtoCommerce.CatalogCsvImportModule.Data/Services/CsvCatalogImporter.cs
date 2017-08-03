@@ -14,6 +14,7 @@ using VirtoCommerce.Domain.Inventory.Services;
 using VirtoCommerce.Domain.Pricing.Services;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
+using VirtoCommerce.Platform.Core.Settings;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 {
@@ -33,10 +34,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private readonly Func<ICatalogRepository> _catalogRepositoryFactory;
         private readonly object _lockObject = new object();
 
+        private readonly bool _createPropertyDictionatyValues;
+
         public CsvCatalogImporter(ICatalogService catalogService, ICategoryService categoryService, IItemService productService,
                                   ISkuGenerator skuGenerator,
                                   IPricingService pricingService, IInventoryService inventoryService, ICommerceService commerceService,
-                                  IPropertyService propertyService, ICatalogSearchService searchService, Func<ICatalogRepository> catalogRepositoryFactory, IPricingSearchService pricingSearchService)
+                                  IPropertyService propertyService, ICatalogSearchService searchService, Func<ICatalogRepository> catalogRepositoryFactory, IPricingSearchService pricingSearchService,
+                                  ISettingsManager settingsManager)
         {
             _catalogService = catalogService;
             _categoryService = categoryService;
@@ -49,6 +53,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             _searchService = searchService;
             _catalogRepositoryFactory = catalogRepositoryFactory;
             _pricingSearchService = pricingSearchService;
+
+            _createPropertyDictionatyValues = settingsManager.GetValue("CsvCatalogImport.CreateDictionaryValues", false);
         }
 
         public void DoImport(Stream inputStream, CsvImportInfo importInfo, Action<ExportImportProgressInfo> progressCallback)
@@ -87,16 +93,32 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 }
             }
 
-            var catalog = _catalogService.GetById(importInfo.CatalogId);
-
-            SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
-            SaveProducts(catalog, csvProducts, progressInfo, progressCallback);
+            DoImport(csvProducts, importInfo, progressInfo, progressCallback);
         }
 
+        public void DoImport(List<CsvProduct> csvProducts, CsvImportInfo importInfo, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
+        {
+            var catalog = _catalogService.GetById(importInfo.CatalogId);
 
+            MergeFromAlreadyExistProducts(csvProducts, catalog);
+
+            SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
+
+            ICollection<Property> modifiedProperties;
+            LoadProductDependencies(csvProducts, catalog, out modifiedProperties, progressInfo, progressCallback);
+
+            progressInfo.Description = "Saving property dictionary values...";
+            progressCallback(progressInfo);
+            _propertyService.Update(modifiedProperties.ToArray());
+
+            SaveProducts(csvProducts, progressInfo, progressCallback);
+        }
+
+        /// <summary>
+        /// Try to find (create if not) categories for products with Category.Path
+        /// </summary>
         private void SaveCategoryTree(Catalog catalog, IEnumerable<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-            progressInfo.ProcessedCount = 0;
             var cachedCategoryMap = new Dictionary<string, Category>();
 
             foreach (var csvProduct in csvProducts.Where(x => x.Category != null && !string.IsNullOrEmpty(x.Category.Path)))
@@ -139,24 +161,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
         }
 
-        private void SaveProducts(Catalog catalog, List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
+        private void SaveProducts(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
             progressInfo.ProcessedCount = 0;
             progressInfo.TotalCount = csvProducts.Count;
 
             var defaultFulfilmentCenter = _commerceService.GetAllFulfillmentCenters().FirstOrDefault();
 
-            ICollection<Property> modifiedProperties;
-            LoadProductDependencies(csvProducts, catalog, out modifiedProperties, progressInfo, progressCallback);
-            MergeFromAlreadyExistProducts(csvProducts, catalog);
-
-            //var defaultLanguge = catalog.DefaultLanguage != null ? catalog.DefaultLanguage.LanguageCode : "en-US";           
+            ICollection<Property> modifiedProperties = new List<Property>();
             foreach (var csvProduct in csvProducts)
             {
                 //Try to detect and split single property value in to multiple values for multivalue properties 
-                csvProduct.PropertyValues = TryToSplitMultivaluePropertyValues(csvProduct, progressInfo, progressCallback);
+                csvProduct.PropertyValues = TryToSplitMultivaluePropertyValues(csvProduct, progressInfo, progressCallback, modifiedProperties);
             }
-
             progressInfo.Description = "Saving property dictionary values...";
             progressCallback(progressInfo);
             _propertyService.Update(modifiedProperties.ToArray());
@@ -235,9 +252,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
         }
 
-        private List<PropertyValue> TryToSplitMultivaluePropertyValues(CsvProduct csvProduct, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
+        private List<PropertyValue> TryToSplitMultivaluePropertyValues(CsvProduct csvProduct, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, ICollection<Property> modifiedProperties)
         {
             var result = new List<PropertyValue>();
+
             //Try to split multivalues
             foreach (var propValue in csvProduct.PropertyValues)
             {
@@ -247,10 +265,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 if (propValue.Value != null && propValue.Property != null && propValue.Property.Multivalue)
                 {
                     var multivalue = propValue.Value.ToString();
-                    var values = multivalue.Split(',').Select(x => x.Trim()).Distinct().ToArray();
+                    var chars = new[] {','}; 
+                    var values = multivalue.Split(chars, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Distinct().ToArray();
 
                     foreach (var value in values)
                     {
+                        if (string.IsNullOrEmpty(value))
+                            continue;
+
                         var multiPropValue = propValue.Clone() as PropertyValue;
                         multiPropValue.Value = value;
                         if (propValue.Property.Dictionary)
@@ -258,20 +280,25 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                             var dicValue = propValue.Property.DictionaryValues.FirstOrDefault(x => Equals(x.Value, value));
                             if (dicValue == null)
                             {
-                                //dicValue = new PropertyDictionaryValue
-                                //{
-                                //    Alias = propertyValue.Value.ToString(),
-                                //    Value = propertyValue.Value.ToString(),
-                                //    Id = Guid.NewGuid().ToString()
-                                //};
-                                //property.DictionaryValues.Add(dicValue);
-                                //if(!changedProperties.Contains(property))
-                                //{
-                                //    changedProperties.Add(property);
-                                //}
-
-                                progressInfo.Errors.Add($"Proderty value '{value}' not found in '{propValue.Property.Name}' dictionary");
-                                progressCallback(progressInfo);
+                                if (_createPropertyDictionatyValues)
+                                {
+                                    dicValue = new PropertyDictionaryValue
+                                    {
+                                        Alias = value,
+                                        Value = value,
+                                        Id = Guid.NewGuid().ToString()
+                                    };
+                                    propValue.Property.DictionaryValues.Add(dicValue);
+                                    if (!modifiedProperties.Contains(propValue.Property))
+                                    {
+                                        modifiedProperties.Add(propValue.Property);
+                                    }
+                                }
+                                else
+                                {
+                                    progressInfo.Errors.Add($"Proderty value '{value}' not found in '{propValue.Property.Name}' dictionary");
+                                    progressCallback(progressInfo);
+                                }
                             }
                             multiPropValue.ValueId = dicValue?.Id;
                         }
@@ -348,20 +375,26 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                             var dicValue = propertyValue.Property.DictionaryValues.FirstOrDefault(x => Equals(x.Value, propertyValue.Value));
                             if (dicValue == null)
                             {
-                                //dicValue = new PropertyDictionaryValue
-                                //{
-                                //    Alias = propertyValue.Value.ToString(),
-                                //    Value = propertyValue.Value.ToString(),
-                                //    Id = Guid.NewGuid().ToString()
-                                //};
-                                ////need to register modified property for future update
-                                //if (!modifiedProperties.Contains(propertyValue.Property))
-                                //{
-                                //    modifiedProperties.Add(propertyValue.Property);
-                                //}
-
-                                progressInfo.Errors.Add($"Proderty value '{propertyValue.Value}' not found in '{propertyValue.Property.Name}' dictionary");
-                                progressCallback(progressInfo);
+                                if (_createPropertyDictionatyValues)
+                                {
+                                    dicValue = new PropertyDictionaryValue
+                                    {
+                                        Alias = propertyValue.Value.ToString(),
+                                        Value = propertyValue.Value.ToString(),
+                                        Id = Guid.NewGuid().ToString()
+                                    };
+                                    propertyValue.Property.DictionaryValues.Add(dicValue);
+                                    //need to register modified property for future update
+                                    if (!modifiedProperties.Contains(propertyValue.Property))
+                                    {
+                                        modifiedProperties.Add(propertyValue.Property);
+                                    }
+                                }
+                                else
+                                {
+                                    progressInfo.Errors.Add($"Proderty value '{propertyValue.Value}' not found in '{propertyValue.Property.Name}' dictionary");
+                                    progressCallback(progressInfo);
+                                }
                             }
                             propertyValue.ValueId = dicValue?.Id;
                         }

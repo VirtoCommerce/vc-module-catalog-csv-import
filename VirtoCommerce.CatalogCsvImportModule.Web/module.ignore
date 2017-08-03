@@ -1,1 +1,6 @@
 ﻿VirtoCommerce.Domain.dll
+
+CsvHelper.dll
+FluentValidation.dll
+Hangfire.SqlServer.dll
+Microsoft.Owin.Host.SystemWeb.dll

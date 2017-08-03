@@ -76,6 +76,8 @@
       }
     },
     "commands": {
+      "import": "Import",
+      "export": "Export",
       "start-export": "Export starten",
       "start-import": "Import starten"
     },

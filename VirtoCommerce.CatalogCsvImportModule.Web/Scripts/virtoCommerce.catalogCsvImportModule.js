@@ -89,13 +89,13 @@ angular.module(moduleTemplateName, [])
         });
 
         var catalogImportCommand = {
-            name: "import",
+            name: "catalogCsvImportModule.commands.import",
             icon: 'fa fa-download',
             executeMethod: function (blade) {
                 var newBlade = {
                     id: 'catalogImport',
-                    title: 'catalog.blades.importers-list.title',
-                    subtitle: 'catalog.blades.importers-list.subtitle',
+                    title: 'catalogCsvImportModule.blades.importers-list.title',
+                    subtitle: 'catalogCsvImportModule.blades.importers-list.subtitle',
                     catalog: blade.catalog,
                     controller: 'virtoCommerce.catalogCsvImportModule.importerListController',
                     template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/import/importers-list.tpl.html'
@@ -110,10 +110,18 @@ angular.module(moduleTemplateName, [])
         toolbarService.register(catalogImportCommand, 'virtoCommerce.catalogModule.categoriesItemsListController');
 
         var catalogExportCommand = {
-            name: "export",
+            name: "catalogCsvImportModule.commands.export",
             icon: 'fa fa-upload',
             executeMethod: function (blade) {
-
+                var newBlade = {
+                    id: 'catalogExport',
+                    title: 'catalogCsvImportModule.blades.exporter-list.title',
+                    subtitle: 'catalogCsvImportModule.blades.exporter-list.subtitle',
+                    catalog: blade.catalog,
+                    controller: 'virtoCommerce.catalogCsvImportModule.exporterListController',
+                    template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/export/exporter-list.tpl.html'
+                };
+                bladeNavigationService.showBlade(newBlade, blade);
             },
             canExecuteMethod: function(blade) {
                 return blade.catalogId;

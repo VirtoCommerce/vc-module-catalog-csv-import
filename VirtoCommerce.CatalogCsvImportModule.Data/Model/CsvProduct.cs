@@ -209,7 +209,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         {
             get
             {
-                return Category != null ? string.Join("/", Category.Parents.Select(x => x.Name).Concat(new[] { Category.Name })) : null;
+                if (Category == null)
+                    return null;
+
+                var parents = Category.Parents ?? new Category[] { };
+                return string.Join("/", parents.Select(x => x.Name).Concat(new[] { Category.Name }));
             }
             set
             {
@@ -260,6 +264,21 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         {
             Id = product.Id;
 
+            if (string.IsNullOrEmpty(Name))
+            {
+                Name = product.Name;
+            }
+
+            if (string.IsNullOrEmpty(CategoryId))
+            {
+                CategoryId = product.CategoryId;
+            }
+
+            if (Category == null || (Category != null && string.IsNullOrEmpty(Category.Path)))
+            {
+                Category = product.Category;
+            }
+
             var imgComparer = AnonymousComparer.Create((Image x) => x.Url);
             Images = Images.Concat(product.Images).Distinct(imgComparer).ToList();
 
@@ -272,12 +291,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             var properyValueComparer = AnonymousComparer.Create((PropertyValue x) => x.PropertyName);
             foreach (var propertyValue in PropertyValues)
             {
-                foreach (var productPropertyValue in product.PropertyValues.Where(x => properyValueComparer.Equals(x, propertyValue)).ToArray())
+                var array = product.PropertyValues.Where(x => properyValueComparer.Equals(x, propertyValue)).ToArray();
+                foreach (var productPropertyValue in array)
                 {
                     product.PropertyValues.Remove(productPropertyValue);
                 }
             }
-            PropertyValues = product.PropertyValues.Concat(PropertyValues).Distinct(properyValueComparer).ToList();
+            PropertyValues = product.PropertyValues.Concat(PropertyValues).ToList();
 
             var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode));
             SeoInfos = SeoInfos.Concat(product.SeoInfos).Distinct(seoComparer).ToList();
