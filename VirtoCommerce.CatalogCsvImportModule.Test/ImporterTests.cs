@@ -32,10 +32,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         private List<Price> _pricesInternal = new List<Price>();
         private List<FulfillmentCenter> _fulfillmentCentersInternal = new List<FulfillmentCenter>();
         private List<InventoryInfo> _inventoryInfosInternal = new List<InventoryInfo>();
+
         private bool _createDictionatyValues = false;
 
         [Fact]
-        public void DoImport_NewProductMultivalueDictionaryProperties_PropertiesCreated()
+        public void DoImport_NewProductMultivalueDictionaryProperties_PropertyValuesCreated()
         {
             //Arrange
             var product = GetCsvProductBase();
@@ -82,7 +83,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_NewProductDictionaryMultivaluePropertyWithNewValue_NewPropertyCreated()
+        public void DoImport_NewProductDictionaryMultivaluePropertyWithNewValue_NewPropertyValueCreated()
         {
             //Arrange
             var product = GetCsvProductBase();
@@ -101,11 +102,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
 
             //Assert
+            var property = product.Properties.FirstOrDefault(x=>x.Name.Equals("CatalogProductProperty_1_MultivalueDictionary")).DictionaryValues.FirstOrDefault(y => y.Value.Equals("NewValue"));
+            Assert.NotNull(property);
             Assert.True(!exportInfo.Errors.Any());
         }
 
         [Fact]
-        public void DoImport_UpdateProductDictionaryMultivalueProperties_PropertiesMerged()
+        public void DoImport_UpdateProductDictionaryMultivalueProperties_PropertyValuesMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -193,7 +196,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_NewProductMultivalueProperties_PropertiesCreated()
+        public void DoImport_NewProductMultivalueProperties_PropertyValuesCreated()
         {
             //Arrange
             var product = GetCsvProductBase();
@@ -219,7 +222,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductMultivalueProperties_PropertiesMerged()
+        public void DoImport_UpdateProductMultivalueProperties_PropertyValuesMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -240,7 +243,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var product = GetCsvProductBase();
             product.PropertyValues = new List<PropertyValue>
             {
-                new PropertyValue { PropertyName = "CatalogProductProperty_2_Multivalue", Value = "TestValue1,TestValue2", ValueType = PropertyValueType.ShortText },
+                new PropertyValue { PropertyName = "CatalogProductProperty_2_Multivalue", Value = "TestValue1, TestValue2", ValueType = PropertyValueType.ShortText },
                 new PropertyValue { PropertyName = "TestCategory_ProductProperty_Multivalue", Value = "TestValue3", ValueType = PropertyValueType.ShortText }
             };
 
@@ -262,7 +265,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
 
         [Fact]
-        public void DoImport_NewProductDictionaryProperties_PropertiesCreated()
+        public void DoImport_NewProductDictionaryProperties_PropertyValuesCreated()
         {
             //Arrange
             var product = GetCsvProductBase();
@@ -307,7 +310,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_NewProductDictionaryPropertyWithNewValue_NewPropertyCreated()
+        public void DoImport_NewProductDictionaryPropertyWithNewValue_NewPropertyValueCreated()
         {
             //Arrange
             var product = GetCsvProductBase();
@@ -326,11 +329,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
 
             //Assert
+            var property = product.Properties.FirstOrDefault(x => x.Name.Equals("CatalogProductProperty_1_Dictionary")).DictionaryValues.FirstOrDefault(y => y.Value.Equals("NewValue"));
+            Assert.NotNull(property);
             Assert.True(!exportInfo.Errors.Any());
         }
 
         [Fact]
-        public void DoImport_NewProductProperties_PropertiesCreated()
+        public void DoImport_NewProductProperties_PropertyValuesCreated()
         {
             //Arrange
             var target = GetImporter();

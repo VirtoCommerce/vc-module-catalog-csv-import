@@ -1,6 +1,9 @@
 ﻿VirtoCommerce.Domain.dll
-
 CsvHelper.dll
 FluentValidation.dll
-Hangfire.SqlServer.dll
-Microsoft.Owin.Host.SystemWeb.dll
+VirtoCommerce.CatalogModule.Data.dll
+VirtoCommerce.CatalogModule.Web.Core.dll
+es\Hangfire.Core.resources.dll
+zh\Hangfire.Core.resources.dll
+CsvHelper.xml
+FluentValidation.xml
