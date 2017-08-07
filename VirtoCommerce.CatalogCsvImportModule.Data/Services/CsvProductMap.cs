@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -53,11 +54,20 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     // create custom converter instance which will get the required record from the collection
                     csvPropertyMap.UsingExpression<ICollection<coreModel.PropertyValue>>(null, propValues =>
                          {
-                             var propValue = propValues.FirstOrDefault(x => x.PropertyName == propertyCsvColumn);
-                             if (propValue != null)
+                             var multiValueProperty = propValues.Where(x => x.PropertyName == propertyCsvColumn).ToList();
+                             if (multiValueProperty.Count == 1)
                              {
-                                 return propValue.Value != null ? propValue.Value.ToString() : string.Empty;
+                                 var propValue = multiValueProperty.First();
+                                 return propValue.Value?.ToString() ?? string.Empty;
                              }
+
+                             if (multiValueProperty.Count > 1)
+                             {
+                                 var props = multiValueProperty.Where(x => x.Value != null).Select(x => x.Value.ToString());
+                                 var result = string.Join(mappingCfg.Delimiter, props);
+                                 return result;
+                             }
+
                              return string.Empty;
                          });
 
