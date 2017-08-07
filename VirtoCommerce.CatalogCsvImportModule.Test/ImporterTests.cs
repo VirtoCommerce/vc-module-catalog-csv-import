@@ -358,6 +358,70 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.Collection(product.PropertyValues, inspectors);
         }
 
+
+        [Fact]
+        public void DoImport_UpdateProductReviewIsEmpty_ReviewsNotClearedUp()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+            existingProduct.PropertyValues = new List<PropertyValue>();
+            existingProduct.SeoInfos = new List<SeoInfo>
+            {
+                new SeoInfo()
+                {
+                    Id = "SeoInfo_test",
+                    Name = "SeoInfo_test"
+                }
+            };
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var product = GetCsvProductBase();
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Assert.True(product.SeoInfos.Count == 1);
+            Assert.True(product.SeoInfos.First().Id == existingProduct.SeoInfos.First().Id);
+        }
+
+        [Fact]
+        public void DoImport_UpdateProductSeoInfoIsEmpty_SeoInfosNotClearedUp()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+            existingProduct.PropertyValues = new List<PropertyValue>();
+            existingProduct.Reviews = new List<EditorialReview>
+            {
+                new EditorialReview()
+                {
+                    Id = "EditorialReview_test",
+                    Content = "EditorialReview_test"
+                }
+            };
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var product = GetCsvProductBase();
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Assert.True(product.Reviews.Count == 1);
+            Assert.True(product.Reviews.First().Id == existingProduct.Reviews.First().Id);
+        }
+
+
         private CsvCatalogImporter GetImporter()
         {
             #region CatalogService

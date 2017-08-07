@@ -15,8 +15,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyProduct("Virto Commerce Catalog CSV Import Module")]
 [assembly: AssemblyCopyright("Copyright © VirtoCommerce 2017")]
 
-[assembly: AssemblyFileVersion("1.0.1.0")]
-[assembly: AssemblyVersion("1.0.1.0")]
+[assembly: AssemblyFileVersion("1.0.2.0")]
+[assembly: AssemblyVersion("1.0.2.0")]
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]

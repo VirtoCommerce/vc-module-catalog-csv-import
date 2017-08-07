@@ -89,7 +89,7 @@ angular.module(moduleTemplateName, [])
         });
 
         var catalogImportCommand = {
-            name: "catalogCsvImportModule.commands.import",
+            name: "platform.commands.import",
             icon: 'fa fa-download',
             executeMethod: function (blade) {
                 var newBlade = {
@@ -110,7 +110,7 @@ angular.module(moduleTemplateName, [])
         toolbarService.register(catalogImportCommand, 'virtoCommerce.catalogModule.categoriesItemsListController');
 
         var catalogExportCommand = {
-            name: "catalogCsvImportModule.commands.export",
+            name: "platform.commands.export",
             icon: 'fa fa-upload',
             executeMethod: function (blade) {
                 var newBlade = {
