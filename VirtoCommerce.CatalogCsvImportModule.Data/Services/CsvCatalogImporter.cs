@@ -100,6 +100,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             var catalog = _catalogService.GetById(importInfo.CatalogId);
 
+            RemoveEmptyComplexObjects(csvProducts, catalog);
+
             MergeFromAlreadyExistProducts(csvProducts, catalog);
 
             SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
@@ -112,6 +114,32 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             _propertyService.Update(modifiedProperties.ToArray());
 
             SaveProducts(csvProducts, progressInfo, progressCallback);
+        }
+
+        private void RemoveEmptyComplexObjects(List<CsvProduct> csvProducts, Catalog catalog)
+        {
+            var defaultLanguge = catalog.DefaultLanguage != null ? catalog.DefaultLanguage.LanguageCode : "en-US";
+            foreach (var csvProduct in csvProducts)
+            {
+                if (csvProduct.EditorialReview.Content != null)
+                {
+                    csvProduct.EditorialReview.LanguageCode = defaultLanguge;
+                }
+                else
+                {
+                    csvProduct.Reviews.Clear();
+                }
+
+                if (csvProduct.SeoInfo.SemanticUrl != null)
+                {
+                    csvProduct.SeoInfo.LanguageCode = defaultLanguge;
+                    csvProduct.SeoInfo.SemanticUrl = csvProduct.SeoInfo.SemanticUrl;
+                }
+                else
+                {
+                    csvProduct.SeoInfos.Clear();
+                }
+            }
         }
 
         /// <summary>
@@ -318,7 +346,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             modifiedProperties = new List<Property>();
             var allCategoriesIds = csvProducts.Select(x => x.CategoryId).Distinct().ToArray();
             var categoriesMap = _categoryService.GetByIds(allCategoriesIds, CategoryResponseGroup.Full).ToDictionary(x => x.Id);
-            var defaultLanguge = catalog.DefaultLanguage != null ? catalog.DefaultLanguage.LanguageCode : "en-US";
 
             foreach (var csvProduct in csvProducts)
             {
@@ -339,26 +366,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 {
                     csvProduct.Code = _skuGenerator.GenerateSku(csvProduct);
                 }
-
-                if (csvProduct.EditorialReview.Content != null)
-                {
-                    csvProduct.EditorialReview.LanguageCode = defaultLanguge;
-                }
-                else
-                {
-                    csvProduct.Reviews.Clear();
-                }
-
-                if (csvProduct.SeoInfo.SemanticUrl != null)
-                {
-                    csvProduct.SeoInfo.LanguageCode = defaultLanguge;
-                    csvProduct.SeoInfo.SemanticUrl = csvProduct.SeoInfo.SemanticUrl;
-                }
-                else
-                {
-                    csvProduct.SeoInfos.Clear();
-                }
-
                 //Properties inheritance
                 csvProduct.Properties = (csvProduct.Category != null ? csvProduct.Category.Properties : csvProduct.Catalog.Properties).OrderBy(x => x.Name).ToList();
                 foreach (var propertyValue in csvProduct.PropertyValues.ToArray())
