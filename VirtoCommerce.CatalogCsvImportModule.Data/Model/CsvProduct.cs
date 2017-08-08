@@ -254,6 +254,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             get { return SeoInfo.MetaDescription; }
             set { SeoInfo.MetaDescription = value; }
         }
+
+        public int LineNumber { get; set; }
       
         /// <summary>
         /// Merge from other product, without any deletion, only update and create allowed

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using CsvHelper;
 using CsvHelper.Configuration;
 using VirtoCommerce.CatalogCsvImportModule.Data.Model;
 using coreModel = VirtoCommerce.Domain.Catalog.Model;
@@ -77,6 +78,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var newPropMap = new CsvPropertyMap(typeof(CsvProduct).GetProperty("PropertyValues"));
                 newPropMap.UsingExpression<ICollection<coreModel.PropertyValue>>(null, null).ConvertUsing(x => mappingCfg.PropertyCsvColumns.Select(column => new coreModel.PropertyValue { PropertyName = column, Value = x.GetField<string>(column) }).ToList());
                 PropertyMaps.Add(newPropMap);
+
+                //map line number
+                Map(m => m.LineNumber).ConvertUsing(row => ((CsvReader)row).Parser.Row);
             }
         }
     }
