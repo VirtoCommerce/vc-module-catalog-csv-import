@@ -213,7 +213,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
                     return null;
 
                 var parents = Category.Parents ?? new Category[] { };
-                return string.Join("/", parents.Select(x => x.Name).Concat(new[] { Category.Name }));
+                return string.Join("/", parents.Select(x => x.Path).Concat(new[] { Category.Path }));
             }
             set
             {

@@ -35,6 +35,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
         private bool _createDictionatyValues = false;
 
+        private List<CatalogProduct> _savedProducts;
+
         [Fact]
         public void DoImport_NewProductMultivalueDictionaryProperties_PropertyValuesCreated()
         {
@@ -48,8 +50,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             var target = GetImporter();
 
+            var progressInfo = new ExportImportProgressInfo();
+
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -59,6 +63,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 x => Assert.True(x.PropertyName == "CatalogProductProperty_2_MultivalueDictionary" && (string) x.Value == "1")
             };
             Assert.Collection(product.PropertyValues, inspectors);
+            Assert.True(!progressInfo.Errors.Any());
         }
 
         [Fact]
@@ -76,7 +81,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
 
             //Assert
             Assert.True(exportInfo.Errors.Any());
@@ -99,7 +104,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
 
             //Assert
             var property = product.Properties.FirstOrDefault(x=>x.Name.Equals("CatalogProductProperty_1_MultivalueDictionary")).DictionaryValues.FirstOrDefault(y => y.Value.Equals("NewValue"));
@@ -134,9 +139,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             };
 
             var target = GetImporter();
+            var progressInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -147,6 +153,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 x => Assert.True(x.PropertyName == "TestCategory_ProductProperty_MultivalueDictionary" && (string) x.Value == "2")
             };
             Assert.Collection(product.PropertyValues, inspectors);
+            Assert.True(!progressInfo.Errors.Any());
         }
 
         [Fact]
@@ -209,7 +216,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo() { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -248,9 +255,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             };
 
             var target = GetImporter();
-
+            
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -360,7 +367,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
 
         [Fact]
-        public void DoImport_UpdateProductReviewIsEmpty_ReviewsNotClearedUp()
+        public void DoImport_UpdateProductSeoInfoIsEmpty_SeoInfosNotClearedUp()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -391,8 +398,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductSeoInfoIsEmpty_SeoInfosNotClearedUp()
-        {
+        public void DoImport_UpdateProductReviewIsEmpty_ReviewsNotClearedUp()
+{
             //Arrange
             var existingProduct = GetCsvProductBase();
             existingProduct.PropertyValues = new List<PropertyValue>();
@@ -421,6 +428,227 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.True(product.Reviews.First().Id == existingProduct.Reviews.First().Id);
         }
 
+        [Fact]
+        public void DoImport_UpdateProductTwoProductsWithSameCode_ProductsMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var firstProduct = GetCsvProductBase();           
+            var secondProduct = GetCsvProductBase();
+            firstProduct.Id = null;
+            secondProduct.Id = null;
+
+            var list = new List<CsvProduct> { firstProduct, secondProduct };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Assert.True(_savedProducts.Count == 1);
+        }
+
+        [Fact]
+        public void DoImport_TwoProductsSameCodeDifferentReviewTypes_ReviewsMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+            existingProduct.Reviews.Clear();
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var firstProduct = GetCsvProductBase();
+            var secondProduct = GetCsvProductBase();
+            firstProduct.EditorialReview.ReviewType = "FullReview";
+            firstProduct.EditorialReview.Content = "Review Content 1";
+            secondProduct.EditorialReview.ReviewType = "QuickReview";
+            secondProduct.EditorialReview.Content = "Review Content 2";
+
+            var list = new List<CsvProduct> { firstProduct, secondProduct };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<EditorialReview>[] inspectors = {
+                x => Assert.True(x.LanguageCode == "en-US" && x.Content == "Review Content 1"),
+                x => Assert.True(x.LanguageCode == "en-US" && x.Content == "Review Content 2")
+            };
+            Assert.Collection(_savedProducts.FirstOrDefault().Reviews, inspectors);
+        }
+
+        [Fact]
+        public void DoImport_TwoProductsSameCodeSameReviewTypes_ReviewsMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+            existingProduct.Reviews.Clear();
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var firstProduct = GetCsvProductBase();
+            var secondProduct = GetCsvProductBase();
+            firstProduct.EditorialReview.Content = "Review Content 1";
+            secondProduct.EditorialReview.Content = "Review Content 2";
+
+            var list = new List<CsvProduct> { firstProduct, secondProduct };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<EditorialReview>[] inspectors = {
+                x => Assert.True(x.LanguageCode == "en-US" && x.Content == "Review Content 1")
+            };
+            Assert.Collection(_savedProducts.FirstOrDefault().Reviews, inspectors);
+        }
+
+        [Fact]
+        public void DoImport_UpdateProductTwoProductsSameCodeDifferentReviewTypes_ReviewsMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+            existingProduct.Reviews = new List<EditorialReview>() { new EditorialReview() { Content = "Review Content 3", Id = "1", LanguageCode = "en-US", ReviewType = "QuickReview"} };
+            
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var firstProduct = GetCsvProductBase();
+            var secondProduct = GetCsvProductBase();
+            firstProduct.EditorialReview.ReviewType = "FullReview";
+            firstProduct.EditorialReview.Content = "Review Content 1";
+            secondProduct.EditorialReview.ReviewType = "QuickReview";
+            secondProduct.EditorialReview.Content = "Review Content 2";
+
+            var list = new List<CsvProduct> { firstProduct, secondProduct };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<EditorialReview>[] inspectors = {
+                x => Assert.True(x.LanguageCode == "en-US" && x.Content == "Review Content 1" && x.ReviewType == "FullReview"),
+                x => Assert.True(x.LanguageCode == "en-US" && x.Content == "Review Content 2" && x.ReviewType == "QuickReview")
+            };
+            Assert.Collection(_savedProducts.FirstOrDefault().Reviews, inspectors);
+        }
+
+        [Fact]
+        public void DoImport_TwoProductsSameCodeDifferentSeoInfo_SeoInfosMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+            existingProduct.SeoInfos.Clear();
+
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var firstProduct = GetCsvProductBase();
+            var secondProduct = GetCsvProductBase();
+            firstProduct.SeoInfo.SemanticUrl = "SemanticsUrl1";
+            secondProduct.SeoInfo.SemanticUrl = "SemanticsUrl2";
+
+            var list = new List<CsvProduct> { firstProduct, secondProduct };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<SeoInfo>[] inspectors = {
+                x => Assert.True(x.LanguageCode == "en-US" && x.SemanticUrl == "SemanticsUrl1"),
+                x => Assert.True(x.LanguageCode == "en-US" && x.SemanticUrl == "SemanticsUrl2")
+            };
+            Assert.Collection(_savedProducts.FirstOrDefault().SeoInfos, inspectors);
+        }
+
+        [Fact]
+        public void DoImport_TwoProductsSameCodeSameSeoInfo_SeoInfosMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+            existingProduct.SeoInfos.Clear();
+
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var firstProduct = GetCsvProductBase();
+            var secondProduct = GetCsvProductBase();
+            firstProduct.SeoInfo.SemanticUrl = "SemanticsUrl1";
+            secondProduct.SeoInfo.SemanticUrl = "SemanticsUrl1";
+
+            var list = new List<CsvProduct> { firstProduct, secondProduct };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<SeoInfo>[] inspectors = {
+                x => Assert.True(x.LanguageCode == "en-US" && x.SemanticUrl == "SemanticsUrl1")
+            };
+            Assert.Collection(_savedProducts.FirstOrDefault().SeoInfos, inspectors);
+        }
+
+        [Fact]
+        public void DoImport_UpdateProductTwoProductsSameCodeDifferentSeoInfo_SeoInfosMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+            existingProduct.SeoInfos = new List<SeoInfo>() { new SeoInfo() { Id = "1", LanguageCode = "en-US", SemanticUrl = "SemanticsUrl3" } };
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var firstProduct = GetCsvProductBase();
+            var secondProduct = GetCsvProductBase();
+            firstProduct.SeoInfo.SemanticUrl = "SemanticsUrl1";
+            secondProduct.SeoInfo.SemanticUrl = "SemanticsUrl2";
+
+            var list = new List<CsvProduct> { firstProduct, secondProduct };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<SeoInfo>[] inspectors = {
+                x => Assert.True(x.LanguageCode == "en-US" && x.SemanticUrl == "SemanticsUrl1"),
+                x => Assert.True(x.LanguageCode == "en-US" && x.SemanticUrl == "SemanticsUrl2"),
+                x => Assert.True(x.LanguageCode == "en-US" && x.SemanticUrl == "SemanticsUrl3")
+            };
+            Assert.Collection(_savedProducts.FirstOrDefault().SeoInfos, inspectors);
+        }
 
         private CsvCatalogImporter GetImporter()
         {
@@ -497,7 +725,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                     return result.ToArray();
                 });
 
-            itemService.Setup(x => x.Update(It.IsAny<CatalogProduct[]>())).Callback((CatalogProduct[] products) => { });
+            itemService.Setup(x => x.Update(It.IsAny<CatalogProduct[]>())).Callback((CatalogProduct[] products) =>
+            {
+                _savedProducts = products.ToList();
+            });
 
             #endregion
 

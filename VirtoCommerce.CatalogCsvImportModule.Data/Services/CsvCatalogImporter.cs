@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper;
+using Microsoft.Practices.ObjectBuilder2;
 using Omu.ValueInjecter;
 using VirtoCommerce.CatalogCsvImportModule.Data.Core;
 using VirtoCommerce.CatalogModule.Data.Repositories;
@@ -123,7 +124,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
             catch
             {
-                return null;
+                return Encoding.UTF8;
             }
         }
 
@@ -136,23 +137,23 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             RemoveEmptyComplexObjects(csvProducts, catalog);
 
             MergeFromAlreadyExistProducts(csvProducts, catalog);
-
+           
             SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
 
             var modifiedProperties = LoadProductDependencies(csvProducts, catalog, progressInfo, progressCallback);
-            modifiedProperties.AddRange(TryToSplitMultivaluePropertyValues(csvProducts, progressInfo, progressCallback));
+            modifiedProperties.AddRange(TryToSplitMultivaluePropertyValues(csvProducts, progressInfo, progressCallback, importInfo));
 
             SaveProperties(modifiedProperties, progressInfo, progressCallback);
             SaveProducts(csvProducts, progressInfo, progressCallback);
         }
 
-        private ICollection<Property> TryToSplitMultivaluePropertyValues(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
+        private ICollection<Property> TryToSplitMultivaluePropertyValues(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, CsvImportInfo importInfo)
         {
             var modifiedProperties = new List<Property>();
             foreach (var csvProduct in csvProducts)
             {
                 //Try to detect and split single property value in to multiple values for multivalue properties 
-                csvProduct.PropertyValues = TryToSplitMultivaluePropertyValues(csvProduct, progressInfo, progressCallback, modifiedProperties);
+                csvProduct.PropertyValues = TryToSplitMultivaluePropertyValues(csvProduct, progressInfo, progressCallback, modifiedProperties, importInfo);
             }
             return modifiedProperties;
         }
@@ -163,9 +164,21 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             var groupedCsv = csvProducts.GroupBy(x => new { x.Code, x.Id });
             foreach (var group in groupedCsv)
             {
-                mergedCsvProducts.Add(group.FirstOrDefault());
+                mergedCsvProducts.Add(MergeCsvProduct(group.ToList()));
             }
             return mergedCsvProducts;
+        }
+
+        private CsvProduct MergeCsvProduct(List<CsvProduct> csvProducts)
+        {
+            var firstProduct = csvProducts.FirstOrDefault();
+            if (firstProduct == null)
+                return null;
+
+            firstProduct.Reviews = csvProducts.SelectMany(x => x.Reviews).ToList();
+            firstProduct.SeoInfos = csvProducts.SelectMany(x => x.SeoInfos).ToList();
+
+            return firstProduct;
         }
 
         private void RemoveEmptyComplexObjects(List<CsvProduct> csvProducts, Catalog catalog)
@@ -173,35 +186,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             var defaultLanguge = catalog.DefaultLanguage != null ? catalog.DefaultLanguage.LanguageCode : "en-US";
             foreach (var csvProduct in csvProducts)
             {
-                if (csvProduct.EditorialReview.Content != null)
-                {
-                    csvProduct.EditorialReview.LanguageCode = defaultLanguge;
-                }
-                else
-                {
-                    csvProduct.Reviews.Clear();
-                }
+                csvProduct.Reviews = csvProduct.Reviews.Where(x => x.Content != null).ToList();
+                csvProduct.Reviews = csvProduct.Reviews.GroupBy(l => l.ReviewType).Select(g => g.FirstOrDefault()).ToList();
 
-                //var emptyReviews = csvProduct.Reviews.Where(x => x.Content == null).ToList();
-                //foreach (var review in emptyReviews)
-                //{
-                //    if (csvProduct.Reviews.Contains(review))
-                //        csvProduct.Reviews.Remove(review);
-                //    else
-                //    {
-                //        review.LanguageCode = defaultLanguge;
-                //    }
-                //}
+                csvProduct.SeoInfos = csvProduct.SeoInfos.Where(x => x.SemanticUrl != null).ToList();
+                csvProduct.SeoInfos = csvProduct.SeoInfos.GroupBy(l => l.SemanticUrl).Select(g => g.FirstOrDefault()).ToList();
 
-                if (csvProduct.SeoInfo.SemanticUrl != null)
-                {
-                    csvProduct.SeoInfo.LanguageCode = defaultLanguge;
-                    csvProduct.SeoInfo.SemanticUrl = csvProduct.SeoInfo.SemanticUrl;
-                }
-                else
-                {
-                    csvProduct.SeoInfos.Clear();
-                }
+                csvProduct.Reviews.ForEach(x => x.LanguageCode = defaultLanguge);
+                csvProduct.SeoInfos.ForEach(x => x.LanguageCode = defaultLanguge);
             }
         }
 
@@ -326,11 +318,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 {
                     lock (_lockObject)
                     {
-                        foreach (var validationError in validationEx.Errors)
+                        foreach (var validationErrorGroup in validationEx.Errors.GroupBy(x=>x.PropertyName))
                         {
-                            progressInfo.Errors.Add(validationError.ErrorMessage);
+                            string errorMessage = string.Join("; ", validationErrorGroup.Select(x => x.ErrorMessage));
+                            progressInfo.Errors.Add(errorMessage);
                             progressCallback(progressInfo);
-
                         }
                     }
                 }
@@ -356,7 +348,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
         }
 
-        private List<PropertyValue> TryToSplitMultivaluePropertyValues(CsvProduct csvProduct, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, ICollection<Property> modifiedProperties)
+        private List<PropertyValue> TryToSplitMultivaluePropertyValues(CsvProduct csvProduct, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, ICollection<Property> modifiedProperties, CsvImportInfo importInfo)
         {
             var result = new List<PropertyValue>();
 
@@ -369,7 +361,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 if (propValue.Value != null && propValue.Property != null && propValue.Property.Multivalue)
                 {
                     var multivalue = propValue.Value.ToString();
-                    var chars = new[] {','};
+                    var chars = new[] { ",", importInfo.Configuration.Delimiter };
                     var values = multivalue.Split(chars, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Distinct().ToArray();
 
                     foreach (var value in values)
