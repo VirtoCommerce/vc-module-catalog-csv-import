@@ -148,6 +148,25 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.Equal(defaultValue, product.Category.Path);
         }
 
+        [Fact]
+        public void CsvProductMapTest_MappingHasDefaultBoolValue_DefaultBoolValuesMapped()
+        {
+            var defaultValue = true;
+
+            var importInfo = new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() };
+            importInfo.Configuration.Delimiter = ",";
+
+            var categoryPathMapping = importInfo.Configuration.PropertyMaps.FirstOrDefault(x => x.EntityColumnName == "IsBuyable");
+            categoryPathMapping.CsvColumnName = null;
+            categoryPathMapping.CustomValue = defaultValue.ToString();
+
+            string path = @"../../data/product-productproperties.csv";
+            var csvProducts = ReadCsvFile(path, importInfo);
+            var product = csvProducts.FirstOrDefault();
+
+            Assert.True(product.IsBuyable);
+        }
+
         private List<CsvProduct> ReadCsvFile(string path, CsvImportInfo importInfo)
         {
             var csvProducts = new List<CsvProduct>();

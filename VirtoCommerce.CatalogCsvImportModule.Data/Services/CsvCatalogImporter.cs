@@ -132,9 +132,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             var catalog = _catalogService.GetById(importInfo.CatalogId);
 
-            csvProducts = MergeCsvProducts(csvProducts);
-
-            RemoveEmptyComplexObjects(csvProducts, catalog);
+            csvProducts = MergeCsvProducts(csvProducts, catalog);
 
             MergeFromAlreadyExistProducts(csvProducts, catalog);
            
@@ -158,18 +156,21 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return modifiedProperties;
         }
 
-        private List<CsvProduct> MergeCsvProducts(List<CsvProduct> csvProducts)
+        private List<CsvProduct> MergeCsvProducts(List<CsvProduct> csvProducts, Catalog catalog)
         {
             var mergedCsvProducts = new List<CsvProduct>();
             var groupedCsv = csvProducts.GroupBy(x => new { x.Code, x.Id });
             foreach (var group in groupedCsv)
             {
-                mergedCsvProducts.Add(MergeCsvProduct(group.ToList()));
+                mergedCsvProducts.Add(MergeCsvProductsGroup(group.ToList()));
             }
+
+            MergeCsvProductComplexObjects(mergedCsvProducts, catalog);
+
             return mergedCsvProducts;
         }
 
-        private CsvProduct MergeCsvProduct(List<CsvProduct> csvProducts)
+        private CsvProduct MergeCsvProductsGroup(List<CsvProduct> csvProducts)
         {
             var firstProduct = csvProducts.FirstOrDefault();
             if (firstProduct == null)
@@ -177,23 +178,28 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             firstProduct.Reviews = csvProducts.SelectMany(x => x.Reviews).ToList();
             firstProduct.SeoInfos = csvProducts.SelectMany(x => x.SeoInfos).ToList();
+            firstProduct.PropertyValues = csvProducts.SelectMany(x => x.PropertyValues).ToList();
+            firstProduct.Prices = csvProducts.SelectMany(x => x.Prices).ToList();
 
             return firstProduct;
         }
 
-        private void RemoveEmptyComplexObjects(List<CsvProduct> csvProducts, Catalog catalog)
+        private void MergeCsvProductComplexObjects(List<CsvProduct> csvProducts, Catalog catalog)
         {
             var defaultLanguge = catalog.DefaultLanguage != null ? catalog.DefaultLanguage.LanguageCode : "en-US";
             foreach (var csvProduct in csvProducts)
             {
-                csvProduct.Reviews = csvProduct.Reviews.Where(x => x.Content != null).ToList();
-                csvProduct.Reviews = csvProduct.Reviews.GroupBy(l => l.ReviewType).Select(g => g.FirstOrDefault()).ToList();
+                var reviews = csvProduct.Reviews.Where(x => x.Content != null).GroupBy(x => x.ReviewType).Select(g => g.FirstOrDefault()).ToList();
+                reviews.ForEach(x => x.LanguageCode = defaultLanguge);
+                csvProduct.Reviews = reviews;
 
-                csvProduct.SeoInfos = csvProduct.SeoInfos.Where(x => x.SemanticUrl != null).ToList();
-                csvProduct.SeoInfos = csvProduct.SeoInfos.GroupBy(l => l.SemanticUrl).Select(g => g.FirstOrDefault()).ToList();
+                var seoInfos = csvProduct.SeoInfos.Where(x => x.SemanticUrl != null).GroupBy(x => x.SemanticUrl).Select(g => g.FirstOrDefault()).ToList();
+                seoInfos.ForEach(x => x.LanguageCode = defaultLanguge);
+                csvProduct.SeoInfos = seoInfos;
 
-                csvProduct.Reviews.ForEach(x => x.LanguageCode = defaultLanguge);
-                csvProduct.SeoInfos.ForEach(x => x.LanguageCode = defaultLanguge);
+                csvProduct.PropertyValues = csvProduct.PropertyValues.GroupBy(x => new { x.PropertyName, x.Value }).Select(g => g.FirstOrDefault()).ToList();
+
+                csvProduct.Prices = csvProduct.Prices.Where(x => x.EffectiveValue > 0).GroupBy(x => x.Currency).Select(g => g.FirstOrDefault()).ToList();
             }
         }
 
@@ -278,9 +284,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         if (defaultFulfilmentCenter != null || product.Inventory.FulfillmentCenterId != null)
                         {
                             product.Inventory.ProductId = product.Id;
-                            product.Inventory.FulfillmentCenterId =
-                                product.Inventory.FulfillmentCenterId ?? defaultFulfilmentCenter.Id;
-                            product.Price.ProductId = product.Id;
+                            product.Inventory.FulfillmentCenterId = product.Inventory.FulfillmentCenterId ?? defaultFulfilmentCenter.Id;
                         }
                         else
                         {
@@ -302,14 +306,21 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                     //We do not have information about concrete price list id and therefore select first product price then
                     var existPrices = _pricingSearchService.SearchPrices(new Domain.Pricing.Model.Search.PricesSearchCriteria { ProductIds = productIds, Take = 1000 }).Results;
-                    products.ForEach(p => p.Price.ProductId = p.Id);
-                    var prices = products.Where(x => x.Price != null && x.Price.EffectiveValue > 0).Select(x => x.Price).ToArray();
+                    foreach (var product in products)
+                    {
+                        product.Prices.ForEach(p => p.ProductId = product.Id);
+                    }
+                    var prices = products.SelectMany(x => x.Prices).ToArray();
                     foreach (var price in prices)
                     {
                         var existPrice = existPrices.FirstOrDefault(x => x.Currency.EqualsInvariant(price.Currency) && x.ProductId.EqualsInvariant(price.ProductId));
                         if (existPrice != null)
                         {
-                            price.InjectFrom(existPrice);
+                            price.Id = existPrice.Id;
+                            price.Sale = price.Sale ?? existPrice.Sale;
+                            price.List = price.List == 0M ? existPrice.List : price.List;
+                            price.MinQuantity = existPrice.MinQuantity;
+                            price.PricelistId = existPrice.PricelistId;
                         }
                     }
                     _pricingService.SavePrices(prices);

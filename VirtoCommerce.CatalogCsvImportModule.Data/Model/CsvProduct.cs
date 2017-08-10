@@ -24,6 +24,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             Assets = new List<Asset>();
 
             Price = new Price { Currency = "USD" };
+            Prices = new List<Price> { Price };
             Inventory = new InventoryInfo();
             EditorialReview = new EditorialReview();
             Reviews = new List<EditorialReview> { EditorialReview };
@@ -75,7 +76,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         {
             get
             {
-                return Price.Sale != null ? Price.Sale.Value.ToString(CultureInfo.InvariantCulture) : null;
+                return Price.Sale?.ToString(CultureInfo.InvariantCulture);
             }
             set
             {

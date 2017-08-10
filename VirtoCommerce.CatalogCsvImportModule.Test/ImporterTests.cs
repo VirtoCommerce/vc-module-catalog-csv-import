@@ -650,6 +650,138 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.Collection(_savedProducts.FirstOrDefault().SeoInfos, inspectors);
         }
 
+        [Fact]
+        public void DoImport_UpdateProductsTwoProductsSamePropertyName_PropertyValuesMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+            existingProduct.PropertyValues = new List<PropertyValue>
+            {
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText },
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText },
+                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText }
+            };
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var firstProduct = GetCsvProductBase();
+            var secondProduct = GetCsvProductBase();
+
+            firstProduct.PropertyValues = new List<PropertyValue>
+            {
+                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText },
+                new PropertyValue { PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "1,2", ValueType = PropertyValueType.ShortText }
+            };
+
+            secondProduct.PropertyValues = new List<PropertyValue>
+            {
+                new PropertyValue { PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText },
+            };
+
+            var list = new List<CsvProduct> { firstProduct, secondProduct };
+
+            var progressInfo = new ExportImportProgressInfo();
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(list, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
+
+            //Assert
+            Action<PropertyValue>[] inspectors = {
+                x => Assert.True(x.PropertyName == "CatalogProductProperty_1_MultivalueDictionary" && (string) x.Value == "1"),
+                x => Assert.True(x.PropertyName == "CatalogProductProperty_1_MultivalueDictionary" && (string) x.Value == "2"),
+                x => Assert.True(x.PropertyName == "CatalogProductProperty_2_MultivalueDictionary" && (string) x.Value == "3"),
+                x => Assert.True(x.PropertyName == "TestCategory_ProductProperty_MultivalueDictionary" && (string) x.Value == "1"),
+                x => Assert.True(x.PropertyName == "TestCategory_ProductProperty_MultivalueDictionary" && (string) x.Value == "2"),
+                x => Assert.True(x.PropertyName == "TestCategory_ProductProperty_MultivalueDictionary" && (string) x.Value == "3")
+            };
+            Assert.Collection(_savedProducts.FirstOrDefault().PropertyValues, inspectors);
+            Assert.True(!progressInfo.Errors.Any());
+        }
+
+        [Fact]
+        public void DoImport_UpdateProductHasPrice_PriceUpdated()
+        {
+            //Arrange
+            var listPrice = 555.5m;
+            var existingPriceId = "ExistingPrice_ID";
+
+            var existingProduct = GetCsvProductBase();
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var firstProduct = GetCsvProductBase();
+            firstProduct.Prices = new List<Price> {new Price()
+            {
+                List = listPrice,
+                Sale = listPrice,
+                Currency = "EUR"
+            }};
+
+            _pricesInternal = new List<Price>()
+            {
+                new Price
+                {
+                    Currency = "EUR",
+                    PricelistId = "DefaultEUR",
+                    List = 333.3m,
+                    Id = existingPriceId,
+                    ProductId = firstProduct.Id
+                }
+            };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<Price>[] inspectors =
+            {
+                x => Assert.True(x.List == listPrice && x.Id == existingPriceId && x.ProductId == firstProduct.Id)
+            };
+            Assert.Collection(_pricesInternal, inspectors);
+        }
+
+        [Fact]
+        public void DoImport_UpdateProductsTwoProductDifferentPriceCurrency_PricesMerged()
+        {
+            //Arrange
+            var listPrice = 555.5m;
+            var salePrice = 666.6m;
+            var existingPriceId = "ExistingPrice_ID";
+
+            var existingProduct = GetCsvProductBase();
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var firstProduct = GetCsvProductBase();
+            firstProduct.Prices = new List<Price> { new Price { List = listPrice, Sale = salePrice, Currency = "EUR" } };
+
+            var secondProduct = GetCsvProductBase();
+            secondProduct.Prices = new List<Price> { new Price { List = listPrice, Sale = salePrice, Currency = "USD" } };
+
+            _pricesInternal = new List<Price>
+            {
+                new Price {Currency = "EUR",PricelistId = "DefaultEUR",List = 333.3m,Sale = 444.4m,Id = existingPriceId,ProductId = firstProduct.Id},
+                new Price {Currency = "USD",PricelistId = "DefaultUSD",List = 444.4m,Sale = 555.5m,Id = existingPriceId,ProductId = firstProduct.Id}
+            };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { firstProduct, secondProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<Price>[] inspectors =
+            {
+                x => Assert.True(x.List == listPrice && x.Sale == salePrice && x.Id == existingPriceId && x.ProductId == firstProduct.Id && x.Currency == "EUR"),
+                x => Assert.True(x.List == listPrice && x.Sale == salePrice && x.Id == existingPriceId && x.ProductId == firstProduct.Id && x.Currency == "USD")
+            };
+            Assert.Collection(_pricesInternal, inspectors);
+        }
+
         private CsvCatalogImporter GetImporter()
         {
             #region CatalogService
@@ -752,7 +884,17 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             #region PricingService
 
             var pricingService = new Mock<IPricingService>();
-            pricingService.Setup(x => x.SavePrices(It.IsAny<Price[]>())).Callback((Price[] prices) => { });
+            pricingService.Setup(x => x.SavePrices(It.IsAny<Price[]>())).Callback((Price[] prices) =>
+            {
+                _pricesInternal.RemoveAll(x => prices.Any(y => y.Id == x.Id));
+                foreach (var price in prices)
+                {
+                    if (price.Id == null)
+                        price.Id = Guid.NewGuid().ToString();
+                }
+
+                _pricesInternal.AddRange(prices);
+            });
 
             #endregion
 
@@ -792,7 +934,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 {
                     return new PricingSearchResult<Price>
                     {
-                        Results = _pricesInternal.Where(x => crietera.ProductIds.Contains(x.ProductId)).ToArray()
+                        Results = _pricesInternal.Where(x => crietera.ProductIds.Contains(x.ProductId)).Select(TestUtils.Clone).ToList()
                     };
                 });
 
