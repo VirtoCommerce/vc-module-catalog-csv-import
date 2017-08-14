@@ -24,6 +24,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             Assets = new List<Asset>();
 
             Price = new Price { Currency = "USD" };
+            Prices = new List<Price> { Price };
             Inventory = new InventoryInfo();
             EditorialReview = new EditorialReview();
             Reviews = new List<EditorialReview> { EditorialReview };
@@ -75,7 +76,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         {
             get
             {
-                return Price.Sale != null ? Price.Sale.Value.ToString(CultureInfo.InvariantCulture) : null;
+                return Price.Sale?.ToString(CultureInfo.InvariantCulture);
             }
             set
             {
@@ -213,7 +214,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
                     return null;
 
                 var parents = Category.Parents ?? new Category[] { };
-                return string.Join("/", parents.Select(x => x.Name).Concat(new[] { Category.Name }));
+                return string.Join("/", parents.Select(x => x.Path).Concat(new[] { Category.Path }));
             }
             set
             {
@@ -254,6 +255,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             get { return SeoInfo.MetaDescription; }
             set { SeoInfo.MetaDescription = value; }
         }
+
+        public int LineNumber { get; set; }
       
         /// <summary>
         /// Merge from other product, without any deletion, only update and create allowed

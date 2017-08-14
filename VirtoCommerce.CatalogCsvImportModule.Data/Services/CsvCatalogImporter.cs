@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CsvHelper;
+using Microsoft.Practices.ObjectBuilder2;
 using Omu.ValueInjecter;
 using VirtoCommerce.CatalogCsvImportModule.Data.Core;
 using VirtoCommerce.CatalogModule.Data.Repositories;
@@ -36,8 +38,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private readonly bool _createPropertyDictionatyValues;
 
-        public CsvCatalogImporter(ICatalogService catalogService, ICategoryService categoryService, IItemService productService,
-                                  ISkuGenerator skuGenerator,
+        public CsvCatalogImporter(ICatalogService catalogService, ICategoryService categoryService, IItemService productService, ISkuGenerator skuGenerator,
                                   IPricingService pricingService, IInventoryService inventoryService, ICommerceService commerceService,
                                   IPropertyService propertyService, ICatalogSearchService searchService, Func<ICatalogRepository> catalogRepositoryFactory, IPricingSearchService pricingSearchService,
                                   ISettingsManager settingsManager)
@@ -67,11 +68,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             };
             progressCallback(progressInfo);
 
-            using (var reader = new CsvReader(new StreamReader(inputStream)))
+            var encoding = DetectEncoding(inputStream);
+
+            using (var reader = new CsvReader(new StreamReader(inputStream, encoding)))
             {
                 reader.Configuration.Delimiter = importInfo.Configuration.Delimiter;
                 reader.Configuration.RegisterClassMap(new CsvProductMap(importInfo.Configuration));
                 reader.Configuration.WillThrowOnMissingField = false;
+                reader.Configuration.TrimFields = true;
 
                 while (reader.Read())
                 {
@@ -96,50 +100,117 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             DoImport(csvProducts, importInfo, progressInfo, progressCallback);
         }
 
+        private Encoding DetectEncoding(Stream stream)
+        {
+            var encoding = Encoding.UTF8;
+
+            Ude.CharsetDetector cdet = new Ude.CharsetDetector();
+            cdet.Feed(stream);
+            cdet.DataEnd();
+            if (cdet.Charset != null)
+            {
+                encoding = GetEncodingFromString(cdet.Charset);
+            }
+
+            stream.Position = 0;
+            return encoding;
+        }
+
+        private Encoding GetEncodingFromString(string encoding)
+        {
+            try
+            {
+                return Encoding.GetEncoding(encoding);
+            }
+            catch
+            {
+                return Encoding.UTF8;
+            }
+        }
+
         public void DoImport(List<CsvProduct> csvProducts, CsvImportInfo importInfo, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
             var catalog = _catalogService.GetById(importInfo.CatalogId);
 
-            RemoveEmptyComplexObjects(csvProducts, catalog);
+            csvProducts = MergeCsvProducts(csvProducts, catalog);
 
             MergeFromAlreadyExistProducts(csvProducts, catalog);
-
+           
             SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
 
-            ICollection<Property> modifiedProperties;
-            LoadProductDependencies(csvProducts, catalog, out modifiedProperties, progressInfo, progressCallback);
+            var modifiedProperties = LoadProductDependencies(csvProducts, catalog, progressInfo, progressCallback);
+            modifiedProperties.AddRange(TryToSplitMultivaluePropertyValues(csvProducts, progressInfo, progressCallback, importInfo));
 
-            progressInfo.Description = "Saving property dictionary values...";
-            progressCallback(progressInfo);
-            _propertyService.Update(modifiedProperties.ToArray());
-
+            SaveProperties(modifiedProperties, progressInfo, progressCallback);
             SaveProducts(csvProducts, progressInfo, progressCallback);
         }
 
-        private void RemoveEmptyComplexObjects(List<CsvProduct> csvProducts, Catalog catalog)
+        private ICollection<Property> TryToSplitMultivaluePropertyValues(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, CsvImportInfo importInfo)
+        {
+            var modifiedProperties = new List<Property>();
+            foreach (var csvProduct in csvProducts)
+            {
+                //Try to detect and split single property value in to multiple values for multivalue properties 
+                csvProduct.PropertyValues = TryToSplitMultivaluePropertyValues(csvProduct, progressInfo, progressCallback, modifiedProperties, importInfo);
+            }
+            return modifiedProperties;
+        }
+
+        private List<CsvProduct> MergeCsvProducts(List<CsvProduct> csvProducts, Catalog catalog)
+        {
+            var mergedCsvProducts = new List<CsvProduct>();
+            var groupedCsv = csvProducts.GroupBy(x => new { x.Code, x.Id });
+            foreach (var group in groupedCsv)
+            {
+                mergedCsvProducts.Add(MergeCsvProductsGroup(group.ToList()));
+            }
+
+            MergeCsvProductComplexObjects(mergedCsvProducts, catalog);
+
+            return mergedCsvProducts;
+        }
+
+        private CsvProduct MergeCsvProductsGroup(List<CsvProduct> csvProducts)
+        {
+            var firstProduct = csvProducts.FirstOrDefault();
+            if (firstProduct == null)
+                return null;
+
+            firstProduct.Reviews = csvProducts.SelectMany(x => x.Reviews).ToList();
+            firstProduct.SeoInfos = csvProducts.SelectMany(x => x.SeoInfos).ToList();
+            firstProduct.PropertyValues = csvProducts.SelectMany(x => x.PropertyValues).ToList();
+            firstProduct.Prices = csvProducts.SelectMany(x => x.Prices).ToList();
+
+            return firstProduct;
+        }
+
+        private void MergeCsvProductComplexObjects(List<CsvProduct> csvProducts, Catalog catalog)
         {
             var defaultLanguge = catalog.DefaultLanguage != null ? catalog.DefaultLanguage.LanguageCode : "en-US";
             foreach (var csvProduct in csvProducts)
             {
-                if (csvProduct.EditorialReview.Content != null)
-                {
-                    csvProduct.EditorialReview.LanguageCode = defaultLanguge;
-                }
-                else
-                {
-                    csvProduct.Reviews.Clear();
-                }
+                var reviews = csvProduct.Reviews.Where(x => x.Content != null).GroupBy(x => x.ReviewType).Select(g => g.FirstOrDefault()).ToList();
+                reviews.ForEach(x => x.LanguageCode = defaultLanguge);
+                csvProduct.Reviews = reviews;
 
-                if (csvProduct.SeoInfo.SemanticUrl != null)
-                {
-                    csvProduct.SeoInfo.LanguageCode = defaultLanguge;
-                    csvProduct.SeoInfo.SemanticUrl = csvProduct.SeoInfo.SemanticUrl;
-                }
-                else
-                {
-                    csvProduct.SeoInfos.Clear();
-                }
+                var seoInfos = csvProduct.SeoInfos.Where(x => x.SemanticUrl != null).GroupBy(x => x.SemanticUrl).Select(g => g.FirstOrDefault()).ToList();
+                seoInfos.ForEach(x => x.LanguageCode = defaultLanguge);
+                csvProduct.SeoInfos = seoInfos;
+
+                csvProduct.PropertyValues = csvProduct.PropertyValues.GroupBy(x => new { x.PropertyName, x.Value }).Select(g => g.FirstOrDefault()).ToList();
+
+                csvProduct.Prices = csvProduct.Prices.Where(x => x.EffectiveValue > 0).GroupBy(x => x.Currency).Select(g => g.FirstOrDefault()).ToList();
             }
+        }
+
+        private void SaveProperties(ICollection<Property> modifiedProperties, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
+        {
+            if (!modifiedProperties.Any())
+                return;
+
+            progressInfo.Description = "Saving property dictionary values...";
+            progressCallback(progressInfo);
+            _propertyService.Update(modifiedProperties.ToArray());
         }
 
         /// <summary>
@@ -196,16 +267,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             var defaultFulfilmentCenter = _commerceService.GetAllFulfillmentCenters().FirstOrDefault();
 
-            ICollection<Property> modifiedProperties = new List<Property>();
-            foreach (var csvProduct in csvProducts)
-            {
-                //Try to detect and split single property value in to multiple values for multivalue properties 
-                csvProduct.PropertyValues = TryToSplitMultivaluePropertyValues(csvProduct, progressInfo, progressCallback, modifiedProperties);
-            }
-            progressInfo.Description = "Saving property dictionary values...";
-            progressCallback(progressInfo);
-            _propertyService.Update(modifiedProperties.ToArray());
-
             var totalProductsCount = csvProducts.Count();
             //Order to save main products first then variations
             csvProducts = csvProducts.OrderBy(x => x.MainProductId != null).ToList();
@@ -224,7 +285,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         {
                             product.Inventory.ProductId = product.Id;
                             product.Inventory.FulfillmentCenterId = product.Inventory.FulfillmentCenterId ?? defaultFulfilmentCenter.Id;
-                            product.Price.ProductId = product.Id;
                         }
                         else
                         {
@@ -239,24 +299,51 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         var exitsInventory = existInventories.FirstOrDefault(x => x.ProductId == inventory.ProductId && x.FulfillmentCenterId == inventory.FulfillmentCenterId);
                         if (exitsInventory != null)
                         {
-                            inventory.InjectFrom(exitsInventory);
+                            inventory.ProductId = exitsInventory.ProductId;
+                            inventory.FulfillmentCenterId = exitsInventory.FulfillmentCenterId;
+                            inventory.AllowBackorder = exitsInventory.AllowBackorder;
+                            inventory.AllowPreorder = exitsInventory.AllowPreorder;
+                            inventory.BackorderAvailabilityDate = exitsInventory.BackorderAvailabilityDate;
+                            inventory.BackorderQuantity = exitsInventory.BackorderQuantity;
+                            inventory.InTransit  = exitsInventory.InTransit;
+
+                            inventory.InStockQuantity = inventory.InStockQuantity == 0 ? exitsInventory.InStockQuantity : inventory.InStockQuantity;
                         }
                     }
                     _inventoryService.UpsertInventories(inventories);
 
                     //We do not have information about concrete price list id and therefore select first product price then
                     var existPrices = _pricingSearchService.SearchPrices(new Domain.Pricing.Model.Search.PricesSearchCriteria { ProductIds = productIds, Take = 1000 }).Results;
-                    products.ForEach(p => p.Price.ProductId = p.Id);
-                    var prices = products.Where(x => x.Price != null && x.Price.EffectiveValue > 0).Select(x => x.Price).ToArray();
+                    foreach (var product in products)
+                    {
+                        product.Prices.ForEach(p => p.ProductId = product.Id);
+                    }
+                    var prices = products.SelectMany(x => x.Prices).ToArray();
                     foreach (var price in prices)
                     {
                         var existPrice = existPrices.FirstOrDefault(x => x.Currency.EqualsInvariant(price.Currency) && x.ProductId.EqualsInvariant(price.ProductId));
                         if (existPrice != null)
                         {
-                            price.InjectFrom(existPrice);
+                            price.Id = existPrice.Id;
+                            price.Sale = price.Sale ?? existPrice.Sale;
+                            price.List = price.List == 0M ? existPrice.List : price.List;
+                            price.MinQuantity = existPrice.MinQuantity;
+                            price.PricelistId = existPrice.PricelistId;
                         }
                     }
                     _pricingService.SavePrices(prices);
+                }
+                catch (FluentValidation.ValidationException validationEx)
+                {
+                    lock (_lockObject)
+                    {
+                        foreach (var validationErrorGroup in validationEx.Errors.GroupBy(x=>x.PropertyName))
+                        {
+                            string errorMessage = string.Join("; ", validationErrorGroup.Select(x => x.ErrorMessage));
+                            progressInfo.Errors.Add(errorMessage);
+                            progressCallback(progressInfo);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -280,7 +367,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
         }
 
-        private List<PropertyValue> TryToSplitMultivaluePropertyValues(CsvProduct csvProduct, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, ICollection<Property> modifiedProperties)
+        private List<PropertyValue> TryToSplitMultivaluePropertyValues(CsvProduct csvProduct, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, ICollection<Property> modifiedProperties, CsvImportInfo importInfo)
         {
             var result = new List<PropertyValue>();
 
@@ -293,7 +380,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 if (propValue.Value != null && propValue.Property != null && propValue.Property.Multivalue)
                 {
                     var multivalue = propValue.Value.ToString();
-                    var chars = new[] {','}; 
+                    var chars = new[] { ",", importInfo.Configuration.Delimiter };
                     var values = multivalue.Split(chars, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Distinct().ToArray();
 
                     foreach (var value in values)
@@ -324,7 +411,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                                 }
                                 else
                                 {
-                                    progressInfo.Errors.Add($"Proderty value '{value}' not found in '{propValue.Property.Name}' dictionary");
+                                    progressInfo.Errors.Add($"Proderty value '{value}' not found in '{propValue.Property.Name}' dictionary for {csvProduct.Code}, line {csvProduct.LineNumber}");
                                     progressCallback(progressInfo);
                                 }
                             }
@@ -341,9 +428,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return result;
         }
 
-        private void LoadProductDependencies(IEnumerable<CsvProduct> csvProducts, Catalog catalog, out ICollection<Property> modifiedProperties, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
+        private ICollection<Property> LoadProductDependencies(IEnumerable<CsvProduct> csvProducts, Catalog catalog, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-            modifiedProperties = new List<Property>();
+            var modifiedProperties = new List<Property>();
             var allCategoriesIds = csvProducts.Select(x => x.CategoryId).Distinct().ToArray();
             var categoriesMap = _categoryService.GetByIds(allCategoriesIds, CategoryResponseGroup.Full).ToDictionary(x => x.Id);
 
@@ -399,7 +486,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                                 }
                                 else
                                 {
-                                    progressInfo.Errors.Add($"Proderty value '{propertyValue.Value}' not found in '{propertyValue.Property.Name}' dictionary");
+                                    progressInfo.Errors.Add($"Proderty value '{propertyValue.Value}' not found in '{propertyValue.Property.Name}' dictionary for {csvProduct.Code}, line {csvProduct.LineNumber}");
                                     progressCallback(progressInfo);
                                 }
                             }
@@ -408,6 +495,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     }
                 }
             }
+
+            return modifiedProperties;
         }
 
         //Merge importing products with already exist to prevent erasing already exist data, import should only update or create data
@@ -427,7 +516,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             using (var repository = _catalogRepositoryFactory())
             {
                 var products = repository.Items.Where(x => x.CatalogId == catalog.Id && transientProductsCodes.Contains(x.Code));
-                var foundProducts = products.Select(x => new { Id = x.Id, Code = x.Code }).ToArray();
+                var foundProducts = products.Select(x => new { x.Id, x.Code }).ToArray();
                 for (int i = 0; i < foundProducts.Count(); i += 50)
                 {
                     alreadyExistProducts.AddRange(_productService.GetByIds(foundProducts.Skip(i).Take(50).Select(x => x.Id).ToArray(), ItemResponseGroup.ItemLarge));
