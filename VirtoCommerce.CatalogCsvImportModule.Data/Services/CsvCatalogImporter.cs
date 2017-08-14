@@ -299,7 +299,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         var exitsInventory = existInventories.FirstOrDefault(x => x.ProductId == inventory.ProductId && x.FulfillmentCenterId == inventory.FulfillmentCenterId);
                         if (exitsInventory != null)
                         {
-                            inventory.InjectFrom(exitsInventory);
+                            inventory.ProductId = exitsInventory.ProductId;
+                            inventory.FulfillmentCenterId = exitsInventory.FulfillmentCenterId;
+                            inventory.AllowBackorder = exitsInventory.AllowBackorder;
+                            inventory.AllowPreorder = exitsInventory.AllowPreorder;
+                            inventory.BackorderAvailabilityDate = exitsInventory.BackorderAvailabilityDate;
+                            inventory.BackorderQuantity = exitsInventory.BackorderQuantity;
+                            inventory.InTransit  = exitsInventory.InTransit;
+
+                            inventory.InStockQuantity = inventory.InStockQuantity == 0 ? exitsInventory.InStockQuantity : inventory.InStockQuantity;
                         }
                     }
                     _inventoryService.UpsertInventories(inventories);
@@ -508,7 +516,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             using (var repository = _catalogRepositoryFactory())
             {
                 var products = repository.Items.Where(x => x.CatalogId == catalog.Id && transientProductsCodes.Contains(x.Code));
-                var foundProducts = products.Select(x => new { Id = x.Id, Code = x.Code }).ToArray();
+                var foundProducts = products.Select(x => new { x.Id, x.Code }).ToArray();
                 for (int i = 0; i < foundProducts.Count(); i += 50)
                 {
                     alreadyExistProducts.AddRange(_productService.GetByIds(foundProducts.Skip(i).Take(50).Select(x => x.Id).ToArray(), ItemResponseGroup.ItemLarge));
