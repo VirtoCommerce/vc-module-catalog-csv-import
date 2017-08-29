@@ -782,6 +782,47 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.Collection(_pricesInternal, inspectors);
         }
 
+
+        [Fact]
+        public void DoImport_UpdateProducts_OnlyExistringProductsMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var product1 = GetCsvProductBase();
+            product1.Id = null;
+
+            var product2 = GetCsvProductBase();
+            product2.Id = null;
+            
+            var product3 = GetCsvProductBase();
+            product3.Code = null;
+            product3.Id = null;
+
+            var product4 = GetCsvProductBase();
+            product4.Code = null;
+            product4.Id = null;
+
+            var list = new List<CsvProduct> { product1, product2, product3, product4 };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<CatalogProduct>[] inspectors = {
+                x => Assert.True(x.Code == "TST1" && x.Id == "1"),
+                x => Assert.True(x.Code != "TST1"),
+                x => Assert.True(x.Code != "TST1")
+            };
+            Assert.Collection(_savedProducts, inspectors);
+        }
+
         private CsvCatalogImporter GetImporter()
         {
             #region CatalogService

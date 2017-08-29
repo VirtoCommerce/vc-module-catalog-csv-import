@@ -159,7 +159,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private List<CsvProduct> MergeCsvProducts(List<CsvProduct> csvProducts, Catalog catalog)
         {
             var mergedCsvProducts = new List<CsvProduct>();
-            var groupedCsv = csvProducts.GroupBy(x => new { x.Code, x.Id });
+
+            var haveCodeProducts = csvProducts.Where(x => !string.IsNullOrEmpty(x.Code)).ToList();
+            csvProducts = csvProducts.Except(haveCodeProducts).ToList();
+
+            var groupedCsv = haveCodeProducts.GroupBy(x => new { x.Code });
             foreach (var group in groupedCsv)
             {
                 mergedCsvProducts.Add(MergeCsvProductsGroup(group.ToList()));
@@ -167,6 +171,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             MergeCsvProductComplexObjects(mergedCsvProducts, catalog);
 
+            mergedCsvProducts.AddRange(csvProducts);
             return mergedCsvProducts;
         }
 
