@@ -135,7 +135,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             csvProducts = MergeCsvProducts(csvProducts, catalog);
 
             MergeFromAlreadyExistProducts(csvProducts, catalog);
-           
+
             SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
 
             var modifiedProperties = LoadProductDependencies(csvProducts, catalog, progressInfo, progressCallback);
@@ -278,10 +278,23 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             for (int i = 0; i < totalProductsCount; i += 10)
             {
                 var products = csvProducts.Skip(i).Take(10).ToList();
+                List<CsvProduct> upadeCsvProducts = new List<CsvProduct>();
                 try
                 {
                     //Save main products first and then variations
                     _productService.Update(products.ToArray());
+
+                    //Update MainProductId for products as variation product.Code
+                    foreach (var product in products)
+                    {
+                        if (product.MainProduct != null && product.MainProductId == null)
+                        {
+                            product.MainProductId = product.MainProduct.Id;
+                            upadeCsvProducts.Add(product);
+                        }
+                    }
+                    if (upadeCsvProducts.Count > 0)
+                        _productService.Update(upadeCsvProducts.ToArray());
 
                     //Set productId for dependent objects
                     foreach (var product in products)
@@ -534,7 +547,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 {
                     csvProduct.MergeFrom(existProduct);
                 }
-            }           
+            }
 
         }
     }
