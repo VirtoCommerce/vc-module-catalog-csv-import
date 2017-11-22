@@ -173,6 +173,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             MergeCsvProductComplexObjects(mergedCsvProducts, defaultLanguge);
 
             csvProducts.SelectMany(x=>x.SeoInfos).Where(y => y.LanguageCode.IsNullOrEmpty()).ForEach(z=>z.LanguageCode = defaultLanguge);
+            csvProducts.SelectMany(x=>x.Reviews).Where(y => y.LanguageCode.IsNullOrEmpty()).ForEach(x => x.LanguageCode = defaultLanguge);
+
             mergedCsvProducts.AddRange(csvProducts);
             return mergedCsvProducts;
         }
