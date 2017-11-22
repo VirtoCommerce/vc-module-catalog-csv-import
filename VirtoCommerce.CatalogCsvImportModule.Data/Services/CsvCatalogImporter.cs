@@ -169,8 +169,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 mergedCsvProducts.Add(MergeCsvProductsGroup(group.ToList()));
             }
 
-            MergeCsvProductComplexObjects(mergedCsvProducts, catalog);
+            var defaultLanguge = GetDefaultLanguage(catalog);
+            MergeCsvProductComplexObjects(mergedCsvProducts, defaultLanguge);
 
+            csvProducts.SelectMany(x=>x.SeoInfos).Where(y => y.LanguageCode.IsNullOrEmpty()).ForEach(z=>z.LanguageCode = defaultLanguge);
             mergedCsvProducts.AddRange(csvProducts);
             return mergedCsvProducts;
         }
@@ -189,23 +191,27 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return firstProduct;
         }
 
-        private void MergeCsvProductComplexObjects(List<CsvProduct> csvProducts, Catalog catalog)
+        private void MergeCsvProductComplexObjects(List<CsvProduct> csvProducts, string defaultLanguge)
         {
-            var defaultLanguge = catalog.DefaultLanguage != null ? catalog.DefaultLanguage.LanguageCode : "en-US";
             foreach (var csvProduct in csvProducts)
             {
                 var reviews = csvProduct.Reviews.Where(x => x.Content != null).GroupBy(x => x.ReviewType).Select(g => g.FirstOrDefault()).ToList();
-                reviews.ForEach(x => x.LanguageCode = defaultLanguge);
+                reviews.Where(x=>x.LanguageCode.IsNullOrEmpty()).ForEach(x => x.LanguageCode = defaultLanguge);
                 csvProduct.Reviews = reviews;
 
                 var seoInfos = csvProduct.SeoInfos.Where(x => x.SemanticUrl != null).GroupBy(x => x.SemanticUrl).Select(g => g.FirstOrDefault()).ToList();
-                seoInfos.ForEach(x => x.LanguageCode = defaultLanguge);
+                seoInfos.Where(x => x.LanguageCode.IsNullOrEmpty()).ForEach(x => x.LanguageCode = defaultLanguge);
                 csvProduct.SeoInfos = seoInfos;
 
                 csvProduct.PropertyValues = csvProduct.PropertyValues.GroupBy(x => new { x.PropertyName, x.Value }).Select(g => g.FirstOrDefault()).ToList();
 
                 csvProduct.Prices = csvProduct.Prices.Where(x => x.EffectiveValue > 0).GroupBy(x => x.Currency).Select(g => g.FirstOrDefault()).ToList();
             }
+        }
+
+        private string GetDefaultLanguage(Catalog catalog)
+        {
+            return catalog.DefaultLanguage != null ? catalog.DefaultLanguage.LanguageCode : "en-US";
         }
 
         private void SaveProperties(ICollection<Property> modifiedProperties, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
