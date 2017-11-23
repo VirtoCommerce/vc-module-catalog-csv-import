@@ -313,7 +313,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             }
             PropertyValues = product.PropertyValues.Concat(PropertyValues).ToList();
 
-            var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode));
+            var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode?.ToLower()));
             SeoInfos = SeoInfos.Where(x=>!x.SemanticUrl.IsNullOrEmpty()).Concat(product.SeoInfos).Distinct(seoComparer).ToList();
         }
     }
