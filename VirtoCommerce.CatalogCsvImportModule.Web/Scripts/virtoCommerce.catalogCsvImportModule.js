@@ -32,8 +32,8 @@ angular.module(moduleTemplateName, [])
             action: function (notify) {
                 var blade = {
                     id: 'CatalogCsvExportDetail',
-                    title: 'catalog export detail',
-                    subtitle: 'detail',
+                    title: 'catalogCsvImportModule.blades.history.export.title',
+                    subtitle: 'catalogCsvImportModule.blades.history.export.subtitle',
                     template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/export/catalog-CSV-export.tpl.html',
                     controller: 'virtoCommerce.catalogCsvImportModule.catalogCSVexportController',
                     notification: notify
@@ -61,8 +61,8 @@ angular.module(moduleTemplateName, [])
             action: function (notify) {
                 var blade = {
                     id: 'CatalogCsvImportDetail',
-                    title: 'catalog import detail',
-                    subtitle: 'detail',
+                    title: 'catalogCsvImportModule.blades.history.import.title',
+                    subtitle: 'catalogCsvImportModule.blades.history.import.title',
                     template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/import/catalog-CSV-import.tpl.html',
                     controller: 'virtoCommerce.catalogCsvImportModule.catalogCSVimportController',
                     notification: notify

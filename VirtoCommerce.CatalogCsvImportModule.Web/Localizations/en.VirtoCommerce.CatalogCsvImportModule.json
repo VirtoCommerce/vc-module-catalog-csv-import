@@ -31,16 +31,26 @@
         }
       },
       "catalog-CSV-import": {
-        "title": "Importing from csv",
-        "labels": {
-          "select-fulfillment": "Select fulfillment center for exported inventory",
-          "select-pricelist": "Select price list for exported prices",
-          "start": "Start",
-          "end": "End",
-          "total": "Total count",
-          "processed": "Processed count",
-          "errors-count": "Error count",
-          "errors": "Errors"
+            "title": "Importing from csv",
+            "labels": {
+                "select-fulfillment": "Select fulfillment center for exported inventory",
+                "select-pricelist": "Select price list for exported prices",
+                "start": "Start",
+                "end": "End",
+                "total": "Total count",
+                "processed": "Processed count",
+                "errors-count": "Error count",
+                "errors": "Errors"
+            }
+        },
+      "history": {
+        "export": {
+            "title": "catalog export detail",
+            "subtitle": "detail"
+        },
+        "import": {
+            "title": "catalog import detail",
+            "subtitle": "detail"
         }
       }
     },

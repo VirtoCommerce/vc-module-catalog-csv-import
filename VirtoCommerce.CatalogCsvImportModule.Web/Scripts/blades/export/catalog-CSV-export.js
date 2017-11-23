@@ -6,7 +6,7 @@
         blade.fulfilmentCenterId = undefined;
         blade.pricelistId = undefined;
         blade.isLoading = false;
-        blade.title = 'catalog.blades.catalog-CSV-export.title';
+        blade.title = 'catalogCsvImportModule.blades.catalog-CSV-export.title';
         blade.titleValues = { name: blade.catalog ? blade.catalog.name : '' };
 
         $scope.$on("new-notification-event", function (event, notification) {
