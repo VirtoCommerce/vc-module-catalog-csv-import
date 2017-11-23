@@ -256,6 +256,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             set { SeoInfo.MetaDescription = value; }
         }
 
+        public string SeoLanguage
+        {
+            get { return SeoInfo.LanguageCode; }
+            set { SeoInfo.LanguageCode = value; }
+        }
+
         public int LineNumber { get; set; }
       
         /// <summary>
