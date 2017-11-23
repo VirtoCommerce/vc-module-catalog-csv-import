@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CsvHelper;
+using CsvHelper.Configuration;
 using VirtoCommerce.CatalogCsvImportModule.Data.Model;
 using VirtoCommerce.CatalogCsvImportModule.Data.Services;
 using VirtoCommerce.Domain.Catalog.Model;
@@ -167,6 +168,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.True(product.IsBuyable);
         }
 
+        [Fact]
+        public void CsvProductMapTest_CsvHasMultipleLines_LineNumberMapTest()
+        {
+            var importInfo = new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() };
+            importInfo.Configuration.Delimiter = ",";
+
+            string path = @"../../data/product-productproperties-twoproducts.csv";
+            var csvProducts = ReadCsvFile(path, importInfo);
+
+            Assert.Equal(2, csvProducts[0].LineNumber);
+            Assert.Equal(3, csvProducts[1].LineNumber);
+        }
+
         private List<CsvProduct> ReadCsvFile(string path, CsvImportInfo importInfo)
         {
             var csvProducts = new List<CsvProduct>();
@@ -176,8 +190,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 {
                     reader.Configuration.Delimiter = importInfo.Configuration.Delimiter;
                     reader.Configuration.RegisterClassMap(new CsvProductMap(importInfo.Configuration));
-                    reader.Configuration.WillThrowOnMissingField = false;
-                    reader.Configuration.TrimFields = true;
+                    reader.Configuration.MissingFieldFound = (strings, i, arg3) =>
+                    {
+                        //do nothing
+                    };
+                    reader.Configuration.TrimOptions = TrimOptions.Trim;
+                    reader.Configuration.HeaderValidated = null;
 
                     while (reader.Read())
                     {

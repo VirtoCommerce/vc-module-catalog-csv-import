@@ -132,7 +132,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                 reader.Configuration.Delimiter = delimiter;
                 if (reader.Read())
                 {
-                    retVal.AutoMap(reader.FieldHeaders);
+                    if (reader.ReadHeader())
+                    {
+                        retVal.AutoMap(reader.Context.HeaderRecord);
+                    }
                 }
             }
 
