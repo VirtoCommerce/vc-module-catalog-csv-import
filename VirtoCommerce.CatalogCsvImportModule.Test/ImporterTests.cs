@@ -169,7 +169,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             var product = GetCsvProductBase();
             product.Category = null;
-            
+
             var target = GetImporter();
 
             //Act
@@ -255,7 +255,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             };
 
             var target = GetImporter();
-            
+
             //Act
             target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, new ExportImportProgressInfo(), info => { });
 
@@ -399,7 +399,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
         [Fact]
         public void DoImport_UpdateProductReviewIsEmpty_ReviewsNotClearedUp()
-{
+        {
             //Arrange
             var existingProduct = GetCsvProductBase();
             existingProduct.PropertyValues = new List<PropertyValue>();
@@ -439,7 +439,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var existringCategory = CreateCategory(existingProduct);
             _categoriesInternal.Add(existringCategory);
 
-            var firstProduct = GetCsvProductBase();           
+            var firstProduct = GetCsvProductBase();
             var secondProduct = GetCsvProductBase();
             firstProduct.Id = null;
             secondProduct.Id = null;
@@ -528,7 +528,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             _productsInternal = new List<CatalogProduct> { existingProduct };
             existingProduct.Reviews = new List<EditorialReview>() { new EditorialReview() { Content = "Review Content 3", Id = "1", LanguageCode = "en-US", ReviewType = "QuickReview"} };
-            
+
             var existringCategory = CreateCategory(existingProduct);
             _categoriesInternal.Add(existringCategory);
 
@@ -798,7 +798,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             var product2 = GetCsvProductBase();
             product2.Id = null;
-            
+
             var product3 = GetCsvProductBase();
             product3.Code = null;
             product3.Id = null;
@@ -822,6 +822,43 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             };
             Assert.Collection(_savedProducts, inspectors);
         }
+
+        [Fact]
+        public void DoImport_NewProductWithVariationsProductUseSku()
+        {
+            //Arrange
+            var mainProduct = GetCsvProductBase();
+            var variationProduct = GetCsvProductWithMainProduct(mainProduct.Sku);
+
+            var target = GetImporter();
+
+            var exportInfo = new ExportImportProgressInfo();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { mainProduct, variationProduct }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
+
+            //Assert
+            Assert.True(variationProduct.MainProductId == mainProduct.Id);
+        }
+
+        [Fact]
+        public void DoImport_NewProductWithVariationsProductUseId()
+        {
+            //Arrange
+            var mainProduct = GetCsvProductBase();
+            var variationProduct = GetCsvProductWithMainProduct(mainProduct.Id);
+
+            var target = GetImporter();
+
+            var exportInfo = new ExportImportProgressInfo();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { mainProduct, variationProduct }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
+
+            //Assert
+            Assert.True(variationProduct.MainProductId == mainProduct.Id);
+        }
+
 
         private CsvCatalogImporter GetImporter()
         {
@@ -858,7 +895,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                             category.Properties = new List<Property>();
 
                         //emulate catalog property inheritance
-                        category.Properties.AddRange(_catalog.Properties); 
+                        category.Properties.AddRange(_catalog.Properties);
                     }
                     return result.ToArray();
                 });
@@ -1249,6 +1286,35 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 Quantity = "0",
                 Sku = "TST1",
                 TrackInventory = true
+            };
+        }
+
+        private static CsvProduct GetCsvProductWithMainProduct(string mainProductIdOrSku)
+        {
+            var seoInfo = new SeoInfo { ObjectType = "CatalogProduct" };
+            var review = new EditorialReview();
+            return new CsvProduct
+            {
+                Category = new Category
+                {
+                    Parents = new Category[] { },
+                    Path = "TestCategory"
+                },
+                Code = "TST2",
+                Currency = "USD",
+                EditorialReview = review,
+                Reviews = new List<EditorialReview> { review },
+                Id = "2",
+                ListPrice = "100",
+                Inventory = new InventoryInfo(),
+                SeoInfo = seoInfo,
+                SeoInfos = new List<SeoInfo> { seoInfo },
+                Name = "TST2-TestCategory",
+                Price = new Price(),
+                Quantity = "0",
+                Sku = "TST2",
+                TrackInventory = true,
+                MainProductId = mainProductIdOrSku
             };
         }
 
