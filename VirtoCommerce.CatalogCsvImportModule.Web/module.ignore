@@ -1,5 +1,4 @@
 ﻿VirtoCommerce.Domain.dll
-CsvHelper.dll
 FluentValidation.dll
 VirtoCommerce.CatalogModule.Data.dll
 VirtoCommerce.CatalogModule.Web.Core.dll

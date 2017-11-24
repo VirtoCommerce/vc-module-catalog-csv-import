@@ -1,6 +1,8 @@
 ﻿using System;
+using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using VirtoCommerce.Platform.Core.Common;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 {
@@ -34,12 +36,45 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             return OutExpression((T)value);
         }
+
+        #region Implementation of ITypeConverter
+
+        public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+        {
+            if (value == null)
+            {
+                return string.Empty;
+            }
+
+            if (OutExpression != null)
+            {
+                return OutExpression((T)value);
+            }
+
+            return value.ToString();
+            //return string.Empty;
+        }
+
+        public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+        {
+            if (text.IsNullOrEmpty())
+                return null;
+
+            if (InExpression != null)
+            {
+                return InExpression(text);
+            }
+
+            return null;
+        }
+
+        #endregion
     }
 
     public static class CsvHelperExtensions
     {
         [CLSCompliant(false)]
-        public static CsvPropertyMap UsingExpression<T>(this CsvPropertyMap map, Func<string, T> readExpression,
+        public static MemberMap UsingExpression<T>(this MemberMap map, Func<string, T> readExpression,
             Func<T, string> writeExpression)
         {
             return map.TypeConverter(new ExpressionConverter<T>(readExpression, writeExpression));
