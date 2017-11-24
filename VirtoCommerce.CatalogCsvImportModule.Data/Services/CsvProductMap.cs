@@ -29,8 +29,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     //var newMap = new CsvPropertyMap(propertyInfo);
                     newMap.Data.TypeConverterOptions.CultureInfo = CultureInfo.InvariantCulture;
                     newMap.Data.TypeConverterOptions.NumberStyle = NumberStyles.Any;
-                    newMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(new List<string>() { "yes", "true" });
-                    newMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange(new List<string>() { "false", "no" });
+                    newMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange(new List<string>() { "yes", "true" });
+                    newMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(new List<string>() { "false", "no" });
 
                     newMap.Data.Index = ++index;
 

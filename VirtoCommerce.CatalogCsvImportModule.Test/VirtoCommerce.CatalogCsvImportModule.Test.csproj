@@ -139,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="data\product-productproperties-boolean.csv" />
     <None Include="data\product-productproperties-noCategoryPath.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

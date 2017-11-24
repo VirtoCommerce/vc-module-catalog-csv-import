@@ -171,6 +171,24 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
+        public void CsvProductMapTest_CsvHasBooleanValues_BooleanFieldsMapped()
+        {
+            var importInfo = new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() };
+            importInfo.Configuration.Delimiter = ",";
+
+            string path = @"../../data/product-productproperties-boolean.csv";
+            var csvProducts = ReadCsvFile(path, importInfo);
+
+            Assert.False(csvProducts[0].HasUserAgreement);
+            Assert.False(csvProducts[0].IsBuyable);
+            Assert.False(csvProducts[0].TrackInventory);
+
+            Assert.True(csvProducts[1].HasUserAgreement);
+            Assert.True(csvProducts[1].IsBuyable);
+            Assert.True(csvProducts[1].TrackInventory);
+        }
+
+        [Fact]
         public void CsvProductMapTest_CsvHasMultipleLines_LineNumberMapTest()
         {
             var importInfo = new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() };
