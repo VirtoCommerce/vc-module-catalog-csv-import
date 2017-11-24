@@ -143,6 +143,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             SaveProperties(modifiedProperties, progressInfo, progressCallback);
             SaveProducts(csvProducts, progressInfo, progressCallback);
+            SaveVariationProduct(csvProducts, progressInfo, progressCallback);
         }
 
         private ICollection<Property> TryToSplitMultivaluePropertyValues(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, CsvImportInfo importInfo)
@@ -278,23 +279,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             for (int i = 0; i < totalProductsCount; i += 10)
             {
                 var products = csvProducts.Skip(i).Take(10).ToList();
-                List<CsvProduct> upadeCsvProducts = new List<CsvProduct>();
+
                 try
                 {
                     //Save main products first and then variations
                     _productService.Update(products.ToArray());
-
-                    //Update MainProductId for products as variation product.Code
-                    foreach (var product in products)
-                    {
-                        if (product.MainProduct != null && product.MainProductId == null)
-                        {
-                            product.MainProductId = product.MainProduct.Id;
-                            upadeCsvProducts.Add(product);
-                        }
-                    }
-                    if (upadeCsvProducts.Count > 0)
-                        _productService.Update(upadeCsvProducts.ToArray());
 
                     //Set productId for dependent objects
                     foreach (var product in products)
@@ -549,6 +538,59 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 }
             }
 
+        }
+
+        private void SaveVariationProduct(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo,
+            Action<ExportImportProgressInfo> progressCallback)
+        {
+            progressInfo.Description = "Saving releated variation products...";
+            progressInfo.ProcessedCount = 0;
+
+            var csvProductsRelationVariation = csvProducts.Where(x => x.MainProduct != null && x.MainProductId == null).ToList();
+            var variationCount = csvProductsRelationVariation.Count;
+
+            if (variationCount == 0)
+                return;
+
+            progressInfo.TotalCount = variationCount;
+
+            for (int i = 0; i < csvProductsRelationVariation.Count; i += 10)
+            {
+                List<CsvProduct> upadeCsvProducts = new List<CsvProduct>();
+                var products = csvProductsRelationVariation.Skip(i).Take(10).ToList();
+
+                try
+                {
+                    //Update MainProductId for products as variation product.Code
+                    foreach (var product in products)
+                    {
+                        product.MainProductId = product.MainProduct.Id;
+                        upadeCsvProducts.Add(product);
+                    }
+
+                    if(upadeCsvProducts.Count > 0)
+                        _productService.Update(upadeCsvProducts.ToArray());
+                }
+                catch (Exception ex)
+                {
+                    lock (_lockObject)
+                    {
+                        progressInfo.Errors.Add(ex.ToString());
+                        progressCallback(progressInfo);
+                    }
+                }
+                finally
+                {
+                    lock (_lockObject)
+                    {
+                        //Raise notification
+                        progressInfo.ProcessedCount += products.Count();
+                        progressInfo.Description =
+                            $"Variation products: {progressInfo.ProcessedCount} of {progressInfo.TotalCount} processed";
+                        progressCallback(progressInfo);
+                    }
+                }
+            }
         }
     }
 }
