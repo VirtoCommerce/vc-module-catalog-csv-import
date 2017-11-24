@@ -91,7 +91,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             string path = @"../../data/product-productproperties-seoInfo.csv";
             var csvProducts = ReadCsvFile(path, importInfo);
-            var product = csvProducts.FirstOrDefault();
+            var product = csvProducts.FirstOrDefault(x => x.Code == "cblk21113-product-1");
 
             Assert.Equal("seo-slug-url", product.SeoUrl);
             Assert.Equal("seo-slug-url", product.SeoInfo.SemanticUrl);
@@ -99,6 +99,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.Equal("Seo_Title_Value", product.SeoInfo.PageTitle);
             Assert.Equal("Seo_Descr_Value", product.SeoDescription);
             Assert.Equal("Seo_Descr_Value", product.SeoInfo.MetaDescription);
+            Assert.Equal("Seo_Language_Value", product.SeoInfo.LanguageCode);
+            Assert.True(csvProducts.Count == 2);
         }
 
         [Fact]

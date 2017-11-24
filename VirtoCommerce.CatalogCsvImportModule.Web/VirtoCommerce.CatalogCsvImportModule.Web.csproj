@@ -148,8 +148,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Localizations\de.VirtoCommerce.Catalog.json" />
-    <Content Include="Localizations\en.VirtoCommerce.Catalog.json" />
+    <Content Include="Localizations\de.VirtoCommerce.CatalogCsvImportModule.json" />
+    <Content Include="Localizations\en.VirtoCommerce.CatalogCsvImportModule.json" />
     <None Include="module.ignore" />
     <None Include="packages.config" />
     <None Include="app.config" />

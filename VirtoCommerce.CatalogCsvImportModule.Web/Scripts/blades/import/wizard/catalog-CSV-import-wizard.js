@@ -4,15 +4,15 @@
 
         var blade = $scope.blade;
         blade.isLoading = false;
-        blade.title = 'catalog.wizards.catalog-CSV-import.title';
-        blade.subtitle = 'catalog.wizards.catalog-CSV-import.subtitle';
+        blade.title = 'catalogCsvImportModule.wizards.catalog-CSV-import.title';
+        blade.subtitle = 'catalogCsvImportModule.wizards.catalog-CSV-import.subtitle';
         blade.subtitleVales = { name: blade.catalog.name };
 
         $scope.columnDelimiters = [
-            { name: "catalog.wizards.catalog-CSV-import.labels.space", value: " " },
-            { name: "catalog.wizards.catalog-CSV-import.labels.comma", value: "," },
-            { name: "catalog.wizards.catalog-CSV-import.labels.semicolon", value: ";" },
-            { name: "catalog.wizards.catalog-CSV-import.labels.tab", value: "\t" }
+            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.space", value: " " },
+            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.comma", value: "," },
+            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.semicolon", value: ";" },
+            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.tab", value: "\t" }
         ];
 
         if (!$scope.uploader) {
@@ -71,8 +71,8 @@
             var newBlade = {
                 id: "importMapping",
                 importConfiguration: blade.importConfiguration,
-                title: 'catalog.wizards.catalog-CSV-import-wizard-mapping-step.title',
-                subtitle: 'catalog.wizards.catalog-CSV-import-wizard-mapping-step.subtitle',
+                title: 'catalogCsvImportModule.wizards.catalog-CSV-import-wizard-mapping-step.title',
+                subtitle: 'catalogCsvImportModule.wizards.catalog-CSV-import-wizard-mapping-step.subtitle',
                 controller: 'virtoCommerce.catalogCsvImportModule.catalogCSVimportWizardMappingStepController',
                 template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/import/wizard/catalog-CSV-import-wizard-mapping-step.tpl.html'
             };

@@ -139,14 +139,24 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             csvProducts = MergeCsvProducts(csvProducts, catalog);
 
             MergeFromAlreadyExistProducts(csvProducts, catalog);
-           
+
             SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
 
             var modifiedProperties = LoadProductDependencies(csvProducts, catalog, progressInfo, progressCallback);
             modifiedProperties.AddRange(TryToSplitMultivaluePropertyValues(csvProducts, progressInfo, progressCallback, importInfo));
 
             SaveProperties(modifiedProperties, progressInfo, progressCallback);
-            SaveProducts(csvProducts, progressInfo, progressCallback);
+
+            //take parentless prodcuts and save them first
+            progressInfo.TotalCount = csvProducts.Count;
+
+            var mainProcuts = csvProducts.Where(x => x.MainProduct == null).ToList();
+            SaveProducts(mainProcuts, progressInfo, progressCallback);
+
+            //prepare and save variations (needed to be able to save variation with SKU as MainProductId)
+            var variations = csvProducts.Except(mainProcuts).ToList();
+            variations.Where(x => x.MainProductId == null).ForEach(x => x.MainProductId = x.MainProduct.Id);
+            SaveProducts(variations, progressInfo, progressCallback);
         }
 
         private ICollection<Property> TryToSplitMultivaluePropertyValues(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, CsvImportInfo importInfo)
@@ -266,7 +276,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         }
                         category = _categoryService.Create(new Category() { Name = categoryName, Code = code, CatalogId = catalog.Id, ParentId = parentCategoryId });
                         //Raise notification each notifyCategorySizeLimit category
-                        progressInfo.Description = $"Creating categories: {++progressInfo.ProcessedCount} created";
+                        var count = progressInfo.ProcessedCount;
+                        progressInfo.Description = $"Creating categories: {++count} created";
                         progressCallback(progressInfo);
                     }
                     csvProduct.CategoryId = category.Id;
@@ -279,17 +290,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private void SaveProducts(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-            progressInfo.ProcessedCount = 0;
-            progressInfo.TotalCount = csvProducts.Count;
-
             var defaultFulfilmentCenter = _commerceService.GetAllFulfillmentCenters().FirstOrDefault();
 
             var totalProductsCount = csvProducts.Count();
-            //Order to save main products first then variations
-            csvProducts = csvProducts.OrderBy(x => x.MainProductId != null).ToList();
             for (int i = 0; i < totalProductsCount; i += 10)
             {
                 var products = csvProducts.Skip(i).Take(10).ToList();
+
                 try
                 {
                     //Save main products first and then variations
@@ -546,7 +553,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 {
                     csvProduct.MergeFrom(existProduct);
                 }
-            }           
+            }
 
         }
     }
