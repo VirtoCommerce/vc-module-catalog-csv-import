@@ -556,7 +556,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             for (int i = 0; i < csvProductsRelationVariation.Count; i += 10)
             {
-                List<CsvProduct> upadeCsvProducts = new List<CsvProduct>();
                 var products = csvProductsRelationVariation.Skip(i).Take(10).ToList();
 
                 try
@@ -565,11 +564,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     foreach (var product in products)
                     {
                         product.MainProductId = product.MainProduct.Id;
-                        upadeCsvProducts.Add(product);
                     }
-
-                    if(upadeCsvProducts.Count > 0)
-                        _productService.Update(upadeCsvProducts.ToArray());
+                    
+                    _productService.Update(products.ToArray());
                 }
                 catch (Exception ex)
                 {
