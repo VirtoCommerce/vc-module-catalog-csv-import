@@ -1,7 +1,9 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using VirtoCommerce.CatalogCsvImportModule.Data.Model;
@@ -179,6 +181,30 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             Assert.Equal(2, csvProducts[0].LineNumber);
             Assert.Equal(3, csvProducts[1].LineNumber);
+        }
+
+        //Export mapping test
+
+        [Fact]
+        public void CsvHeadersExportTest_DefaultConfiguration_HeadersAreSame()
+        {
+            using (var sw = new StringWriter())
+            {
+                using (var csv = new CsvWriter(sw))
+                {
+                    CsvExportInfo exportInfo = new CsvExportInfo();
+                    exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
+                    csv.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
+                    csv.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
+
+                    csv.WriteHeader<CsvProduct>();
+                    csv.Flush();
+
+                    var expected = string.Join(exportInfo.Configuration.Delimiter, exportInfo.Configuration.PropertyMaps.Select(x => x.CsvColumnName));
+
+                    Assert.Equal(expected, sw.ToString());
+                }
+            }
         }
 
         private List<CsvProduct> ReadCsvFile(string path, CsvImportInfo importInfo)
