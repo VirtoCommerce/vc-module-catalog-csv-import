@@ -15,10 +15,14 @@ using VirtoCommerce.Domain.Inventory.Services;
 using VirtoCommerce.Domain.Pricing.Model;
 using VirtoCommerce.Domain.Pricing.Model.Search;
 using VirtoCommerce.Domain.Pricing.Services;
+using VirtoCommerce.Domain.Store.Model;
+using VirtoCommerce.Domain.Store.Services;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.Settings;
 using Xunit;
+using SearchCriteria = VirtoCommerce.Domain.Catalog.Model.SearchCriteria;
+using SearchResult = VirtoCommerce.Domain.Catalog.Model.SearchResult;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Test
 {
@@ -862,6 +866,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
         private CsvCatalogImporter GetImporter()
         {
+
+            #region StoreServise
+
+            var storeService = new Mock<IStoreService>();
+            storeService.Setup(x => x.SearchStores(It.IsAny<Domain.Store.Model.SearchCriteria>())).Returns( new Domain.Store.Model.SearchResult());
+
+            #endregion
+
             #region CatalogService
 
             var catalogService = new Mock<ICatalogService>();
@@ -1036,7 +1048,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 catalogSearchService.Object,
                 repositoryFactory,
                 pricingSearchService.Object,
-                settingsManager.Object
+                settingsManager.Object,
+                storeService.Object
             );
 
             return target;

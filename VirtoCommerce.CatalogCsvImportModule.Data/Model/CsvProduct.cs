@@ -7,6 +7,7 @@ using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Commerce.Model;
 using VirtoCommerce.Domain.Inventory.Model;
 using VirtoCommerce.Domain.Pricing.Model;
+using VirtoCommerce.Domain.Store.Model;
 using VirtoCommerce.Platform.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 
@@ -260,6 +261,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         {
             get { return SeoInfo.LanguageCode; }
             set { SeoInfo.LanguageCode = value; }
+        }
+
+        public string SeoStore
+        {
+            get { return SeoInfo.StoreId; }
+            set { SeoInfo.StoreId = value; }
         }
 
         public int LineNumber { get; set; }
