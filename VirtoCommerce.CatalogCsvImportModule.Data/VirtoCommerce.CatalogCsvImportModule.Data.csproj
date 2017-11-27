@@ -136,6 +136,7 @@
     <Compile Include="Model\CsvProduct.cs" />
     <Compile Include="Model\CsvProductMappingConfiguration.cs" />
     <Compile Include="Model\CsvProductPropertyMap.cs" />
+    <Compile Include="Model\CsvSeoInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CsvCatalogExporter.cs" />
     <Compile Include="Services\CsvCatalogImporter.cs" />

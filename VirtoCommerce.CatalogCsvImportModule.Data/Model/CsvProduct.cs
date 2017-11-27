@@ -28,7 +28,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             Inventory = new InventoryInfo();
             EditorialReview = new EditorialReview();
             Reviews = new List<EditorialReview> { EditorialReview };
-            SeoInfo = new SeoInfo { ObjectType = typeof(CatalogProduct).Name };
+            SeoInfo = new CsvSeoInfo { ObjectType = typeof(CatalogProduct).Name };
             SeoInfos = new List<SeoInfo> { SeoInfo };
         }
 
@@ -293,6 +293,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
                 Category = product.Category;
             }
 
+            if (string.IsNullOrEmpty(ProductType))
+            {
+                ProductType = product.ProductType;
+            }
+
             var imgComparer = AnonymousComparer.Create((Image x) => x.Url);
             Images = Images.Concat(product.Images).Distinct(imgComparer).ToList();
 
@@ -313,8 +318,20 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             }
             PropertyValues = product.PropertyValues.Concat(PropertyValues).ToList();
 
+            //merge seo infos
             var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode?.ToLower()));
-            SeoInfos = SeoInfos.Where(x=>!x.SemanticUrl.IsNullOrEmpty()).Concat(product.SeoInfos).Distinct(seoComparer).ToList();
+            //var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode?.ToLower(), x.StoreId));
+
+            foreach (var seoInfo in SeoInfos.OfType<CsvSeoInfo>())
+            {
+                var existingSeoInfo = product.SeoInfos.FirstOrDefault(x => seoComparer.Equals(x, seoInfo));
+                if (existingSeoInfo != null)
+                {
+                    seoInfo.MergeFrom(existingSeoInfo);
+                    product.SeoInfos.Remove(existingSeoInfo);
+                }
+            }
+            SeoInfos = SeoInfos.Where(x=>!x.SemanticUrl.IsNullOrEmpty()).Concat(product.SeoInfos).ToList();
         }
     }
 }
