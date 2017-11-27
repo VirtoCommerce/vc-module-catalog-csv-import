@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,9 +15,12 @@ using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Commerce.Services;
 using VirtoCommerce.Domain.Inventory.Services;
 using VirtoCommerce.Domain.Pricing.Services;
+using VirtoCommerce.Domain.Store.Model;
+using VirtoCommerce.Domain.Store.Services;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.Settings;
+using SearchCriteria = VirtoCommerce.Domain.Catalog.Model.SearchCriteria;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 {
@@ -34,14 +38,16 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private readonly IPropertyService _propertyService;
         private readonly ICatalogSearchService _searchService;
         private readonly Func<ICatalogRepository> _catalogRepositoryFactory;
+        private readonly IStoreService _storeService;
         private readonly object _lockObject = new object();
 
         private readonly bool _createPropertyDictionatyValues;
+        private List<Store> _stores = new List<Store>();
 
         public CsvCatalogImporter(ICatalogService catalogService, ICategoryService categoryService, IItemService productService, ISkuGenerator skuGenerator,
                                   IPricingService pricingService, IInventoryService inventoryService, ICommerceService commerceService,
                                   IPropertyService propertyService, ICatalogSearchService searchService, Func<ICatalogRepository> catalogRepositoryFactory, IPricingSearchService pricingSearchService,
-                                  ISettingsManager settingsManager)
+                                  ISettingsManager settingsManager, IStoreService storeService)
         {
             _catalogService = catalogService;
             _categoryService = categoryService;
@@ -54,6 +60,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             _searchService = searchService;
             _catalogRepositoryFactory = catalogRepositoryFactory;
             _pricingSearchService = pricingSearchService;
+            _storeService = storeService;
 
             _createPropertyDictionatyValues = settingsManager.GetValue("CsvCatalogImport.CreateDictionaryValues", false);
         }
@@ -131,6 +138,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         public void DoImport(List<CsvProduct> csvProducts, CsvImportInfo importInfo, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
             var catalog = _catalogService.GetById(importInfo.CatalogId);
+            _stores.AddRange(_storeService.SearchStores(new Domain.Store.Model.SearchCriteria{ Take = int.MaxValue}).Stores);
+
+            var contunie = ImportAllowed(csvProducts, progressInfo, progressCallback);
+
+            if(!contunie)
+                return;
 
             csvProducts = MergeCsvProducts(csvProducts, catalog);
 
@@ -164,6 +177,22 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 csvProduct.PropertyValues = TryToSplitMultivaluePropertyValues(csvProduct, progressInfo, progressCallback, modifiedProperties, importInfo);
             }
             return modifiedProperties;
+        }
+
+        //Is it allowed to continue
+        private bool ImportAllowed(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
+        {
+
+            progressInfo.Description = "Check product...";
+
+            // Рere you can enter checks before import for example SeoAllowed(csvProducts) && SkuCkeck(csvProducts)
+            var canContunie = SeoAllowed(csvProducts);
+
+            if (!canContunie)
+                progressInfo.Errors.Add($"Data are not correct");
+
+            progressCallback(progressInfo);
+            return canContunie;
         }
 
         private List<CsvProduct> MergeCsvProducts(List<CsvProduct> csvProducts, Catalog catalog)
@@ -350,6 +379,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         }
                     }
                     _pricingService.SavePrices(prices);
+
+                    // set seo properties
+                    foreach (var product in products)
+                    {
+                        product.SeoStore = _stores.FirstOrDefault(s => s.Id.ToLower() == product.SeoStore.ToLower()).Id;
+                    }
                 }
                 catch (FluentValidation.ValidationException validationEx)
                 {
@@ -550,5 +585,32 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
 
         }
+
+        #region Import allowed
+
+        private bool SeoAllowed(List<CsvProduct> csvProducts)
+        {
+            return csvProducts.All(CorrectProduct);
+
+            bool CorrectProduct(CsvProduct product)
+            {
+                //not seo properties import
+                if (product.SeoStore == null)
+                    return true;
+
+                //not specified seo store
+                if (product.SeoStore == String.Empty)
+                    return false;
+
+                if (product.SeoStore != null)
+                {
+                    return _stores.Any(x => x.Id.ToLower() == product.SeoStore.ToLower());
+                }
+
+                return false;
+            }
+        }
+
+        #endregion
     }
 }
