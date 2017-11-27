@@ -87,9 +87,10 @@
     },
     "commands": {
       "import": "Import",
-      "export": "Export",  
+      "export": "Export",
       "start-export": "Start export",
-      "start-import": "Start import"
+      "start-import": "Start import",
+      "clear-all": "Clear all"
     },
     "services": {
       "catalog-csv-export": {

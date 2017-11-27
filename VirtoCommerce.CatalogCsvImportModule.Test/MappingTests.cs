@@ -1,8 +1,11 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CsvHelper;
+using CsvHelper.Configuration;
 using VirtoCommerce.CatalogCsvImportModule.Data.Model;
 using VirtoCommerce.CatalogCsvImportModule.Data.Services;
 using VirtoCommerce.Domain.Catalog.Model;
@@ -169,6 +172,61 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.True(product.IsBuyable);
         }
 
+        [Fact]
+        public void CsvProductMapTest_CsvHasBooleanValues_BooleanFieldsMapped()
+        {
+            var importInfo = new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() };
+            importInfo.Configuration.Delimiter = ",";
+
+            string path = @"../../data/product-productproperties-boolean.csv";
+            var csvProducts = ReadCsvFile(path, importInfo);
+
+            Assert.False(csvProducts[0].HasUserAgreement);
+            Assert.False(csvProducts[0].IsBuyable);
+            Assert.False(csvProducts[0].TrackInventory);
+
+            Assert.True(csvProducts[1].HasUserAgreement);
+            Assert.True(csvProducts[1].IsBuyable);
+            Assert.True(csvProducts[1].TrackInventory);
+        }
+
+        [Fact]
+        public void CsvProductMapTest_CsvHasMultipleLines_LineNumberMapTest()
+        {
+            var importInfo = new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() };
+            importInfo.Configuration.Delimiter = ",";
+
+            string path = @"../../data/product-productproperties-twoproducts.csv";
+            var csvProducts = ReadCsvFile(path, importInfo);
+
+            Assert.Equal(2, csvProducts[0].LineNumber);
+            Assert.Equal(3, csvProducts[1].LineNumber);
+        }
+
+        //Export mapping test
+
+        [Fact]
+        public void CsvHeadersExportTest_DefaultConfiguration_HeadersAreSame()
+        {
+            using (var sw = new StringWriter())
+            {
+                using (var csv = new CsvWriter(sw))
+                {
+                    CsvExportInfo exportInfo = new CsvExportInfo();
+                    exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
+                    csv.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
+                    csv.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
+
+                    csv.WriteHeader<CsvProduct>();
+                    csv.Flush();
+
+                    var expected = string.Join(exportInfo.Configuration.Delimiter, exportInfo.Configuration.PropertyMaps.Select(x => x.CsvColumnName));
+
+                    Assert.Equal(expected, sw.ToString());
+                }
+            }
+        }
+
         private List<CsvProduct> ReadCsvFile(string path, CsvImportInfo importInfo)
         {
             var csvProducts = new List<CsvProduct>();
@@ -178,8 +236,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 {
                     reader.Configuration.Delimiter = importInfo.Configuration.Delimiter;
                     reader.Configuration.RegisterClassMap(new CsvProductMap(importInfo.Configuration));
-                    reader.Configuration.WillThrowOnMissingField = false;
-                    reader.Configuration.TrimFields = true;
+                    reader.Configuration.MissingFieldFound = (strings, i, arg3) =>
+                    {
+                        //do nothing
+                    };
+                    reader.Configuration.TrimOptions = TrimOptions.Trim;
+                    reader.Configuration.HeaderValidated = null;
 
                     while (reader.Read())
                     {

@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using CsvHelper;
 using VirtoCommerce.CatalogCsvImportModule.Data.Core;
@@ -79,6 +82,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                 //Write header
                 csvWriter.WriteHeader<CsvProduct>();
+                csvWriter.NextRecord();
 
                 prodgressInfo.TotalCount = products.Count;
                 var notifyProductSizeLimit = 50;
@@ -89,6 +93,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     {
                         var csvProduct = new CsvProduct(product, _blobUrlResolver, allProductPrices.FirstOrDefault(x => x.ProductId == product.Id), allProductInventories.FirstOrDefault(x => x.ProductId == product.Id));
                         csvWriter.WriteRecord(csvProduct);
+                        csvWriter.NextRecord();
                     }
                     catch (Exception ex)
                     {

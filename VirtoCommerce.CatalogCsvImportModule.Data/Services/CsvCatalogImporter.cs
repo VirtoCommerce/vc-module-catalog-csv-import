@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper;
+using CsvHelper.Configuration;
 using Microsoft.Practices.ObjectBuilder2;
 using Omu.ValueInjecter;
 using VirtoCommerce.CatalogCsvImportModule.Data.Core;
@@ -81,8 +82,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             {
                 reader.Configuration.Delimiter = importInfo.Configuration.Delimiter;
                 reader.Configuration.RegisterClassMap(new CsvProductMap(importInfo.Configuration));
-                reader.Configuration.WillThrowOnMissingField = false;
-                reader.Configuration.TrimFields = true;
+                reader.Configuration.MissingFieldFound = (strings, i, arg3) =>
+                {
+                    //do nothing
+                };
+                reader.Configuration.TrimOptions = TrimOptions.Trim;
 
                 while (reader.Read())
                 {
@@ -212,6 +216,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             MergeCsvProductComplexObjects(mergedCsvProducts, defaultLanguge);
 
             csvProducts.SelectMany(x=>x.SeoInfos).Where(y => y.LanguageCode.IsNullOrEmpty()).ForEach(z=>z.LanguageCode = defaultLanguge);
+            csvProducts.SelectMany(x=>x.Reviews).Where(y => y.LanguageCode.IsNullOrEmpty()).ForEach(x => x.LanguageCode = defaultLanguge);
+
             mergedCsvProducts.AddRange(csvProducts);
             return mergedCsvProducts;
         }
