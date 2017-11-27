@@ -582,11 +582,17 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private bool SeoAllowed(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-            var isCheckAll = csvProducts.All(CorrectProduct);
+            bool isCompleted = true;
+
+            foreach (var product in csvProducts)
+            {
+                if (!CorrectProduct(product))
+                    isCompleted = false;
+            }
 
             progressCallback(progressInfo);
 
-            return isCheckAll;
+            return isCompleted;
 
             bool CorrectProduct(CsvProduct product)
             {
