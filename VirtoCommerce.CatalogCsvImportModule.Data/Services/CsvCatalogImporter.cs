@@ -596,29 +596,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             bool CorrectProduct(CsvProduct product)
             {
-                //not seo properties import
-                if (product.SeoStore == null)
-                    return true;
-
-                //not specified seo store
-                if (product.SeoStore == String.Empty)
+                //check seoinfo storeif if specified
+                if (!string.IsNullOrEmpty(product.SeoStore))
                 {
-                    progressInfo.Errors.Add($"SeoStore can not be empty. Line number: {product.LineNumber}");
-                    return false;
-                }
-
-                if (product.SeoStore != null)
-                {
-                    var rezult = _stores.Any(x => x.Id == product.SeoStore);
-                    if (!rezult)
+                    var result = _stores.Any(x => x.Id == product.SeoStore);
+                    if (!result)
                     {
-                        progressInfo.Errors.Add($"Not found a store with such Id = {product.SeoStore}. Line number: {product.LineNumber}");
+                        progressInfo.Errors.Add($"No store with Id = {product.SeoStore}. Line number: {product.LineNumber}");
                     }
 
-                    return rezult;
+                    return result;
                 }
 
-                return false;
+                return true;
             }
         }
 

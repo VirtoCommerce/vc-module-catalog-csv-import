@@ -305,6 +305,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
                 ProductType = product.ProductType;
             }
 
+            if (string.IsNullOrEmpty(Vendor))
+            {
+                Vendor = product.Vendor;
+            }
+
             var imgComparer = AnonymousComparer.Create((Image x) => x.Url);
             Images = Images.Concat(product.Images).Distinct(imgComparer).ToList();
 
@@ -326,8 +331,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             PropertyValues = product.PropertyValues.Concat(PropertyValues).ToList();
 
             //merge seo infos
-            var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode?.ToLower()));
-            //var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode?.ToLower(), x.StoreId));
+            var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode?.ToLower(), x.StoreId));
 
             foreach (var seoInfo in SeoInfos.OfType<CsvSeoInfo>())
             {

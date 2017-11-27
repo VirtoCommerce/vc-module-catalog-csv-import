@@ -9,7 +9,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         {
             SemanticUrl = source.SemanticUrl;
             LanguageCode = source.LanguageCode;
-            //StoreId = source.StoreId;
+            StoreId = source.StoreId;
 
             if (PageTitle.IsNullOrEmpty())
             {
