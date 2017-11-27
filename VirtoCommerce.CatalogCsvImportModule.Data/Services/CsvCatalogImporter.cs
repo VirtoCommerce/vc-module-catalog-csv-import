@@ -186,17 +186,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         //Is it allowed to continue
         private bool ImportAllowed(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-
             progressInfo.Description = "Check product...";
-
             // Рere you can enter checks before import for example SeoAllowed(csvProducts) && SkuCkeck(csvProducts)
-            var canContunie = SeoAllowed(csvProducts);
-
-            if (!canContunie)
-                progressInfo.Errors.Add($"Data are not correct");
-
-            progressCallback(progressInfo);
-            return canContunie;
+            return SeoAllowed(csvProducts, progressInfo, progressCallback);
         }
 
         private List<CsvProduct> MergeCsvProducts(List<CsvProduct> csvProducts, Catalog catalog)
@@ -385,12 +377,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         }
                     }
                     _pricingService.SavePrices(prices);
-
-                    // set seo properties
-                    foreach (var product in products)
-                    {
-                        product.SeoStore = _stores.FirstOrDefault(s => s.Id.ToLower() == product.SeoStore.ToLower()).Id;
-                    }
                 }
                 catch (FluentValidation.ValidationException validationEx)
                 {
@@ -594,9 +580,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         #region Import allowed
 
-        private bool SeoAllowed(List<CsvProduct> csvProducts)
+        private bool SeoAllowed(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-            return csvProducts.All(CorrectProduct);
+            var isCheckAll = csvProducts.All(CorrectProduct);
+
+            progressCallback(progressInfo);
+
+            return isCheckAll;
 
             bool CorrectProduct(CsvProduct product)
             {
@@ -606,11 +596,20 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                 //not specified seo store
                 if (product.SeoStore == String.Empty)
+                {
+                    progressInfo.Errors.Add($"SeoStore can not be empty. Line number: {product.LineNumber}");
                     return false;
+                }
 
                 if (product.SeoStore != null)
                 {
-                    return _stores.Any(x => x.Id.ToLower() == product.SeoStore.ToLower());
+                    var rezult = _stores.Any(x => x.Id == product.SeoStore);
+                    if (!rezult)
+                    {
+                        progressInfo.Errors.Add($"Not found a store with such Id = {product.SeoStore}. Line number: {product.LineNumber}");
+                    }
+
+                    return rezult;
                 }
 
                 return false;
