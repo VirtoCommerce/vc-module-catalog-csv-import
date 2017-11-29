@@ -15,6 +15,7 @@ using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Commerce.Services;
 using VirtoCommerce.Domain.Inventory.Services;
+using VirtoCommerce.Domain.Pricing.Model;
 using VirtoCommerce.Domain.Pricing.Services;
 using VirtoCommerce.Domain.Store.Model;
 using VirtoCommerce.Domain.Store.Services;
@@ -320,63 +321,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                 try
                 {
-                    //Save main products first and then variations
                     _productService.Update(products.ToArray());
 
-                    //Set productId for dependent objects
-                    foreach (var product in products)
-                    {
-                        if (defaultFulfilmentCenter != null || product.Inventory.FulfillmentCenterId != null)
-                        {
-                            product.Inventory.ProductId = product.Id;
-                            product.Inventory.FulfillmentCenterId = product.Inventory.FulfillmentCenterId ?? defaultFulfilmentCenter.Id;
-                        }
-                        else
-                        {
-                            product.Inventory = null;
-                        }
-                    }
-                    var productIds = products.Select(x => x.Id).ToArray();
-                    var existInventories = _inventoryService.GetProductsInventoryInfos(productIds);
-                    var inventories = products.Where(x => x.Inventory != null).Select(x => x.Inventory).ToArray();
-                    foreach (var inventory in inventories)
-                    {
-                        var exitsInventory = existInventories.FirstOrDefault(x => x.ProductId == inventory.ProductId && x.FulfillmentCenterId == inventory.FulfillmentCenterId);
-                        if (exitsInventory != null)
-                        {
-                            inventory.ProductId = exitsInventory.ProductId;
-                            inventory.FulfillmentCenterId = exitsInventory.FulfillmentCenterId;
-                            inventory.AllowBackorder = exitsInventory.AllowBackorder;
-                            inventory.AllowPreorder = exitsInventory.AllowPreorder;
-                            inventory.BackorderAvailabilityDate = exitsInventory.BackorderAvailabilityDate;
-                            inventory.BackorderQuantity = exitsInventory.BackorderQuantity;
-                            inventory.InTransit  = exitsInventory.InTransit;
+                    SaveProductInventories(products, defaultFulfilmentCenter);
 
-                            inventory.InStockQuantity = inventory.InStockQuantity == 0 ? exitsInventory.InStockQuantity : inventory.InStockQuantity;
-                        }
-                    }
-                    _inventoryService.UpsertInventories(inventories);
-
-                    //We do not have information about concrete price list id and therefore select first product price then
-                    var existPrices = _pricingSearchService.SearchPrices(new Domain.Pricing.Model.Search.PricesSearchCriteria { ProductIds = productIds, Take = 1000 }).Results;
-                    foreach (var product in products)
-                    {
-                        product.Prices.ForEach(p => p.ProductId = product.Id);
-                    }
-                    var prices = products.SelectMany(x => x.Prices).ToArray();
-                    foreach (var price in prices)
-                    {
-                        var existPrice = existPrices.FirstOrDefault(x => x.Currency.EqualsInvariant(price.Currency) && x.ProductId.EqualsInvariant(price.ProductId));
-                        if (existPrice != null)
-                        {
-                            price.Id = existPrice.Id;
-                            price.Sale = price.Sale ?? existPrice.Sale;
-                            price.List = price.List == 0M ? existPrice.List : price.List;
-                            price.MinQuantity = existPrice.MinQuantity;
-                            price.PricelistId = existPrice.PricelistId;
-                        }
-                    }
-                    _pricingService.SavePrices(prices);
+                    SaveProductPrices(products);
                 }
                 catch (FluentValidation.ValidationException validationEx)
                 {
@@ -410,6 +359,156 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     }
                 }
             }
+        }
+
+        private void SaveProductInventories(IList<CsvProduct> products, Domain.Commerce.Model.FulfillmentCenter defaultFulfilmentCenter)
+        {
+            //Set productId for dependent objects
+            foreach (var product in products)
+            {
+                if (defaultFulfilmentCenter != null || product.Inventory.FulfillmentCenterId != null)
+                {
+                    product.Inventory.ProductId = product.Id;
+                    product.Inventory.FulfillmentCenterId = product.Inventory.FulfillmentCenterId ?? defaultFulfilmentCenter.Id;
+                }
+                else
+                {
+                    product.Inventory = null;
+                }
+            }
+            var productIds = products.Select(x => x.Id).ToArray();
+            var existInventories = _inventoryService.GetProductsInventoryInfos(productIds);
+            var inventories = products.Where(x => x.Inventory != null).Select(x => x.Inventory).ToArray();
+            foreach (var inventory in inventories)
+            {
+                var exitsInventory = existInventories.FirstOrDefault(x => x.ProductId == inventory.ProductId && x.FulfillmentCenterId == inventory.FulfillmentCenterId);
+                if (exitsInventory != null)
+                {
+                    inventory.ProductId = exitsInventory.ProductId;
+                    inventory.FulfillmentCenterId = exitsInventory.FulfillmentCenterId;
+                    inventory.AllowBackorder = exitsInventory.AllowBackorder;
+                    inventory.AllowPreorder = exitsInventory.AllowPreorder;
+                    inventory.BackorderAvailabilityDate = exitsInventory.BackorderAvailabilityDate;
+                    inventory.BackorderQuantity = exitsInventory.BackorderQuantity;
+                    inventory.InTransit = exitsInventory.InTransit;
+
+                    inventory.InStockQuantity = inventory.InStockQuantity == 0 ? exitsInventory.InStockQuantity : inventory.InStockQuantity;
+                }
+            }
+            _inventoryService.UpsertInventories(inventories);
+        }
+
+        private void SaveProductPrices(IList<CsvProduct> products)
+        {
+            // updating prices productid
+            foreach (var product in products)
+            {
+                product.Prices.ForEach(p => p.ProductId = product.Id);
+            }
+
+            var prices = products.SelectMany(x => x.Prices).OfType<CsvPrice>().ToArray();
+
+            //try update update prices by id
+            var pricesWithIds = prices.Where(x => !string.IsNullOrEmpty(x.Id)).ToArray();
+            var mergedPrices = GetMergedPriceById(pricesWithIds);
+
+            //then update for products with PriceListId set
+            var pricesWithPriceListIds = prices.Except(pricesWithIds).Where(x => !string.IsNullOrEmpty(x.PricelistId)).ToArray();
+            mergedPrices.AddRange(GetMergedPriceByPriceList(pricesWithPriceListIds));
+
+            //We do not have information about concrete price list id or price id and therefore select first product price then
+            var restPrices = prices.Except(pricesWithIds).Except(pricesWithPriceListIds).ToArray();
+            mergedPrices.AddRange(GetMergedPriceDefault(restPrices));
+
+            _pricingService.SavePrices(mergedPrices.ToArray());
+        }
+
+        private IList<Price> GetMergedPriceById(IList<CsvPrice> pricesWithIds)
+        {
+            if (!pricesWithIds.Any())
+                return new List<Price>();
+
+            var result = new List<Price>();
+
+            var pricesIds = pricesWithIds.Select(x => x.Id).ToArray();
+            var existingPricesByIds = _pricingService.GetPricesById(pricesIds);
+            foreach (var price in pricesWithIds)
+            {
+                var existPrice = existingPricesByIds.FirstOrDefault(x => x.Id == price.Id);
+                if (existPrice != null)
+                {
+                    price.MergeFrom(existPrice);
+                }
+                result.Add(price);
+            }
+
+            return result;
+        }
+
+        private IList<Price> GetMergedPriceByPriceList(IList<CsvPrice> pricesWithPriceListIds)
+        {
+            if (!pricesWithPriceListIds.Any())
+                return new List<Price>();
+
+            var existPrices = new List<Price>();
+
+            var dictionary = pricesWithPriceListIds.GroupBy(x => x.PricelistId).ToDictionary(g => g.Key, g => g.ToArray());
+            foreach (var priceListId in dictionary.Keys)
+            {
+                var criteria = new Domain.Pricing.Model.Search.PricesSearchCriteria
+                {
+                    PriceListId = priceListId,
+                    ProductIds = dictionary[priceListId].Select(x => x.ProductId).ToArray(),
+                    Take = 1000
+                };
+
+                existPrices.AddRange(_pricingSearchService.SearchPrices(criteria).Results);
+            }
+
+            var result = new List<Price>();
+            foreach (var price in pricesWithPriceListIds)
+            {
+                var existPrice = existPrices.FirstOrDefault(x => x.Currency.EqualsInvariant(price.Currency)
+                    && x.ProductId.EqualsInvariant(price.ProductId) && x.PricelistId.EqualsInvariant(price.PricelistId));
+
+                if (existPrice != null)
+                {
+                    price.MergeFrom(existPrice);
+                }
+
+                result.Add(price);
+            }
+
+            return result;
+        }
+
+        private IList<Price> GetMergedPriceDefault(IList<CsvPrice> restPrices)
+        {
+            if (!restPrices.Any())
+                return new List<Price>();
+
+            var criteria = new Domain.Pricing.Model.Search.PricesSearchCriteria
+            {
+                ProductIds = restPrices.Select(x => x.ProductId).ToArray(),
+                Take = 1000
+            };
+
+            var result = new List<Price>();
+            var existPrices = _pricingSearchService.SearchPrices(criteria).Results;
+            foreach (var price in restPrices)
+            {
+                var existPrice = existPrices.FirstOrDefault(x => x.Currency.EqualsInvariant(price.Currency)
+                    && x.ProductId.EqualsInvariant(price.ProductId));
+
+                if (existPrice != null)
+                {
+                    price.MergeFrom(existPrice);
+                }
+
+                result.Add(price);
+            }
+
+            return result;
         }
 
         private List<PropertyValue> TryToSplitMultivaluePropertyValues(CsvProduct csvProduct, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, ICollection<Property> modifiedProperties, CsvImportInfo importInfo)
