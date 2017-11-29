@@ -161,6 +161,45 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
+        public void DoImport_AppendProductDictionaryMultivalueProperties_PropertyValuesMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+            existingProduct.PropertyValues = new List<PropertyValue>
+            {
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true, Dictionary = false} },
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true, Dictionary = false} }
+
+            };
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var existringCategory = CreateCategory(existingProduct);
+            _categoriesInternal.Add(existringCategory);
+
+            var product = GetCsvProductBase();
+            product.PropertyValues = new List<PropertyValue>
+            {
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "2,3", ValueType = PropertyValueType.ShortText },
+            };
+
+            var target = GetImporter();
+            var progressInfo = new ExportImportProgressInfo();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration(), CsvSettings = CsvProductMappingConfiguration.GetDefaultCsvSetting(true) }, progressInfo, info => { });
+
+            //Assert
+            Action<PropertyValue>[] inspectors = {
+                x => Assert.True(x.PropertyName == "CatalogProductProperty_1_MultivalueDictionary" && (string) x.Value == "1"),
+                x => Assert.True(x.PropertyName == "CatalogProductProperty_1_MultivalueDictionary" && (string) x.Value == "2"),
+                x => Assert.True(x.PropertyName == "CatalogProductProperty_1_MultivalueDictionary" && (string) x.Value == "3")
+            };
+            Assert.Collection(product.PropertyValues, inspectors);
+            Assert.True(!progressInfo.Errors.Any());
+        }
+
+
+        [Fact]
         public void DoImport_UpdateProductCategory_CategoryIsNotUpdated()
         {
             //Arrange

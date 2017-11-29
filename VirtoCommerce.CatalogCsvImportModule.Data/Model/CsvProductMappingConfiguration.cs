@@ -17,9 +17,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         public ICollection<CsvProductPropertyMap> PropertyMaps { get; set; }
         public string[] PropertyCsvColumns { get; set; }
 
-        public static CsvSetting GetDefaultCsvSetting()
+        public static CsvSetting GetDefaultCsvSetting(bool overWriteMultiValue = false)
         {
-            return new CsvSetting { OverWriteMultiValue = false};
+            return new CsvSetting { OverWriteMultiValue = overWriteMultiValue };
         }
 
         public static CsvProductMappingConfiguration GetDefaultConfiguration()
