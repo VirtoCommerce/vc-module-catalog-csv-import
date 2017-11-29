@@ -9,6 +9,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
     //Import settings
     public class CsvSetting
     {
+        /// <summary>
+        /// Setting append property values
+        /// </summary>
         public bool OverWriteMultiValue { get; set; }
     }
 }
