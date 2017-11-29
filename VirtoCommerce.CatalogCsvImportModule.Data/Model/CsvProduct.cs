@@ -276,7 +276,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         /// 
         /// </summary>
         /// <param name="product"></param>
-        public void MergeFrom(CatalogProduct product)
+        public void MergeFrom(CatalogProduct product, CsvSetting settings)
         {
             Id = product.Id;
 
@@ -320,15 +320,28 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             Reviews = Reviews.Concat(product.Reviews).Distinct(reviewsComparer).ToList();
 
             var properyValueComparer = AnonymousComparer.Create((PropertyValue x) => x.PropertyName);
+            var properyValueDublicateComparer = AnonymousComparer.Create((PropertyValue x) => string.Join(":", x.PropertyName, x.Value));
+
             foreach (var propertyValue in PropertyValues)
-            {
-                var array = product.PropertyValues.Where(x => properyValueComparer.Equals(x, propertyValue)).ToArray();
-                foreach (var productPropertyValue in array)
                 {
-                    product.PropertyValues.Remove(productPropertyValue);
+                    var array = product.PropertyValues.Where(x => properyValueComparer.Equals(x, propertyValue)).ToArray();
+                    if(array.Length == 0)
+                        continue;
+
+                    if (array.FirstOrDefault().Property.Multivalue && settings.OverWriteMultiValue)
+                    {
+                        product.PropertyValues.Add(propertyValue);
+                    }
+                    else
+                    {
+                        foreach (var productPropertyValue in array)
+                        {
+                            product.PropertyValues.Remove(productPropertyValue);
+                        }
+                    }
                 }
-            }
-            PropertyValues = product.PropertyValues.Concat(PropertyValues).ToList();
+
+            PropertyValues = product.PropertyValues.Concat(PropertyValues).Distinct(properyValueDublicateComparer).ToList();
 
             //merge seo infos
             var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode?.ToLower(), x.StoreId));

@@ -30,6 +30,13 @@
                 <title>Create new Dictionary Values</title>
                 <description>Enable or disable creation of new Property Dictionary Values during import</description>
             </setting>
+            <setting>
+                <name>CsvCatalogImport.UpdateMultiValues</name>
+                <valueType>boolean</valueType>
+                <defaultValue>false</defaultValue>
+                <title>Append property values</title>
+                <description>Enable or disable appending new values to multi-value properties instead of overwriting them during import</description>
+            </setting>
         </group>
     </settings>
     

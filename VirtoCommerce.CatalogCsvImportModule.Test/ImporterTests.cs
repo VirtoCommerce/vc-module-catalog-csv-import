@@ -123,12 +123,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var existingProduct = GetCsvProductBase();
             existingProduct.PropertyValues = new List<PropertyValue>
             {
-                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText }
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} }
             };
             _productsInternal = new List<CatalogProduct> { existingProduct };
 
@@ -146,7 +146,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var progressInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration(), CsvSettings = CsvProductMappingConfiguration.GetDefaultCsvSetting() }, progressInfo, info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -239,12 +239,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var existingProduct = GetCsvProductBase();
             existingProduct.PropertyValues = new List<PropertyValue>
             {
-                new PropertyValue { PropertyName = "CatalogProductProperty_1_Multivalue", Value = "TestValue1", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_1_Multivalue", Value = "TestValue2", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_2_Multivalue", Value = "TestValue3", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_2_Multivalue", Value = "TestValue4", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "TestCategory_ProductProperty_Multivalue", Value = "TestValue5", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "TestCategory_ProductProperty_Multivalue", Value = "TestValue6", ValueType = PropertyValueType.ShortText }
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_Multivalue", Value = "TestValue1", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_Multivalue", Value = "TestValue2", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "CatalogProductProperty_2_Multivalue", Value = "TestValue3", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "CatalogProductProperty_2_Multivalue", Value = "TestValue4", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "TestCategory_ProductProperty_Multivalue", Value = "TestValue5", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "TestCategory_ProductProperty_Multivalue", Value = "TestValue6", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} }
             };
             _productsInternal = new List<CatalogProduct> { existingProduct };
 
@@ -261,7 +261,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, new ExportImportProgressInfo(), info => { });
+            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration(), CsvSettings = CsvProductMappingConfiguration.GetDefaultCsvSetting() }, new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -661,9 +661,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var existingProduct = GetCsvProductBase();
             existingProduct.PropertyValues = new List<PropertyValue>
             {
-                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText }
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} },
+                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText, Property = new Property{Multivalue = true} }
             };
             _productsInternal = new List<CatalogProduct> { existingProduct };
 
@@ -691,7 +691,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(list, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
+            target.DoImport(list, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration(), CsvSettings = CsvProductMappingConfiguration.GetDefaultCsvSetting() }, progressInfo, info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {

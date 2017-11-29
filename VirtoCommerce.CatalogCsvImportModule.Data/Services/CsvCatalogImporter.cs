@@ -151,7 +151,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             csvProducts = MergeCsvProducts(csvProducts, catalog);
 
-            MergeFromAlreadyExistProducts(csvProducts, catalog);
+            MergeFromAlreadyExistProducts(csvProducts, catalog, importInfo);
 
             SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
 
@@ -415,6 +415,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private List<PropertyValue> TryToSplitMultivaluePropertyValues(CsvProduct csvProduct, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, ICollection<Property> modifiedProperties, CsvImportInfo importInfo)
         {
             var result = new List<PropertyValue>();
+            var multiValueDublicateComparer = AnonymousComparer.Create((PropertyValue x) => string.Join(":", x.PropertyName, x.Value));
 
             //Try to split multivalues
             foreach (var propValue in csvProduct.PropertyValues)
@@ -462,7 +463,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                             }
                             multiPropValue.ValueId = dicValue?.Id;
                         }
-                        result.Add(multiPropValue);
+                        result.AddDistinct(multiValueDublicateComparer, multiPropValue);
                     }
                 }
                 else
@@ -545,7 +546,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         }
 
         //Merge importing products with already exist to prevent erasing already exist data, import should only update or create data
-        private void MergeFromAlreadyExistProducts(IEnumerable<CsvProduct> csvProducts, Catalog catalog)
+        private void MergeFromAlreadyExistProducts(IEnumerable<CsvProduct> csvProducts, Catalog catalog, CsvImportInfo importInfo)
         {
             var transientProducts = csvProducts.Where(x => x.IsTransient()).ToArray();
             var nonTransientProducts = csvProducts.Where(x => !x.IsTransient()).ToArray();
@@ -572,7 +573,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var existProduct = csvProduct.IsTransient() ? alreadyExistProducts.FirstOrDefault(x => x.Code.EqualsInvariant(csvProduct.Code)) : alreadyExistProducts.FirstOrDefault(x=> x.Id == csvProduct.Id);
                 if(existProduct != null)
                 {
-                    csvProduct.MergeFrom(existProduct);
+                    csvProduct.MergeFrom(existProduct , importInfo.CsvSettings);
                 }
             }
 

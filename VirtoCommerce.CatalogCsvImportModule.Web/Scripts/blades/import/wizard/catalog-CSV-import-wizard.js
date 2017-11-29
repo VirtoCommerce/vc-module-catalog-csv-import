@@ -88,7 +88,7 @@
                 propertyCsvColumns: blade.importConfiguration.propertyCsvColumns
             };
 
-            var exportInfo = { configuration: blade.importConfiguration, fileUrl: blade.csvFileUrl, catalogId: blade.catalog.id };
+            var exportInfo = { configuration: blade.importConfiguration, fileUrl: blade.csvFileUrl, catalogId: blade.catalog.id, csvSettings: blade.csvSettings };
             importResource.run(exportInfo, function (notification) {
                 var newBlade = {
                     id: "importProgress",
