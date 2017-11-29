@@ -707,7 +707,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductHasPrice_PriceUpdated()
+        public void DoImport_UpdateProductHasPriceCurrency_PriceUpdated()
         {
             //Arrange
             var listPrice = 555.5m;
@@ -717,7 +717,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             _productsInternal = new List<CatalogProduct> { existingProduct };
 
             var firstProduct = GetCsvProductBase();
-            firstProduct.Prices = new List<Price> {new Price()
+            firstProduct.Prices = new List<Price> { new CsvPrice()
             {
                 List = listPrice,
                 Sale = listPrice,
@@ -750,6 +750,114 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
+        public void DoImport_UpdateProductHasPriceId_PriceUpdated()
+        {
+            //Arrange
+            var listPrice = 555.5m;
+            var existingPriceId = "ExistingPrice_ID";
+            var existingPriceId2 = "ExistingPrice_ID_2";
+
+            var existingProduct = GetCsvProductBase();
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var firstProduct = GetCsvProductBase();
+            firstProduct.Prices = new List<Price> {new CsvPrice()
+            {
+                List = listPrice,
+                Sale = listPrice,
+                Currency = "EUR",
+                Id = existingPriceId
+            }};
+
+            _pricesInternal = new List<Price>()
+            {
+                new Price
+                {
+                    Currency = "EUR",
+                    PricelistId = "DefaultEUR",
+                    List = 333.3m,
+                    Id = existingPriceId,
+                    ProductId = firstProduct.Id
+                },
+                new Price
+                {
+                    Currency = "EUR",
+                    PricelistId = "DefaultEUR",
+                    List = 333.3m,
+                    Id = existingPriceId2,
+                    ProductId = firstProduct.Id
+                }
+            };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<Price>[] inspectors =
+            {
+                x => Assert.True(x.List ==  333.3m && x.Id == existingPriceId2 && x.ProductId == firstProduct.Id),
+                x => Assert.True(x.List == listPrice && x.Id == existingPriceId && x.ProductId == firstProduct.Id)
+            };
+            Assert.Collection(_pricesInternal, inspectors);
+        }
+
+        [Fact]
+        public void DoImport_UpdateProductHasPriceListId_PriceUpdated()
+        {
+            //Arrange
+            var listPrice = 555.5m;
+            var existingPriceId = "ExistingPrice_ID";
+            var existingPriceId2 = "ExistingPrice_ID_2";
+
+            var existingProduct = GetCsvProductBase();
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var firstProduct = GetCsvProductBase();
+            firstProduct.Prices = new List<Price> {new CsvPrice()
+            {
+                List = listPrice,
+                Sale = listPrice,
+                Currency = "EUR",
+                PricelistId = "DefaultEUR",
+            }};
+
+            _pricesInternal = new List<Price>()
+            {
+                new Price
+                {
+                    Currency = "EUR",
+                    PricelistId = "DefaultEUR",
+                    List = 333.3m,
+                    Id = existingPriceId,
+                    ProductId = firstProduct.Id
+                },
+                new Price
+                {
+                    Currency = "USD",
+                    PricelistId = "DefaultUSD",
+                    List = 333.3m,
+                    Id = existingPriceId2,
+                    ProductId = firstProduct.Id
+                }
+            };
+
+            var target = GetImporter();
+
+            //Act
+            target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            Action<Price>[] inspectors =
+            {
+                x => Assert.True(x.List ==  333.3m && x.PricelistId == "DefaultUSD" && x.Id == existingPriceId2 && x.ProductId == firstProduct.Id),
+                x => Assert.True(x.List == listPrice && x.Id == existingPriceId && x.PricelistId == "DefaultEUR" && x.ProductId == firstProduct.Id)
+            };
+            Assert.Collection(_pricesInternal, inspectors);
+        }
+
+        [Fact]
         public void DoImport_UpdateProductsTwoProductDifferentPriceCurrency_PricesMerged()
         {
             //Arrange
@@ -761,10 +869,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             _productsInternal = new List<CatalogProduct> { existingProduct };
 
             var firstProduct = GetCsvProductBase();
-            firstProduct.Prices = new List<Price> { new Price { List = listPrice, Sale = salePrice, Currency = "EUR" } };
+            firstProduct.Prices = new List<Price> { new CsvPrice { List = listPrice, Sale = salePrice, Currency = "EUR" } };
 
             var secondProduct = GetCsvProductBase();
-            secondProduct.Prices = new List<Price> { new Price { List = listPrice, Sale = salePrice, Currency = "USD" } };
+            secondProduct.Prices = new List<Price> { new CsvPrice { List = listPrice, Sale = salePrice, Currency = "USD" } };
 
             _pricesInternal = new List<Price>
             {

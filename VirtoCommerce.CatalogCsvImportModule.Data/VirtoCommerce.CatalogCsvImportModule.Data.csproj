@@ -133,6 +133,7 @@
     <Compile Include="Core\ICsvCatalogImporter.cs" />
     <Compile Include="Model\CsvExportInfo.cs" />
     <Compile Include="Model\CsvImportInfo.cs" />
+    <Compile Include="Model\CsvPrice.cs" />
     <Compile Include="Model\CsvProduct.cs" />
     <Compile Include="Model\CsvProductMappingConfiguration.cs" />
     <Compile Include="Model\CsvProductPropertyMap.cs" />
