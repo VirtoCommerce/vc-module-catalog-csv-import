@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity.Migrations.Model;
 using System.Globalization;
 using System.Linq;
 using Omu.ValueInjecter;
@@ -23,7 +24,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             PropertyValues = new List<PropertyValue>();
             Images = new List<Image>();
             Assets = new List<Asset>();
-
             Price = new CsvPrice() { Currency = "USD" };
             Prices = new List<Price> { Price };
             Inventory = new InventoryInfo();
@@ -33,7 +33,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             SeoInfos = new List<SeoInfo> { SeoInfo };
         }
 
-        public CsvProduct(CatalogProduct product, IBlobUrlResolver blobUrlResolver, Price price, InventoryInfo inventory)
+        public CsvProduct(CatalogProduct product, IBlobUrlResolver blobUrlResolver, Price price, InventoryInfo inventory, SeoInfo seoInfo)
             : this()
         {
             _blobUrlResolver = blobUrlResolver;
@@ -55,7 +55,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             {
                 Inventory = inventory;
             }
-
+            if (seoInfo != null)
+            {
+                SeoInfo = seoInfo;
+            }
         }
         public Price Price { get; set; }
         public InventoryInfo Inventory { get; set; }

@@ -91,9 +91,27 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 {
                     try
                     {
-                        var csvProduct = new CsvProduct(product, _blobUrlResolver, allProductPrices.FirstOrDefault(x => x.ProductId == product.Id), allProductInventories.FirstOrDefault(x => x.ProductId == product.Id));
-                        csvWriter.WriteRecord(csvProduct);
-                        csvWriter.NextRecord();
+                        if (product.SeoInfos.Count > 0)
+                        {
+                            foreach (var seoInfo in product.SeoInfos)
+                            {
+                                var csvProduct = new CsvProduct(product, _blobUrlResolver,
+                                    allProductPrices.FirstOrDefault(x => x.ProductId == product.Id),
+                                    allProductInventories.FirstOrDefault(x => x.ProductId == product.Id), seoInfo);
+
+                                csvWriter.WriteRecord(csvProduct);
+                                csvWriter.NextRecord();
+                            }
+                        }
+                        else
+                        {
+                            var csvProduct = new CsvProduct(product, _blobUrlResolver,
+                                allProductPrices.FirstOrDefault(x => x.ProductId == product.Id),
+                                allProductInventories.FirstOrDefault(x => x.ProductId == product.Id), null);
+
+                            csvWriter.WriteRecord(csvProduct);
+                            csvWriter.NextRecord();
+                        }
                     }
                     catch (Exception ex)
                     {
