@@ -258,7 +258,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             get { return SeoInfo.SemanticUrl; }
             set
             {
-                var slug = value.GenerateSlug();
+                var slug = value;
                 SeoInfo.SemanticUrl = slug.Substring(0, Math.Min(slug.Length, 240));
             }
         }
