@@ -11,6 +11,7 @@ using VirtoCommerce.CatalogCsvImportModule.Data.Core;
 using VirtoCommerce.CatalogCsvImportModule.Data.Model;
 using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Catalog.Services;
+using VirtoCommerce.Domain.Inventory.Model;
 using VirtoCommerce.Domain.Inventory.Services;
 using VirtoCommerce.Domain.Pricing.Model;
 using VirtoCommerce.Domain.Pricing.Services;
@@ -66,7 +67,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 };
                 var allProductPrices = _pricingService.EvaluateProductPrices(priceEvalContext).ToList();
 
-
                 //Load inventories
                 prodgressInfo.Description = "loading inventory information...";
                 progressCallback(prodgressInfo);
@@ -87,13 +87,18 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 prodgressInfo.TotalCount = products.Count;
                 var notifyProductSizeLimit = 50;
                 var counter = 0;
+
+                //convert to dict for faster search
+                var pricesDict = allProductPrices.GroupBy(x=>x.ProductId).ToDictionary(x => x.Key, x => x.First());
+                var inventoriesDict = allProductInventories.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.First());
+
                 foreach (var product in products)
                 {
                     try
                     {
-                        var csvProduct = new CsvProduct(product, _blobUrlResolver, allProductPrices.FirstOrDefault(x => x.ProductId == product.Id), allProductInventories.FirstOrDefault(x => x.ProductId == product.Id));
-                        csvWriter.WriteRecord(csvProduct);
-                        csvWriter.NextRecord();
+                        var csvProducts = MakeMultipleExportProducts(product, pricesDict, inventoriesDict);
+
+                        csvWriter.WriteRecords(csvProducts);
                     }
                     catch (Exception ex)
                     {
@@ -113,6 +118,22 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
         }
 
+        private List<CsvProduct> MakeMultipleExportProducts(CatalogProduct product, Dictionary<string, Price> prices, Dictionary<string, InventoryInfo> inventories)
+        {
+            List<CsvProduct> result = new List<CsvProduct>();
+
+            prices.TryGetValue(product.Id, out Price price);
+            inventories.TryGetValue(product.Id, out InventoryInfo inventoryInfo);
+
+            foreach (var seoInfo in product.SeoInfos.Any() ? product.SeoInfos : new List<Domain.Commerce.Model.SeoInfo>() { null })
+            {
+                var csvProduct = new CsvProduct(product, _blobUrlResolver, price, inventoryInfo, seoInfo);
+
+                result.Add(csvProduct);
+            }
+
+            return result;
+        }
 
         private List<CatalogProduct> LoadProducts(string catalogId, string[] exportedCategories, string[] exportedProducts)
         {
