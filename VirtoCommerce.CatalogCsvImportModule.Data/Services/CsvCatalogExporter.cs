@@ -122,11 +122,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             List<CsvProduct> result = new List<CsvProduct>();
 
-            var price = default(Price);
-            prices.TryGetValue(product.Id, out price);
-
-            var inventoryInfo = default(InventoryInfo);
-            inventories.TryGetValue(product.Id, out inventoryInfo);
+            prices.TryGetValue(product.Id, out Price price);
+            inventories.TryGetValue(product.Id, out InventoryInfo inventoryInfo);
 
             foreach (var seoInfo in product.SeoInfos.Any() ? product.SeoInfos : new List<Domain.Commerce.Model.SeoInfo>() { null })
             {
