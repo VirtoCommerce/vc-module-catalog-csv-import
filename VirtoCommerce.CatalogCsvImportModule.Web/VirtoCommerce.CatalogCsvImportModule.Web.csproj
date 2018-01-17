@@ -165,16 +165,10 @@
     <Content Include="module.manifest" />
     <Content Include="Scripts\blades\export\catalog-CSV-export.js" />
     <Content Include="Scripts\blades\export\catalog-CSV-export.tpl.html" />
-    <Content Include="Scripts\blades\export\catalog-export.js" />
-    <Content Include="Scripts\blades\export\exporter-list.js" />
-    <Content Include="Scripts\blades\export\exporter-list.tpl.html" />
     <Content Include="Scripts\blades\export\notifications\historyExport.tpl.html" />
     <Content Include="Scripts\blades\export\notifications\menuExport.tpl.html" />
     <Content Include="Scripts\blades\import\catalog-CSV-import.js" />
     <Content Include="Scripts\blades\import\catalog-CSV-import.tpl.html" />
-    <Content Include="Scripts\blades\import\catalog-import.js" />
-    <Content Include="Scripts\blades\import\importers-list.js" />
-    <Content Include="Scripts\blades\import\importers-list.tpl.html" />
     <Content Include="Scripts\blades\import\notifications\historyImport.tpl.html" />
     <Content Include="Scripts\blades\import\notifications\menuImport.tpl.html" />
     <Content Include="Scripts\blades\import\wizard\catalog-CSV-import-wizard-mapping-step.js" />

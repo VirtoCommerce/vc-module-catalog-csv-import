@@ -1,14 +1,6 @@
 ﻿{
   "catalogCsvImportModule": {
     "blades": {
-      "importers-list": {
-        "title": "Catalog import",
-        "subtitle": "Choose data format & start import"
-      },
-      "exporter-list": {
-        "title": "Data export",
-        "subtitle": "Choose data format & start export"
-      },
       "catalog-CSV-export": {
         "title": "Catalog {{name}} to csv export",
         "labels": {

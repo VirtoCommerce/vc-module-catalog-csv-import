@@ -10,8 +10,8 @@ angular.module(moduleTemplateName, [])
     function ($stateProvider, $urlRouterProvider) {
     }
 ])
-.run(['$rootScope', 'platformWebApp.mainMenuService', 'platformWebApp.widgetService', 'platformWebApp.toolbarService', 'platformWebApp.pushNotificationTemplateResolver', 'platformWebApp.bladeNavigationService', 'virtoCommerce.catalogCsvImportModule.catalogImportService', 'virtoCommerce.catalogCsvImportModule.catalogExportService', '$state',
-    function ($rootScope, mainMenuService, widgetService, toolbarService, pushNotificationTemplateResolver, bladeNavigationService, catalogImportService, catalogExportService, $state) {
+    .run(['$rootScope', 'platformWebApp.mainMenuService', 'platformWebApp.widgetService', 'platformWebApp.toolbarService', 'platformWebApp.pushNotificationTemplateResolver', 'platformWebApp.bladeNavigationService', '$state', 'virtoCommerce.catalogModule.catalogImportService', 'virtoCommerce.catalogModule.catalogExportService',
+        function ($rootScope, mainMenuService, widgetService, toolbarService, pushNotificationTemplateResolver, bladeNavigationService, $state, catalogImportService, catalogExportService) {
 
         //NOTIFICATIONS
         //Export
@@ -80,6 +80,7 @@ angular.module(moduleTemplateName, [])
             controller: 'virtoCommerce.catalogCsvImportModule.catalogCSVimportWizardController',
             template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/import/wizard/catalog-CSV-import-wizard.tpl.html'
         });
+
         catalogExportService.register({
             name: 'VirtoCommerce CSV export',
             description: 'Native VirtoCommerce catalog data export to CSV',
@@ -87,47 +88,5 @@ angular.module(moduleTemplateName, [])
             controller: 'virtoCommerce.catalogCsvImportModule.catalogCSVexportController',
             template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/export/catalog-CSV-export.tpl.html'
         });
-
-        var catalogImportCommand = {
-            name: "platform.commands.import",
-            icon: 'fa fa-download',
-            executeMethod: function (blade) {
-                var newBlade = {
-                    id: 'catalogImport',
-                    title: 'catalogCsvImportModule.blades.importers-list.title',
-                    subtitle: 'catalogCsvImportModule.blades.importers-list.subtitle',
-                    catalog: blade.catalog,
-                    controller: 'virtoCommerce.catalogCsvImportModule.importerListController',
-                    template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/import/importers-list.tpl.html'
-                };
-                bladeNavigationService.showBlade(newBlade, blade);
-            },
-            canExecuteMethod: function(blade) {
-                return blade.catalogId;
-            },
-            index: 100
-        };
-        toolbarService.register(catalogImportCommand, 'virtoCommerce.catalogModule.categoriesItemsListController');
-
-        var catalogExportCommand = {
-            name: "platform.commands.export",
-            icon: 'fa fa-upload',
-            executeMethod: function (blade) {
-                var newBlade = {
-                    id: 'catalogExport',
-                    title: 'catalogCsvImportModule.blades.exporter-list.title',
-                    subtitle: 'catalogCsvImportModule.blades.exporter-list.subtitle',
-                    catalog: blade.catalog,
-                    controller: 'virtoCommerce.catalogCsvImportModule.exporterListController',
-                    template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/export/exporter-list.tpl.html'
-                };
-                bladeNavigationService.showBlade(newBlade, blade);
-            },
-            canExecuteMethod: function(blade) {
-                return blade.catalogId;
-            },
-            index: 101
-        };
-        toolbarService.register(catalogExportCommand, 'virtoCommerce.catalogModule.categoriesItemsListController');
     }
 ]);
