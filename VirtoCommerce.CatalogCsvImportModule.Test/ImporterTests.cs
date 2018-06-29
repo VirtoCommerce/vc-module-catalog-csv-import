@@ -721,7 +721,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             {
                 List = listPrice,
                 Sale = listPrice,
-                Currency = "EUR"
+                Currency = "EUR",
+                MinQuantity = 1
             }};
 
             _pricesInternal = new List<Price>()
@@ -732,7 +733,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                     PricelistId = "DefaultEUR",
                     List = 333.3m,
                     Id = existingPriceId,
-                    ProductId = firstProduct.Id
+                    ProductId = firstProduct.Id,
+                    MinQuantity = 2
                 }
             };
 
@@ -744,7 +746,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             //Assert
             Action<Price>[] inspectors =
             {
-                x => Assert.True(x.List == listPrice && x.Id == existingPriceId && x.ProductId == firstProduct.Id)
+                x => Assert.True(x.List == listPrice && x.Id == existingPriceId && x.ProductId == firstProduct.Id && x.MinQuantity == 1)
             };
             Assert.Collection(_pricesInternal, inspectors);
         }

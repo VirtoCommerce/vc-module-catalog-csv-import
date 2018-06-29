@@ -79,8 +79,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.Equal(456.7m, product.Price.Sale);
             Assert.Equal("EUR", product.Currency);
             Assert.Equal("EUR", product.Price.Currency);
-            Assert.Equal("5", product.Quantity);
-            Assert.Equal(5, product.Inventory.InStockQuantity);
+            Assert.Equal("5", product.PriceMinQuantity);
+            Assert.Equal(5, product.Price.MinQuantity);
         }
 
         [Fact]

@@ -102,6 +102,18 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             }
         }
 
+        public string PriceMinQuantity
+        {
+            get
+            {
+                return Price.MinQuantity.ToString(CultureInfo.InvariantCulture);
+            }
+            set
+            {
+                Price.MinQuantity = Convert.ToInt32(value);
+            }
+        }
+
         public string Currency
         {
             get
