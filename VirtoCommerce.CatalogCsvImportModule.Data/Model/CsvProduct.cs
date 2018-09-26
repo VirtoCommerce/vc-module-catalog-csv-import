@@ -240,8 +240,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
                 if (Category == null)
                     return null;
 
+                if (!string.IsNullOrEmpty(Category.Path))
+                    return Category.Path;
+
                 var parents = Category.Parents ?? new Category[] { };
-                return string.Join("/", parents.Select(x => x.Path).Concat(new[] { Category.Path }));
+                return string.Join("/", parents.Select(x => x.Name).Concat(new[] { Category.Name }));
             }
             set
             {
