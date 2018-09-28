@@ -241,7 +241,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
                     return null;
 
                 var parents = Category.Parents ?? new Category[] { };
-                return string.Join("/", parents.Select(x => x.Path).Concat(new[] { Category.Path }));
+                return string.Join("/", parents.Select(x => x.Path ?? x.Name).Concat(new[] { Category.Path ?? Category.Name }));
             }
             set
             {
@@ -296,7 +296,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         }
 
         public int LineNumber { get; set; }
-      
+
         /// <summary>
         /// Merge from other product, without any deletion, only update and create allowed
         /// 
@@ -368,7 +368,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
                     product.SeoInfos.Remove(existingSeoInfo);
                 }
             }
-            SeoInfos = SeoInfos.Where(x=>!x.SemanticUrl.IsNullOrEmpty()).Concat(product.SeoInfos).ToList();
+            SeoInfos = SeoInfos.Where(x => !x.SemanticUrl.IsNullOrEmpty()).Concat(product.SeoInfos).ToList();
         }
     }
 }
