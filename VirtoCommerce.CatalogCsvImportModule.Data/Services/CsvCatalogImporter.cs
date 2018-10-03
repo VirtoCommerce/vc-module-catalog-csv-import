@@ -99,6 +99,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     try
                     {
                         var csvProduct = reader.GetRecord<CsvProduct>();
+                        csvProduct.Id = string.IsNullOrEmpty(csvProduct.Id) ? null : csvProduct.Id;
                         csvProducts.Add(csvProduct);
                     }
                     catch (Exception ex)
@@ -399,7 +400,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
             var productIds = products.Select(x => x.Id).ToArray();
             var existInventories = _inventoryService.GetProductsInventoryInfos(productIds);
-            var inventories = products.Where(x => x.Inventory != null).Select(x => x.Inventory).ToArray();
+            var inventories = products.Where(x => x.Inventory != null).Select(x => x.Inventory).Where(x => !string.IsNullOrEmpty(x.ProductId)).ToArray();
             foreach (var inventory in inventories)
             {
                 var exitsInventory = existInventories.FirstOrDefault(x => x.ProductId == inventory.ProductId && x.FulfillmentCenterId == inventory.FulfillmentCenterId);
