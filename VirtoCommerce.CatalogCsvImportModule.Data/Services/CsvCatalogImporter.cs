@@ -550,7 +550,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                 //Try to set parent relations
                 //By id or code reference
-                var parentProduct = csvProducts.FirstOrDefault(x => csvProduct.MainProductId != null && (x.Id == csvProduct.MainProductId || x.Code == csvProduct.MainProductId));
+                var parentProduct = csvProducts.FirstOrDefault(x => !string.IsNullOrEmpty(csvProduct.MainProductId) && (x.Id.EqualsInvariant(csvProduct.MainProductId) || x.Code.EqualsInvariant(csvProduct.MainProductId)));
                 csvProduct.MainProduct = parentProduct;
                 csvProduct.MainProductId = parentProduct != null ? parentProduct.Id : null;
 
