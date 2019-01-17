@@ -9,10 +9,10 @@
         blade.subtitleVales = { name: blade.catalog.name };
 
         $scope.columnDelimiters = [
-            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.space", value: " " },
+            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.space", value: "' '" },
             { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.comma", value: "," },
             { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.semicolon", value: ";" },
-            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.tab", value: "\t" }
+            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.tab", value: "'\t'" }
         ];
 
         if (!$scope.uploader) {
