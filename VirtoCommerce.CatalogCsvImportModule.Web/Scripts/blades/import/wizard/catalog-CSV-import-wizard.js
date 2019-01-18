@@ -9,10 +9,10 @@
         blade.subtitleVales = { name: blade.catalog.name };
 
         $scope.columnDelimiters = [
-            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.space", value: "' '" },
+            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.space", value: " " },
             { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.comma", value: "," },
             { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.semicolon", value: ";" },
-            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.tab", value: "'\t'" }
+            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.tab", value: "\t" }
         ];
 
         if (!$scope.uploader) {
@@ -42,7 +42,7 @@
             uploader.onSuccessItem = function (fileItem, asset, status, headers) {
                 blade.csvFileUrl = asset[0].relativeUrl;
 
-                importResource.getMappingConfiguration({ fileUrl: blade.csvFileUrl, delimiter: blade.columnDelimiter }, function (data) {
+                importResource.getMappingConfiguration({ fileUrl: blade.csvFileUrl, delimiter: encodeURIComponent(blade.columnDelimiter) }, function (data) {
                     if ($localStorage.lastKnownImportData && $localStorage.lastKnownImportData.eTag === data.eTag) {
                         angular.extend(data, $localStorage.lastKnownImportData);
                     }

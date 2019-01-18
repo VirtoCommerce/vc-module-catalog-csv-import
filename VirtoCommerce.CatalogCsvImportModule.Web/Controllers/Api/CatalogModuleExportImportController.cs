@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text.RegularExpressions;
+using System.Web;
 using System.Web.Http;
 using System.Web.Http.Description;
 using VirtoCommerce.CatalogCsvImportModule.Data.Core;
@@ -123,23 +123,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         {
             var retVal = Data.Model.CsvProductMappingConfiguration.GetDefaultConfiguration();
 
-            string clearDelimiter = null;
-            var regex = new Regex("^'(.+)'$", RegexOptions.IgnoreCase);
-            Match m = regex.Match(delimiter);
+            string decodedDelimiter = HttpUtility.UrlDecode(delimiter);
 
-            if (m.Success)
-            {
-                clearDelimiter = m.Groups[1].Value;
-            }
-            else
-                clearDelimiter = delimiter;
-
-            retVal.Delimiter = clearDelimiter;
+            retVal.Delimiter = decodedDelimiter;
 
             //Read csv headers and try to auto map fields by name
             using (var reader = new CsvReader(new StreamReader(_blobStorageProvider.OpenRead(fileUrl))))
             {
-                reader.Configuration.Delimiter = clearDelimiter;
+                reader.Configuration.Delimiter = decodedDelimiter;
                 if (reader.Read())
                 {
                     if (reader.ReadHeader())
