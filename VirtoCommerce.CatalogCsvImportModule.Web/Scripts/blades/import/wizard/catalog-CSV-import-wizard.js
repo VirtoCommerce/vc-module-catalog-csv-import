@@ -42,7 +42,7 @@
             uploader.onSuccessItem = function (fileItem, asset, status, headers) {
                 blade.csvFileUrl = asset[0].relativeUrl;
 
-                importResource.getMappingConfiguration({ fileUrl: blade.csvFileUrl, delimiter: blade.columnDelimiter }, function (data) {
+                importResource.getMappingConfiguration({ fileUrl: blade.csvFileUrl, delimiter: encodeURIComponent(blade.columnDelimiter) }, function (data) {
                     if ($localStorage.lastKnownImportData && $localStorage.lastKnownImportData.eTag === data.eTag) {
                         angular.extend(data, $localStorage.lastKnownImportData);
                     }
