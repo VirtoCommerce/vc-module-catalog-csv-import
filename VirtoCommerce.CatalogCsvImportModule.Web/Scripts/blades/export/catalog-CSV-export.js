@@ -37,7 +37,13 @@
         function (error) { bladeNavigationService.setError('Error ' + error.status, $scope.blade); });
 
         pricelists.search({ take: 1000 }, function (result) {
-            $scope.pricelists = result.results;
+            $scope.pricelists = _.filter(result.results,
+                function (x) {
+                    return _.some(x.assignments,
+                        function (y) {
+                            return y.catalogId === blade.catalog.id
+                        })
+                });
         });
 
         $scope.blade.headIcon = 'fa-file-archive-o';
