@@ -25,7 +25,7 @@ Before starting using the Import functionality, the admin should set the 'Create
 1. The user opens Catalog module→ selects a Catalog and clicks 'Import';
 ![Catalog Import](docs/media/screen-select-catalog-to-import.png)
 1. The system will open the Import types blade and allows the user to select CSV import format;
-1. The user opens the next blade
+1. The user opens the next blade.
 The system will prompt the user to do the following:
 
      1. Select delimeter from drop down;
