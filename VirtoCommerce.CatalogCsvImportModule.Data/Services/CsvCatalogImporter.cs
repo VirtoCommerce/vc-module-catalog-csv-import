@@ -1,19 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Practices.ObjectBuilder2;
-using Omu.ValueInjecter;
 using VirtoCommerce.CatalogCsvImportModule.Data.Core;
-using VirtoCommerce.CatalogModule.Data.Repositories;
 using VirtoCommerce.CatalogCsvImportModule.Data.Model;
+using VirtoCommerce.CatalogModule.Data.Repositories;
 using VirtoCommerce.Domain.Catalog.Model;
+using VirtoCommerce.Domain.Catalog.Model.Search;
 using VirtoCommerce.Domain.Catalog.Services;
-using VirtoCommerce.Domain.Commerce.Services;
+using VirtoCommerce.Domain.Inventory.Model;
 using VirtoCommerce.Domain.Inventory.Services;
 using VirtoCommerce.Domain.Pricing.Model;
 using VirtoCommerce.Domain.Pricing.Services;
@@ -23,8 +22,6 @@ using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.Settings;
 using SearchCriteria = VirtoCommerce.Domain.Catalog.Model.SearchCriteria;
-using VirtoCommerce.Domain.Catalog.Model.Search;
-using VirtoCommerce.Domain.Inventory.Model;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 {
@@ -429,6 +426,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
 
             var prices = products.SelectMany(x => x.Prices).OfType<CsvPrice>().ToArray();
+            //min quantity 0 is not allowed
+            prices.Where(x => x.MinQuantity == 0).ForEach(x => x.MinQuantity = 1);
 
             //try update update prices by id
             var pricesWithIds = prices.Where(x => !string.IsNullOrEmpty(x.Id)).ToArray();
