@@ -17,6 +17,7 @@ using VirtoCommerce.Platform.Core.Assets;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Security;
+using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.Platform.Data.Common;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
@@ -65,10 +66,20 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         private readonly ICommerceService _commerceService;
         private readonly IBlobStorageProvider _blobStorageProvider;
         private readonly IUserNameResolver _userNameResolver;
+        private readonly ISettingsManager _settingsManager;
         private readonly IBlobUrlResolver _blobUrlResolver;
 
-        public ExportImportController(ICatalogService catalogService, IPushNotificationManager pushNotificationManager, ICommerceService commerceService, IBlobStorageProvider blobStorageProvider, IBlobUrlResolver blobUrlResolver,
-            ICsvCatalogExporter csvExporter, ICsvCatalogImporter csvImporter, ISecurityService securityService, IPermissionScopeService permissionScopeService, IUserNameResolver userNameResolver)
+        public ExportImportController(ICatalogService catalogService,
+            IPushNotificationManager pushNotificationManager,
+            ICommerceService commerceService,
+            IBlobStorageProvider blobStorageProvider,
+            IBlobUrlResolver blobUrlResolver,
+            ICsvCatalogExporter csvExporter,
+            ICsvCatalogImporter csvImporter,
+            ISecurityService securityService,
+            IPermissionScopeService permissionScopeService,
+            IUserNameResolver userNameResolver,
+            ISettingsManager settingsManager)
         {
             _securityService = securityService;
             _permissionScopeService = permissionScopeService;
@@ -78,6 +89,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             _commerceService = commerceService;
             _blobStorageProvider = blobStorageProvider;
             _userNameResolver = userNameResolver;
+            _settingsManager = settingsManager;
             _blobUrlResolver = blobUrlResolver;
 
             _csvExporter = csvExporter;
@@ -226,7 +238,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                     _csvExporter.DoExport(stream, exportInfo, progressCallback);
 
                     stream.Position = 0;
-                    var blobRelativeUrl = "temp/Catalog-" + catalog.Name + "-export.csv";
+                    var fileNameTemplate = _settingsManager.GetValue("CsvCatalogImport.ExportFileNameTemplate", string.Empty);
+                    var fileName = string.Format(fileNameTemplate, DateTime.UtcNow);
+                    fileName = Path.ChangeExtension(fileName, ".csv");
+
+                    var blobRelativeUrl = Path.Combine("temp", fileName);
+
                     //Upload result csv to blob storage
                     using (var blobStream = _blobStorageProvider.OpenWrite(blobRelativeUrl))
                     {
