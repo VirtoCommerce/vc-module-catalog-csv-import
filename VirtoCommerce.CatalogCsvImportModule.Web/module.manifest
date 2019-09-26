@@ -30,6 +30,13 @@
                 <title>Create new Dictionary Values</title>
                 <description>Enable or disable creation of new Property Dictionary Values during import</description>
             </setting>
+          <setting>
+            <name>CsvCatalogImport.ExportFileNameTemplate</name>
+            <valueType>string</valueType>
+            <defaultValue>products_{0:yyyy-MM-dd_HH-mm-ss}</defaultValue>
+            <title>Export file name template</title>
+            <description>The template (pattern) that will be used to generate exported file name. Parameters: 0 - date (the UTC time of file generation).</description>
+          </setting>
         </group>
     </settings>
     
