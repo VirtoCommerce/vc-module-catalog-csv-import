@@ -1,29 +1,32 @@
-﻿using CsvHelper;
-using Hangfire;
-using Omu.ValueInjecter;
-using System;
+﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using System.Web;
-using System.Web.Http;
-using System.Web.Http.Description;
-using VirtoCommerce.CatalogCsvImportModule.Data.Core;
+using CsvHelper;
+using Hangfire;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Omu.ValueInjecter;
+using VirtoCommerce.CatalogCsvImportModule.Core;
+using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Web.Model.PushNotifications;
-using VirtoCommerce.CatalogModule.Web.Security;
-using VirtoCommerce.Domain.Catalog.Services;
-using VirtoCommerce.Domain.Commerce.Services;
+using VirtoCommerce.CatalogModule.Core;
+using VirtoCommerce.CatalogModule.Core.Model.Search;
+using VirtoCommerce.CatalogModule.Core.Services;
 using VirtoCommerce.Platform.Core.Assets;
+using VirtoCommerce.Platform.Core.Exceptions;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Settings;
-using VirtoCommerce.Platform.Data.Common;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 {
-    [RoutePrefix("api/catalogcsvimport")]
-    public class ExportImportController : ApiController
+    [Route("api/catalogcsvimport")]
+    public class ExportImportController : Controller
     {
         #region Basecontroller
 
@@ -50,7 +53,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         /// </summary>
         /// <param name="criteria"></param>
         /// <returns></returns>
-        protected void ApplyRestrictionsForCurrentUser(Domain.Catalog.Model.SearchCriteria criteria)
+        protected void ApplyRestrictionsForCurrentUser(CatalogSearchCriteria criteria)
         {
             var userName = User.Identity.Name;
             criteria.ApplyRestrictionsForUser(userName, _securityService);
@@ -63,6 +66,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
         private readonly ICatalogService _catalogService;
         private readonly IPushNotificationManager _notifier;
+        private readonly IAuthorizationService _authorizationService;
         private readonly ICommerceService _commerceService;
         private readonly IBlobStorageProvider _blobStorageProvider;
         private readonly IUserNameResolver _userNameResolver;
@@ -71,6 +75,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
         public ExportImportController(ICatalogService catalogService,
             IPushNotificationManager pushNotificationManager,
+            IAuthorizationService authorizationService,
             ICommerceService commerceService,
             IBlobStorageProvider blobStorageProvider,
             IBlobUrlResolver blobUrlResolver,
@@ -86,6 +91,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
             _catalogService = catalogService;
             _notifier = pushNotificationManager;
+            _authorizationService = authorizationService;
             _commerceService = commerceService;
             _blobStorageProvider = blobStorageProvider;
             _userNameResolver = userNameResolver;
@@ -103,17 +109,23 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         /// <param name="exportInfo">The export configuration.</param>
         [HttpPost]
         [Route("export")]
-        [ResponseType(typeof(ExportNotification))]
-        public IHttpActionResult DoExport(Data.Model.CsvExportInfo exportInfo)
+        public async Task<ActionResult<ExportNotification>> DoExport(CsvExportInfo exportInfo)
         {
             CheckCurrentUserHasPermissionForObjects(CatalogPredefinedPermissions.Export, exportInfo);
 
+            var scopes =  _permissionScopeService.GetObjectPermissionScopeStrings(exportInfo);
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, scopes, new CatalogAuthorizationRequirement(ModuleConstants.Security.Permissions.Update));
+            if (!authorizationResult.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+
             var notification = new ExportNotification(_userNameResolver.GetCurrentUserName())
             {
-                Title = "Catalog export task",
-                Description = "starting export...."
+                Title = "Catalog export task", Description = "starting export...."
             };
-            _notifier.Upsert(notification);
+            await _notifier.SendAsync(notification);
 
 
             BackgroundJob.Enqueue(() => BackgroundExport(exportInfo, notification));
@@ -130,29 +142,29 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         /// <returns></returns>
         [HttpGet]
         [Route("import/mappingconfiguration")]
-        [ResponseType(typeof(Data.Model.CsvProductMappingConfiguration))]
-        public IHttpActionResult GetMappingConfiguration([FromUri]string fileUrl, [FromUri]string delimiter = ";")
+        public async Task<ActionResult<CsvProductMappingConfiguration>> GetMappingConfiguration([FromQuery] string fileUrl,
+            [FromQuery] string delimiter = ";")
         {
-            var retVal = Data.Model.CsvProductMappingConfiguration.GetDefaultConfiguration();
-
-            string decodedDelimiter = HttpUtility.UrlDecode(delimiter);
-
-            retVal.Delimiter = decodedDelimiter;
+            var result = CsvProductMappingConfiguration.GetDefaultConfiguration();
+            var decodedDelimiter = HttpUtility.UrlDecode(delimiter);
+            result.Delimiter = decodedDelimiter;
 
             //Read csv headers and try to auto map fields by name
-            using (var reader = new CsvReader(new StreamReader(_blobStorageProvider.OpenRead(fileUrl))))
+
+            using (var reader = new CsvReader(new StreamReader(_blobStorageProvider.OpenRead(fileUrl)), CultureInfo.InvariantCulture))
             {
                 reader.Configuration.Delimiter = decodedDelimiter;
-                if (reader.Read())
+
+                if (await reader.ReadAsync())
                 {
                     if (reader.ReadHeader())
                     {
-                        retVal.AutoMap(reader.Context.HeaderRecord);
+                        result.AutoMap(reader.Context.HeaderRecord);
                     }
                 }
             }
 
-            return Ok(retVal);
+            return Ok(result);
         }
 
         /// <summary>
@@ -163,17 +175,16 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         /// <returns></returns>
         [HttpPost]
         [Route("import")]
-        [ResponseType(typeof(ImportNotification))]
-        public IHttpActionResult DoImport(Data.Model.CsvImportInfo importInfo)
+        [Authorize(ModuleConstants.Security.Permissions.Import)]
+        public async Task<ActionResult<ImportNotification>> DoImport(CsvImportInfo importInfo)
         {
             CheckCurrentUserHasPermissionForObjects(CatalogPredefinedPermissions.Import, importInfo);
 
             var notification = new ImportNotification(_userNameResolver.GetCurrentUserName())
             {
-                Title = "Import catalog from CSV",
-                Description = "starting import...."
+                Title = "Import catalog from CSV", Description = "starting import...."
             };
-            _notifier.Upsert(notification);
+            await _notifier.SendAsync(notification);
 
             BackgroundJob.Enqueue(() => BackgroundImport(importInfo, notification));
 
@@ -182,12 +193,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
         [ApiExplorerSettings(IgnoreApi = true)]
         // Only public methods can be invoked in the background. (Hangfire)
-        public void BackgroundImport(Data.Model.CsvImportInfo importInfo, ImportNotification notifyEvent)
+        public async Task BackgroundImport(CsvImportInfo importInfo, ImportNotification notifyEvent)
         {
-            Action<ExportImportProgressInfo> progressCallback = x =>
+            Action<ExportImportProgressInfo> progressCallback = async x =>
             {
                 notifyEvent.InjectFrom(x);
-                _notifier.Upsert(notifyEvent);
+                await _notifier.SendAsync(notifyEvent);
             };
 
             using (var stream = _blobStorageProvider.OpenRead(importInfo.FileUrl))
@@ -206,35 +217,35 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                 {
                     notifyEvent.Finished = DateTime.UtcNow;
                     notifyEvent.Description = "Import finished" + (notifyEvent.Errors.Any() ? " with errors" : " successfully");
-                    _notifier.Upsert(notifyEvent);
+                    await _notifier.SendAsync(notifyEvent);
                 }
             }
         }
 
         [ApiExplorerSettings(IgnoreApi = true)]
         // Only public methods can be invoked in the background. (Hangfire)
-        public void BackgroundExport(Data.Model.CsvExportInfo exportInfo, ExportNotification notifyEvent)
+        public async Task BackgroundExport(CsvExportInfo exportInfo, ExportNotification notifyEvent)
         {
             var currencies = _commerceService.GetAllCurrencies();
             var defaultCurrency = currencies.First(x => x.IsPrimary);
-            exportInfo.Currency = exportInfo.Currency ?? defaultCurrency.Code;
-            var catalog = _catalogService.GetById(exportInfo.CatalogId);
+            exportInfo.Currency ??= defaultCurrency.Code;
+            var catalog = await _catalogService.GetByIdsAsync(new[] {exportInfo.CatalogId});
             if (catalog == null)
             {
                 throw new NullReferenceException("catalog");
             }
 
-            Action<ExportImportProgressInfo> progressCallback = x =>
+            Action<ExportImportProgressInfo> progressCallback = async x =>
             {
                 notifyEvent.InjectFrom(x);
-                _notifier.Upsert(notifyEvent);
+                await _notifier.SendAsync(notifyEvent);
             };
 
             using (var stream = new MemoryStream())
             {
                 try
                 {
-                    exportInfo.Configuration = Data.Model.CsvProductMappingConfiguration.GetDefaultConfiguration();
+                    exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
                     _csvExporter.DoExport(stream, exportInfo, progressCallback);
 
                     stream.Position = 0;
@@ -249,6 +260,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                     {
                         stream.CopyTo(blobStream);
                     }
+
                     //Get a download url
                     notifyEvent.DownloadUrl = _blobUrlResolver.GetAbsoluteUrl(blobRelativeUrl);
                     notifyEvent.Description = "Export finished";
@@ -261,7 +273,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                 finally
                 {
                     notifyEvent.Finished = DateTime.UtcNow;
-                    _notifier.Upsert(notifyEvent);
+                    await _notifier.SendAsync(notifyEvent);
                 }
             }
         }
