@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using CsvHelper;
+using VirtoCommerce.CatalogCsvImportModule.Core;
 using VirtoCommerce.CatalogCsvImportModule.Data.Core;
 using VirtoCommerce.CatalogCsvImportModule.Data.Model;
 using VirtoCommerce.Domain.Catalog.Model;
