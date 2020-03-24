@@ -1,8 +1,8 @@
-﻿using VirtoCommerce.Platform.Core.Settings;
+using VirtoCommerce.Platform.Core.Settings;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Core
 {
-    public class ModuleConstants
+    public static class ModuleConstants
     {
         public static class Settings
         {
