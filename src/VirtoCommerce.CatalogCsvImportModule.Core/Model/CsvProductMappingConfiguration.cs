@@ -2,7 +2,7 @@
 using System.Linq;
 using VirtoCommerce.Platform.Core.Common;
 
-namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
+namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 {
     public class CsvProductMappingConfiguration
     {

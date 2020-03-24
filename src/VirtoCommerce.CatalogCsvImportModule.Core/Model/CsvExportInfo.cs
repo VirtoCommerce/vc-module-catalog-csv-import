@@ -1,4 +1,4 @@
-﻿namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
+﻿namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 {
     public class CsvExportInfo
     {

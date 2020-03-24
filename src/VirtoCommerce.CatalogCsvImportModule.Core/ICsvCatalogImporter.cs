@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
-using VirtoCommerce.CatalogCsvImportModule.Data.Model;
+using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.Platform.Core.ExportImport;
 
-namespace VirtoCommerce.CatalogCsvImportModule.Data.Core
+namespace VirtoCommerce.CatalogCsvImportModule.Core
 {
     public interface ICsvCatalogImporter
     {

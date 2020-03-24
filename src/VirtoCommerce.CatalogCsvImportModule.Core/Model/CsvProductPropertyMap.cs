@@ -1,8 +1,8 @@
 ﻿using VirtoCommerce.Platform.Core.Common;
 
-namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
+namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 {
-    public class CsvProductPropertyMap : ValueObject<CsvProductPropertyMap>
+    public class CsvProductPropertyMap : ValueObject
     {
         public string EntityColumnName { get; set; }
         public string CsvColumnName { get; set; }
@@ -14,7 +14,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
 
         public override string ToString()
         {
-            return string.Format("{0} -> {1}", (CsvColumnName ?? CustomValue) ?? "none", EntityColumnName ?? "none");
+            return $"{(CsvColumnName ?? CustomValue) ?? "none"} -> {EntityColumnName ?? "none"}";
         }
     }
 }

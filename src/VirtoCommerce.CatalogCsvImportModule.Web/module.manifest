@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <module>
     <id>VirtoCommerce.CatalogCsvImportModule</id>
-    <version>1.1.5</version>
-    <platformVersion>2.13.9</platformVersion>
+    <version>3.0.0</version>
+    <version-tag>rc.4</version-tag>
+    <platformVersion>3.0.0</platformVersion>
     <dependencies>
-        <dependency id="VirtoCommerce.Core" version="2.25.15" />
-        <dependency id="VirtoCommerce.Catalog" version="2.23.2" />
+        <dependency id="VirtoCommerce.Core" version="3.0.0" />
+        <dependency id="VirtoCommerce.Export" version="3.0.0" />
     </dependencies>
 
     <title>Csv Catalog Import Module</title>
@@ -16,10 +17,6 @@
 
     <assemblyFile>VirtoCommerce.CatalogCsvImportModule.Web.dll</assemblyFile>
     <moduleType>VirtoCommerce.CatalogCsvImportModule.Web.Module, VirtoCommerce.CatalogCsvImportModule.Web</moduleType>
-
-    <scripts>
-        <directory virtualPath="$/Scripts" searchPattern="*.js" searchSubdirectories="true" />
-    </scripts>
 
     <settings>
         <group name="CsvCatalogImport|General">
@@ -39,5 +36,5 @@
           </setting>
         </group>
     </settings>
-    
+
 </module>

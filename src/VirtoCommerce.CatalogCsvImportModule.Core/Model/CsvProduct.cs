@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Omu.ValueInjecter;
-using VirtoCommerce.Domain.Catalog.Model;
-using VirtoCommerce.Domain.Commerce.Model;
-using VirtoCommerce.Domain.Inventory.Model;
-using VirtoCommerce.Domain.Pricing.Model;
-using VirtoCommerce.Domain.Store.Model;
+using VirtoCommerce.CatalogModule.Core.Model;
+using VirtoCommerce.CoreModule.Core.Seo;
+using VirtoCommerce.InventoryModule.Core.Model;
 using VirtoCommerce.Platform.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.PricingModule.Core.Model;
+using Omu.ValueInjecter;
 
-namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
+namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 {
     public sealed class CsvProduct : CatalogProduct
     {
@@ -20,11 +19,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
         {
             SeoInfos = new List<SeoInfo>();
             Reviews = new List<EditorialReview>();
-            PropertyValues = new List<PropertyValue>();
+            Properties = new List<Property>();
             Images = new List<Image>();
             Assets = new List<Asset>();
             Price = new CsvPrice() { Currency = "USD" };
-            Prices = new List<Price> { Price };
             Inventory = new InventoryInfo();
             EditorialReview = new EditorialReview();
             Reviews = new List<EditorialReview> { EditorialReview };
@@ -38,7 +36,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             _blobUrlResolver = blobUrlResolver;
 
             this.InjectFrom(product);
-            PropertyValues = product.PropertyValues;
+            Properties = product.Properties;
             Images = product.Images;
             Assets = product.Assets;
             Links = product.Links;
@@ -243,10 +241,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
                 var parents = Category.Parents ?? new Category[] { };
                 return string.Join("/", parents.Select(x => x.Path ?? x.Name).Concat(new[] { Category.Path ?? Category.Name }));
             }
-            set
-            {
-                Category = new Category { Path = value };
-            }
         }
 
         public string ReviewType
@@ -299,7 +293,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
 
         /// <summary>
         /// Merge from other product, without any deletion, only update and create allowed
-        /// 
+        ///
         /// </summary>
         /// <param name="product"></param>
         public void MergeFrom(CatalogProduct product)

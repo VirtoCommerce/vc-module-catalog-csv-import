@@ -1,7 +1,7 @@
-﻿using VirtoCommerce.Domain.Commerce.Model;
+﻿using VirtoCommerce.CoreModule.Core.Seo;
 using VirtoCommerce.Platform.Core.Common;
 
-namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
+namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 {
     public class CsvSeoInfo : SeoInfo
     {
