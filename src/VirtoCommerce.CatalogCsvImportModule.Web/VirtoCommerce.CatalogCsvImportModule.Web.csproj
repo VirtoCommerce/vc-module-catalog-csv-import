@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <noWarn>1591</noWarn>
+        <IsPackable>False</IsPackable>
+        <LangVersion>latest</LangVersion>
+        <OutputType>Library</OutputType>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <NoWarn>1701;1702;1705;1591</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="FluentValidation" Version="8.0.101" />
+        <PackageReference Include="VirtoCommerce.Platform.Core" Version="3.0.0-rc2-0138" />
+        <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.0.0-rc2-0138" />
+        <PackageReference Include="VirtoCommerce.Platform.Security" Version="3.0.0-rc2-0138" />
+    </ItemGroup>
+</Project>
