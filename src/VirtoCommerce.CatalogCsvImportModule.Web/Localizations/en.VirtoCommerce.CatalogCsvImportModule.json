@@ -94,5 +94,23 @@
         "description": "Native VirtoCommerce catalog data import from CSV"
       }
     }
+  },
+  "setting": {
+    "CatalogCsvImport": {
+      "CreateDictionaryValues": {
+        "title": "Create new Dictionary Values",
+        "description": "Enable or disable creation of new Property Dictionary Values during import"
+      },
+      "ExportFileNameTemplate": {
+        "title": "Export file name template",
+        "description": "The template (pattern) that will be used to generate exported file name. Parameters: 0 - date (the UTC time of file generation)."
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.CatalogCsvImport": {
+      "title": "Csv Catalog Import Module",
+      "description": "Adds CSV import functionality to catalog"
+    }
   }
 }

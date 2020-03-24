@@ -22,6 +22,7 @@ using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Settings;
+using ModuleConstants = VirtoCommerce.CatalogModule.Core.ModuleConstants;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 {
@@ -109,6 +110,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         /// <param name="exportInfo">The export configuration.</param>
         [HttpPost]
         [Route("export")]
+        [Authorize(ModuleConstants.Security.Permissions.Export)]
         public async Task<ActionResult<ExportNotification>> DoExport(CsvExportInfo exportInfo)
         {
             CheckCurrentUserHasPermissionForObjects(CatalogPredefinedPermissions.Export, exportInfo);

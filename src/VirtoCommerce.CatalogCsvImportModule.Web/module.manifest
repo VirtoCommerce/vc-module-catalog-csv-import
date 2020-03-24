@@ -14,27 +14,13 @@
     <authors>
         <author>ksa</author>
     </authors>
+    <owners>
+        <owner>Virto Commerce</owner>
+    </owners>
+    <groups>
+        <group>commerce</group>
+    </groups>
 
     <assemblyFile>VirtoCommerce.CatalogCsvImportModule.Web.dll</assemblyFile>
     <moduleType>VirtoCommerce.CatalogCsvImportModule.Web.Module, VirtoCommerce.CatalogCsvImportModule.Web</moduleType>
-
-    <settings>
-        <group name="CsvCatalogImport|General">
-            <setting>
-                <name>CsvCatalogImport.CreateDictionaryValues</name>
-                <valueType>boolean</valueType>
-                <defaultValue>false</defaultValue>
-                <title>Create new Dictionary Values</title>
-                <description>Enable or disable creation of new Property Dictionary Values during import</description>
-            </setting>
-          <setting>
-            <name>CsvCatalogImport.ExportFileNameTemplate</name>
-            <valueType>string</valueType>
-            <defaultValue>products_{0:yyyy-MM-dd_HH-mm-ss}</defaultValue>
-            <title>Export file name template</title>
-            <description>The template (pattern) that will be used to generate exported file name. Parameters: 0 - date (the UTC time of file generation).</description>
-          </setting>
-        </group>
-    </settings>
-
 </module>
