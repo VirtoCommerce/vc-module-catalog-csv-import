@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using VirtoCommerce.PricingModule.Core.Model;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Core.Model

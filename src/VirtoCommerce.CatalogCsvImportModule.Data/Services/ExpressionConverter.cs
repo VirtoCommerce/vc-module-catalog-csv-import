@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;

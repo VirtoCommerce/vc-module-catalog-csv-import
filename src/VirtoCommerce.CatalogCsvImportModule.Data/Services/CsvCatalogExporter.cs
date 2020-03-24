@@ -1,23 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
 using CsvHelper;
-using VirtoCommerce.CatalogCsvImportModule.Core;
-using VirtoCommerce.CatalogCsvImportModule.Data.Core;
-using VirtoCommerce.CatalogCsvImportModule.Data.Model;
-using VirtoCommerce.Domain.Catalog.Model;
-using VirtoCommerce.Domain.Catalog.Services;
-using VirtoCommerce.Domain.Inventory.Model;
-using VirtoCommerce.Domain.Inventory.Services;
-using VirtoCommerce.Domain.Pricing.Model;
-using VirtoCommerce.Domain.Pricing.Services;
+using VirtoCommerce.CatalogCsvImportModule.Core.Model;
+using VirtoCommerce.CatalogCsvImportModule.Core.Services;
+using VirtoCommerce.CatalogModule.Core.Model;
+using VirtoCommerce.CatalogModule.Core.Search;
+using VirtoCommerce.CatalogModule.Core.Services;
+using VirtoCommerce.CoreModule.Core.Seo;
+using VirtoCommerce.InventoryModule.Core.Model;
+using VirtoCommerce.InventoryModule.Core.Services;
 using VirtoCommerce.Platform.Core.Assets;
 using VirtoCommerce.Platform.Core.ExportImport;
+using VirtoCommerce.PricingModule.Core.Model;
+using VirtoCommerce.PricingModule.Core.Services;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 {
@@ -47,7 +46,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             };
 
             var streamWriter = new StreamWriter(outStream, Encoding.UTF8, 1024, true) { AutoFlush = true };
-            using (var csvWriter = new CsvWriter(streamWriter))
+            using (var csvWriter = new CsvWriter(streamWriter, CultureInfo.InvariantCulture))
             {
                 //Notification
                 progressCallback(prodgressInfo);
@@ -90,7 +89,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var counter = 0;
 
                 //convert to dict for faster search
-                var pricesDict = allProductPrices.GroupBy(x=>x.ProductId).ToDictionary(x => x.Key, x => x.First());
+                var pricesDict = allProductPrices.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.First());
                 var inventoriesDict = allProductInventories.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.First());
 
                 foreach (var product in products)
@@ -126,7 +125,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             prices.TryGetValue(product.Id, out Price price);
             inventories.TryGetValue(product.Id, out InventoryInfo inventoryInfo);
 
-            foreach (var seoInfo in product.SeoInfos.Any() ? product.SeoInfos : new List<Domain.Commerce.Model.SeoInfo>() { null })
+            foreach (var seoInfo in product.SeoInfos.Any() ? product.SeoInfos : new List<SeoInfo>() { null })
             {
                 var csvProduct = new CsvProduct(product, _blobUrlResolver, price, inventoryInfo, seoInfo);
 
@@ -149,7 +148,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             {
                 foreach (var categoryId in exportedCategories)
                 {
-                    var result = _searchService.Search(new SearchCriteria { CatalogId = catalogId, CategoryId = categoryId, Skip = 0, Take = int.MaxValue, ResponseGroup = SearchResponseGroup.WithProducts | SearchResponseGroup.WithCategories, WithHidden = true});
+                    var result = _searchService.Search(new SearchCriteria { CatalogId = catalogId, CategoryId = categoryId, Skip = 0, Take = int.MaxValue, ResponseGroup = SearchResponseGroup.WithProducts | SearchResponseGroup.WithCategories, WithHidden = true });
                     productIds.AddRange(result.Products.Select(x => x.Id));
                     if (result.Categories != null && result.Categories.Any())
                     {
@@ -160,7 +159,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             if ((exportedCategories == null || !exportedCategories.Any()) && (exportedProducts == null || !exportedProducts.Any()))
             {
-                var result = _searchService.Search(new SearchCriteria { CatalogId = catalogId, SearchInChildren = true, Skip = 0, Take = int.MaxValue, ResponseGroup = SearchResponseGroup.WithProducts, WithHidden = true});
+                var result = _searchService.Search(new SearchCriteria { CatalogId = catalogId, SearchInChildren = true, Skip = 0, Take = int.MaxValue, ResponseGroup = SearchResponseGroup.WithProducts, WithHidden = true });
                 productIds = result.Products.Select(x => x.Id).ToList();
             }
 
