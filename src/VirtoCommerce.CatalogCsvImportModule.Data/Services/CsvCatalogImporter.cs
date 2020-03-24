@@ -1,29 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
-using Microsoft.Practices.ObjectBuilder2;
-using VirtoCommerce.CatalogCsvImportModule.Core;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
-using VirtoCommerce.CatalogCsvImportModule.Data.Core;
-using VirtoCommerce.CatalogCsvImportModule.Data.Model;
+using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
 using VirtoCommerce.CatalogModule.Core.Model.Search;
 using VirtoCommerce.CatalogModule.Core.Search;
 using VirtoCommerce.CatalogModule.Core.Services;
 using VirtoCommerce.CatalogModule.Data.Repositories;
-using VirtoCommerce.Domain.Catalog.Model;
-using VirtoCommerce.Domain.Catalog.Model.Search;
-using VirtoCommerce.Domain.Catalog.Services;
-using VirtoCommerce.Domain.Inventory.Model;
-using VirtoCommerce.Domain.Inventory.Services;
-using VirtoCommerce.Domain.Pricing.Model;
-using VirtoCommerce.Domain.Pricing.Services;
-using VirtoCommerce.Domain.Store.Model;
-using VirtoCommerce.Domain.Store.Services;
 using VirtoCommerce.InventoryModule.Core.Model;
 using VirtoCommerce.InventoryModule.Core.Services;
 using VirtoCommerce.Platform.Core.Common;
@@ -31,7 +20,8 @@ using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.PricingModule.Core.Model;
 using VirtoCommerce.PricingModule.Core.Services;
-using SearchCriteria = VirtoCommerce.Domain.Catalog.Model.SearchCriteria;
+using VirtoCommerce.StoreModule.Core.Model;
+using VirtoCommerce.StoreModule.Core.Services;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 {
@@ -91,7 +81,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             var encoding = DetectEncoding(inputStream);
 
-            using (var reader = new CsvReader(new StreamReader(inputStream, encoding)))
+            using (var reader = new CsvReader(new StreamReader(inputStream, encoding), CultureInfo.InvariantCulture))
             {
                 reader.Configuration.Delimiter = importInfo.Configuration.Delimiter;
                 reader.Configuration.RegisterClassMap(new CsvProductMap(importInfo.Configuration));
@@ -129,7 +119,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             var encoding = Encoding.UTF8;
 
-            Ude.CharsetDetector cdet = new Ude.CharsetDetector();
+            var cdet = new Ude.CharsetDetector();
             cdet.Feed(stream);
             cdet.DataEnd();
             if (cdet.Charset != null)

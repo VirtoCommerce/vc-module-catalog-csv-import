@@ -1,14 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using CsvHelper;
 using CsvHelper.Configuration;
-using VirtoCommerce.CatalogCsvImportModule.Data.Model;
-using coreModel = VirtoCommerce.Domain.Catalog.Model;
+using VirtoCommerce.CatalogCsvImportModule.Core.Model;
+using VirtoCommerce.CatalogModule.Core.Model;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 {
@@ -67,7 +66,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     csvPropertyMap.Data.Index = ++index;
 
                     // create custom converter instance which will get the required record from the collection
-                    csvPropertyMap.UsingExpression<ICollection<coreModel.PropertyValue>>(null, propValues =>
+                    csvPropertyMap.UsingExpression<ICollection<PropertyValue>>(null, propValues =>
                          {
                              var multiValueProperty = propValues.Where(x => x.PropertyName == propertyCsvColumn).ToList();
                              if (multiValueProperty.Count == 1)
@@ -92,8 +91,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var newPropInfo = typeof(CsvProduct).GetProperty("PropertyValues");
                 var newPropMap = MemberMap.CreateGeneric(typeof(CsvProduct), newPropInfo);
                 newPropMap.Data.ReadingConvertExpression =
-                    (Expression<Func<IReaderRow, object>>)(x => mappingCfg.PropertyCsvColumns.Select(column => new coreModel.PropertyValue { PropertyName = column, Value = x.GetField<string>(column) }).ToList());
-                newPropMap.UsingExpression<ICollection<coreModel.PropertyValue>>(null, null);
+                    (Expression<Func<IReaderRow, object>>)(x => mappingCfg.PropertyCsvColumns.Select(column => new PropertyValue { PropertyName = column, Value = x.GetField<string>(column) }).ToList());
+                newPropMap.UsingExpression<ICollection<PropertyValue>>(null, null);
 
                 newPropMap.Data.Index = ++index;
 
