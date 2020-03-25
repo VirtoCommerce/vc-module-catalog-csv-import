@@ -4,14 +4,17 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using CsvHelper;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
+using VirtoCommerce.CatalogModule.Core.Model.Search;
 using VirtoCommerce.CatalogModule.Core.Search;
 using VirtoCommerce.CatalogModule.Core.Services;
 using VirtoCommerce.CoreModule.Core.Seo;
 using VirtoCommerce.InventoryModule.Core.Model;
+using VirtoCommerce.InventoryModule.Core.Model.Search;
 using VirtoCommerce.InventoryModule.Core.Services;
 using VirtoCommerce.Platform.Core.Assets;
 using VirtoCommerce.Platform.Core.ExportImport;
@@ -22,23 +25,27 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 {
     public sealed class CsvCatalogExporter : ICsvCatalogExporter
     {
-        private readonly ICatalogSearchService _searchService;
+        private readonly IProductSearchService _productSearchService;
         private readonly IItemService _productService;
         private readonly IPricingService _pricingService;
-        private readonly IInventoryService _inventoryService;
         private readonly IBlobUrlResolver _blobUrlResolver;
+        private readonly IInventorySearchService _inventorySearchService;
 
-        public CsvCatalogExporter(ICatalogSearchService catalogSearchService, IItemService productService,
-                                  IPricingService pricingService, IInventoryService inventoryService, IBlobUrlResolver blobUrlResolver)
+        public CsvCatalogExporter(IProductSearchService productSearchService,
+            IItemService productService,
+            IPricingService pricingService,
+            IInventorySearchService inventorySearchService,
+            IBlobUrlResolver blobUrlResolver
+            )
         {
-            _searchService = catalogSearchService;
+            _productSearchService = productSearchService;
             _productService = productService;
             _pricingService = pricingService;
-            _inventoryService = inventoryService;
+            _inventorySearchService = inventorySearchService;
             _blobUrlResolver = blobUrlResolver;
         }
 
-        public void DoExport(Stream outStream, CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback)
+        public async Task DoExportAsync(Stream outStream, CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback)
         {
             var prodgressInfo = new ExportImportProgressInfo
             {
@@ -52,7 +59,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 progressCallback(prodgressInfo);
 
                 //Load all products to export
-                var products = LoadProducts(exportInfo.CatalogId, exportInfo.CategoryIds, exportInfo.ProductIds);
+                var products = await LoadProducts(exportInfo.CatalogId, exportInfo.CategoryIds, exportInfo.ProductIds);
                 var allProductIds = products.Select(x => x.Id).ToArray();
 
                 //Load prices for products
@@ -65,14 +72,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     PricelistIds = exportInfo.PriceListId == null ? null : new[] { exportInfo.PriceListId },
                     Currency = exportInfo.Currency
                 };
-                var allProductPrices = _pricingService.EvaluateProductPrices(priceEvalContext).ToList();
+                var allProductPrices = (await _pricingService.EvaluateProductPricesAsync(priceEvalContext)).ToList();
 
                 //Load inventories
                 prodgressInfo.Description = "loading inventory information...";
                 progressCallback(prodgressInfo);
 
-                var allProductInventories = _inventoryService.GetProductsInventoryInfos(allProductIds).Where(x => exportInfo.FulfilmentCenterId == null || x.FulfillmentCenterId == exportInfo.FulfilmentCenterId).ToList();
-
+                var inventorySearchCriteria = new InventorySearchCriteria()
+                {
+                    ProductIds = allProductIds,
+                    FulfillmentCenterIds = string.IsNullOrWhiteSpace(exportInfo.FulfilmentCenterId) ? Array.Empty<string>() : new[] { exportInfo.FulfilmentCenterId },
+                    Take = int.MaxValue,
+                };
+                var allProductInventories = (await _inventorySearchService.SearchInventoriesAsync(inventorySearchCriteria)).Results.ToList();
 
                 //Export configuration
                 exportInfo.Configuration.PropertyCsvColumns = products.SelectMany(x => x.PropertyValues).Select(x => x.PropertyName).Distinct().ToArray();
@@ -120,10 +132,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private List<CsvProduct> MakeMultipleExportProducts(CatalogProduct product, Dictionary<string, Price> prices, Dictionary<string, InventoryInfo> inventories)
         {
-            List<CsvProduct> result = new List<CsvProduct>();
+            var result = new List<CsvProduct>();
 
-            prices.TryGetValue(product.Id, out Price price);
-            inventories.TryGetValue(product.Id, out InventoryInfo inventoryInfo);
+            prices.TryGetValue(product.Id, out var price);
+            inventories.TryGetValue(product.Id, out var inventoryInfo);
 
             foreach (var seoInfo in product.SeoInfos.Any() ? product.SeoInfos : new List<SeoInfo>() { null })
             {
@@ -135,7 +147,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return result;
         }
 
-        private List<CatalogProduct> LoadProducts(string catalogId, string[] exportedCategories, string[] exportedProducts)
+        private async Task<List<CatalogProduct>> LoadProducts(string catalogId, string[] exportedCategories, string[] exportedProducts)
         {
             var retVal = new List<CatalogProduct>();
 
@@ -148,22 +160,41 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             {
                 foreach (var categoryId in exportedCategories)
                 {
-                    var result = _searchService.Search(new SearchCriteria { CatalogId = catalogId, CategoryId = categoryId, Skip = 0, Take = int.MaxValue, ResponseGroup = SearchResponseGroup.WithProducts | SearchResponseGroup.WithCategories, WithHidden = true });
-                    productIds.AddRange(result.Products.Select(x => x.Id));
-                    if (result.Categories != null && result.Categories.Any())
+                    // TO DO: Need to propertly find all products in categories recursivly
+                    var criteria = new ProductSearchCriteria
                     {
-                        retVal.AddRange(LoadProducts(catalogId, result.Categories.Select(x => x.Id).ToArray(), null));
-                    }
+                        CatalogId = catalogId,
+                        CategoryId = categoryId,
+                        Skip = 0,
+                        Take = int.MaxValue,
+                        //ResponseGroup = SearchResponseGroup.WithProducts | SearchResponseGroup.WithCategories,
+                        //WithHidden = true
+                    };
+                    var result = await _productSearchService.SearchProductsAsync(criteria);
+                    productIds.AddRange(result.Results.Select(x => x.Id));
+                    //if (result.Categories != null && result.Categories.Any())
+                    //{
+                    //    retVal.AddRange(LoadProducts(catalogId, result.Categories.Select(x => x.Id).ToArray(), null));
+                    //}
                 }
             }
 
             if ((exportedCategories == null || !exportedCategories.Any()) && (exportedProducts == null || !exportedProducts.Any()))
             {
-                var result = _searchService.Search(new SearchCriteria { CatalogId = catalogId, SearchInChildren = true, Skip = 0, Take = int.MaxValue, ResponseGroup = SearchResponseGroup.WithProducts, WithHidden = true });
-                productIds = result.Products.Select(x => x.Id).ToList();
+                var criteria = new ProductSearchCriteria
+                {
+                    CatalogId = catalogId,
+                    SearchInChildren = true,
+                    Skip = 0,
+                    Take = int.MaxValue,
+                    //ResponseGroup = SearchResponseGroup.WithProducts,
+                    //WithHidden = true
+                };
+                var result = await _productSearchService.SearchProductsAsync(criteria);
+                productIds = result.Results.Select(x => x.Id).ToList();
             }
 
-            var products = _productService.GetByIds(productIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge);
+            var products = await _productService.GetByIdsAsync(productIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
             foreach (var product in products)
             {
                 retVal.Add(product);

@@ -10,10 +10,9 @@ using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Omu.ValueInjecter;
-using VirtoCommerce.CatalogCsvImportModule.Core;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
+using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogCsvImportModule.Web.Model.PushNotifications;
-using VirtoCommerce.CatalogModule.Core;
 using VirtoCommerce.CatalogModule.Core.Model.Search;
 using VirtoCommerce.CatalogModule.Core.Services;
 using VirtoCommerce.CatalogModule.Data.Authorization;
@@ -116,7 +115,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         {
             CheckCurrentUserHasPermissionForObjects(CatalogPredefinedPermissions.Export, exportInfo);
 
-            var scopes =  _permissionScopeService.GetObjectPermissionScopeStrings(exportInfo);
+            var scopes = _permissionScopeService.GetObjectPermissionScopeStrings(exportInfo);
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, scopes, new CatalogAuthorizationRequirement(ModuleConstants.Security.Permissions.Update));
             if (!authorizationResult.Succeeded)
             {
@@ -126,7 +125,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
             var notification = new ExportNotification(_userNameResolver.GetCurrentUserName())
             {
-                Title = "Catalog export task", Description = "starting export...."
+                Title = "Catalog export task",
+                Description = "starting export...."
             };
             await _notifier.SendAsync(notification);
 
@@ -185,7 +185,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
             var notification = new ImportNotification(_userNameResolver.GetCurrentUserName())
             {
-                Title = "Import catalog from CSV", Description = "starting import...."
+                Title = "Import catalog from CSV",
+                Description = "starting import...."
             };
             await _notifier.SendAsync(notification);
 
@@ -208,7 +209,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             {
                 try
                 {
-                    _csvImporter.DoImport(stream, importInfo, progressCallback);
+                    await _csvImporter.DoImportAsync(stream, importInfo, progressCallback);
                 }
                 catch (Exception ex)
                 {
@@ -232,7 +233,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             var currencies = _commerceService.GetAllCurrencies();
             var defaultCurrency = currencies.First(x => x.IsPrimary);
             exportInfo.Currency ??= defaultCurrency.Code;
-            var catalog = await _catalogService.GetByIdsAsync(new[] {exportInfo.CatalogId});
+            var catalog = await _catalogService.GetByIdsAsync(new[] { exportInfo.CatalogId });
             if (catalog == null)
             {
                 throw new NullReferenceException("catalog");
@@ -249,7 +250,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                 try
                 {
                     exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
-                    _csvExporter.DoExport(stream, exportInfo, progressCallback);
+                    await _csvExporter.DoExportAsync(stream, exportInfo, progressCallback);
 
                     stream.Position = 0;
                     var fileNameTemplate = _settingsManager.GetValue("CsvCatalogImport.ExportFileNameTemplate", string.Empty);

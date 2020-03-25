@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Omu.ValueInjecter;
 using VirtoCommerce.CatalogModule.Core.Model;
 using VirtoCommerce.CoreModule.Core.Seo;
 using VirtoCommerce.InventoryModule.Core.Model;
 using VirtoCommerce.Platform.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.PricingModule.Core.Model;
-using Omu.ValueInjecter;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 {
@@ -61,6 +61,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
         public InventoryInfo Inventory { get; set; }
         public EditorialReview EditorialReview { get; set; }
         public SeoInfo SeoInfo { get; set; }
+
+        // TODO: Need to check if it is needed at all
+        public IList<Price> Prices { get; set; }
 
         public string PriceId
         {
