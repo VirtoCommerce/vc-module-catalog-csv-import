@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using System.Web;
 using CsvHelper;
@@ -16,7 +16,9 @@ using VirtoCommerce.CatalogCsvImportModule.Web.Model.PushNotifications;
 using VirtoCommerce.CatalogModule.Core.Model.Search;
 using VirtoCommerce.CatalogModule.Core.Services;
 using VirtoCommerce.CatalogModule.Data.Authorization;
+using VirtoCommerce.CoreModule.Core.Currency;
 using VirtoCommerce.Platform.Core.Assets;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Exceptions;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.PushNotifications;
@@ -29,46 +31,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
     [Route("api/catalogcsvimport")]
     public class ExportImportController : Controller
     {
-        #region Basecontroller
-
-        private readonly ISecurityService _securityService;
-        private readonly IPermissionScopeService _permissionScopeService;
-
-        protected string[] GetObjectPermissionScopeStrings(object obj)
-        {
-            return _permissionScopeService.GetObjectPermissionScopeStrings(obj).ToArray();
-        }
-
-        protected void CheckCurrentUserHasPermissionForObjects(string permission, params object[] objects)
-        {
-            //Scope bound security check
-            var scopes = objects.SelectMany(x => _permissionScopeService.GetObjectPermissionScopeStrings(x)).Distinct().ToArray();
-            if (!_securityService.UserHasAnyPermission(User.Identity.Name, scopes, permission))
-            {
-                throw new HttpResponseException(HttpStatusCode.Unauthorized);
-            }
-        }
-
-        /// <summary>
-        /// Filter catalog search criteria based on current user permissions
-        /// </summary>
-        /// <param name="criteria"></param>
-        /// <returns></returns>
-        protected void ApplyRestrictionsForCurrentUser(CatalogSearchCriteria criteria)
-        {
-            var userName = User.Identity.Name;
-            criteria.ApplyRestrictionsForUser(userName, _securityService);
-        }
-
-        #endregion
-
         private readonly ICsvCatalogExporter _csvExporter;
         private readonly ICsvCatalogImporter _csvImporter;
 
         private readonly ICatalogService _catalogService;
         private readonly IPushNotificationManager _notifier;
         private readonly IAuthorizationService _authorizationService;
-        private readonly ICommerceService _commerceService;
+        private readonly ICurrencyService _currencyService;
         private readonly IBlobStorageProvider _blobStorageProvider;
         private readonly IUserNameResolver _userNameResolver;
         private readonly ISettingsManager _settingsManager;
@@ -77,23 +46,18 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         public ExportImportController(ICatalogService catalogService,
             IPushNotificationManager pushNotificationManager,
             IAuthorizationService authorizationService,
-            ICommerceService commerceService,
+            ICurrencyService currencyService,
             IBlobStorageProvider blobStorageProvider,
             IBlobUrlResolver blobUrlResolver,
             ICsvCatalogExporter csvExporter,
             ICsvCatalogImporter csvImporter,
-            ISecurityService securityService,
-            IPermissionScopeService permissionScopeService,
             IUserNameResolver userNameResolver,
             ISettingsManager settingsManager)
         {
-            _securityService = securityService;
-            _permissionScopeService = permissionScopeService;
-
             _catalogService = catalogService;
             _notifier = pushNotificationManager;
             _authorizationService = authorizationService;
-            _commerceService = commerceService;
+            _currencyService = currencyService;
             _blobStorageProvider = blobStorageProvider;
             _userNameResolver = userNameResolver;
             _settingsManager = settingsManager;
@@ -113,10 +77,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         [Authorize(ModuleConstants.Security.Permissions.Export)]
         public async Task<ActionResult<ExportNotification>> DoExport(CsvExportInfo exportInfo)
         {
-            CheckCurrentUserHasPermissionForObjects(CatalogPredefinedPermissions.Export, exportInfo);
+            var criteria = AbstractTypeFactory<CatalogSearchCriteria>.TryCreateInstance();
+            var ids = new List<string>();
+            ids.AddRange(exportInfo.CategoryIds);
+            ids.AddRange(exportInfo.ProductIds);
+            criteria.ObjectIds = ids.ToArray();
 
-            var scopes = _permissionScopeService.GetObjectPermissionScopeStrings(exportInfo);
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, scopes, new CatalogAuthorizationRequirement(ModuleConstants.Security.Permissions.Update));
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, criteria, new CatalogAuthorizationRequirement(ModuleConstants.Security.Permissions.Update));
             if (!authorizationResult.Succeeded)
             {
                 return Unauthorized();
@@ -181,7 +149,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         [Authorize(ModuleConstants.Security.Permissions.Import)]
         public async Task<ActionResult<ImportNotification>> DoImport(CsvImportInfo importInfo)
         {
-            CheckCurrentUserHasPermissionForObjects(CatalogPredefinedPermissions.Import, importInfo);
+            var criteria = AbstractTypeFactory<CatalogSearchCriteria>.TryCreateInstance();
+            criteria.CatalogIds = new[] { importInfo.CatalogId };
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, criteria, new CatalogAuthorizationRequirement(ModuleConstants.Security.Permissions.Update));
+            if (!authorizationResult.Succeeded)
+            {
+                return Unauthorized();
+            }
+
 
             var notification = new ImportNotification(_userNameResolver.GetCurrentUserName())
             {
@@ -230,7 +206,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         // Only public methods can be invoked in the background. (Hangfire)
         public async Task BackgroundExport(CsvExportInfo exportInfo, ExportNotification notifyEvent)
         {
-            var currencies = _commerceService.GetAllCurrencies();
+            var currencies = await _currencyService.GetAllCurrenciesAsync();
             var defaultCurrency = currencies.First(x => x.IsPrimary);
             exportInfo.Currency ??= defaultCurrency.Code;
             var catalog = await _catalogService.GetByIdsAsync(new[] { exportInfo.CatalogId });

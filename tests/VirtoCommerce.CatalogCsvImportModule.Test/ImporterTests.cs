@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Moq;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
-using VirtoCommerce.CatalogCsvImportModule.Data.Model;
 using VirtoCommerce.CatalogCsvImportModule.Data.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
 using VirtoCommerce.CatalogModule.Core.Model.Search;
@@ -12,27 +12,18 @@ using VirtoCommerce.CatalogModule.Core.Services;
 using VirtoCommerce.CatalogModule.Data.Model;
 using VirtoCommerce.CatalogModule.Data.Repositories;
 using VirtoCommerce.CoreModule.Core.Seo;
-using VirtoCommerce.Domain.Catalog.Model;
-using VirtoCommerce.Domain.Catalog.Model.Search;
-using VirtoCommerce.Domain.Catalog.Services;
-using VirtoCommerce.Domain.Commerce.Model;
-using VirtoCommerce.Domain.Commerce.Model.Search;
-using VirtoCommerce.Domain.Inventory.Model;
-using VirtoCommerce.Domain.Inventory.Model.Search;
-using VirtoCommerce.Domain.Inventory.Services;
-using VirtoCommerce.Domain.Pricing.Model;
-using VirtoCommerce.Domain.Pricing.Model.Search;
-using VirtoCommerce.Domain.Pricing.Services;
-using VirtoCommerce.Domain.Store.Services;
+using VirtoCommerce.InventoryModule.Core.Model;
+using VirtoCommerce.InventoryModule.Core.Model.Search;
+using VirtoCommerce.InventoryModule.Core.Services;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.PricingModule.Core.Model;
 using VirtoCommerce.PricingModule.Core.Model.Search;
 using VirtoCommerce.PricingModule.Core.Services;
+using VirtoCommerce.StoreModule.Core.Model.Search;
+using VirtoCommerce.StoreModule.Core.Services;
 using Xunit;
-using SearchCriteria = VirtoCommerce.Domain.Catalog.Model.SearchCriteria;
-using SearchResult = VirtoCommerce.Domain.Catalog.Model.SearchResult;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Test
 {
@@ -44,7 +35,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         private List<CatalogProduct> _productsInternal = new List<CatalogProduct>();
 
         private List<Price> _pricesInternal = new List<Price>();
-        private List<Domain.Inventory.Model.FulfillmentCenter> _fulfillmentCentersInternal = new List<Domain.Inventory.Model.FulfillmentCenter>();
+        private List<FulfillmentCenter> _fulfillmentCentersInternal = new List<FulfillmentCenter>();
         private List<InventoryInfo> _inventoryInfosInternal = new List<InventoryInfo>();
 
         private bool _createDictionatyValues = false;
@@ -113,7 +104,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             _createDictionatyValues = true;
 
-            var mockPropDictItemService = new Moq.Mock<IProperyDictionaryItemService>();
+            var mockPropDictItemService = new Moq.Mock<IPropertyDictionaryItemService>();
             var target = GetImporter(mockPropDictItemService.Object);
 
             var exportInfo = new ExportImportProgressInfo();
@@ -122,7 +113,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
 
             //Assert
-            mockPropDictItemService.Verify(mock => mock.SaveChanges(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
+            mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
 
             Assert.True(!exportInfo.Errors.Any());
         }
@@ -319,7 +310,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             _createDictionatyValues = true;
 
-            var mockPropDictItemService = new Moq.Mock<IProperyDictionaryItemService>();
+            var mockPropDictItemService = new Moq.Mock<IPropertyDictionaryItemService>();
             var target = GetImporter(mockPropDictItemService.Object);
 
 
@@ -329,7 +320,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
 
             //Assert
-            mockPropDictItemService.Verify(mock => mock.SaveChanges(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
+            mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
             Assert.True(!exportInfo.Errors.Any());
         }
 
@@ -962,43 +953,47 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
 
-        private CsvCatalogImporter GetImporter(IProperyDictionaryItemService propDictItemService = null, IProperyDictionaryItemSearchService propDictItemSearchService = null)
+        private CsvCatalogImporter GetImporter(IPropertyDictionaryItemService propDictItemService = null, IPropertyDictionaryItemSearchService propDictItemSearchService = null)
         {
 
             #region StoreServise
 
-            var storeService = new Mock<IStoreService>();
-            storeService.Setup(x => x.SearchStores(It.IsAny<Domain.Store.Model.SearchCriteria>())).Returns(new Domain.Store.Model.SearchResult());
+            var storeService = new Mock<IStoreSearchService>();
+            storeService.Setup(x => x.SearchStoresAsync(It.IsAny<StoreSearchCriteria>())).ReturnsAsync(new StoreSearchResult());
 
             #endregion
 
             #region CatalogService
 
             var catalogService = new Mock<ICatalogService>();
-            catalogService.Setup(x => x.GetById(It.IsAny<string>())).Returns(_catalog);
+            catalogService.Setup(x => x.GetByIdsAsync(It.IsAny<string[]>(), null)).ReturnsAsync(() => new[] { _catalog });
 
             #endregion
 
             #region CategoryService
 
             var categoryService = new Mock<ICategoryService>();
-            categoryService.Setup(x => x.Create(It.IsAny<Category>()))
-                .Returns((Category cat) =>
+            categoryService.Setup(x => x.SaveChangesAsync(It.IsAny<Category[]>()))
+                .Returns((Category[] cats) =>
                 {
-                    cat.Id = Guid.NewGuid().ToString();
-                    cat.Catalog = _catalog;
-                    _categoriesInternal.Add(cat);
-                    return cat;
+                    foreach (var category in cats)
+                    {
+                        category.Id = Guid.NewGuid().ToString();
+                        category.Catalog = _catalog;
+                        _categoriesInternal.Add(category);
+
+                    }
+                    return Task.FromResult(cats);
                 });
 
-            categoryService.Setup(x => x.GetByIds(
+            categoryService.Setup(x => x.GetByIdsAsync(
                 It.IsAny<string[]>(),
-                It.Is<CategoryResponseGroup>(c => c == CategoryResponseGroup.Full),
+                It.Is<CategoryResponseGroup>(c => c == CategoryResponseGroup.Full).ToString(),
                 It.Is<string>(id => id == null)))
-                .Returns((string[] ids, CategoryResponseGroup group, string catalogId) =>
+                .ReturnsAsync((string[] ids, CategoryResponseGroup group, string catalogId) =>
                 {
                     var result = ids.Select(id => _categoriesInternal.FirstOrDefault(x => x.Id == id));
-                    result = result.Where(x => x != null).Select(x => x.Clone()).ToList();
+                    result = result.Where(x => x != null).Select(x => x.Clone() as Category).ToList();
                     foreach (var category in result)
                     {
                         if (category.Properties == null)
@@ -1015,17 +1010,17 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             #region CatalogSearchService
 
             var catalogSearchService = new Mock<ICatalogSearchService>();
-            catalogSearchService.Setup(x => x.Search(It.IsAny<SearchCriteria>())).Returns((SearchCriteria criteria) =>
+            catalogSearchService.Setup(x => x.SearchCatalogsAsync(It.IsAny<CatalogSearchCriteria>())).ReturnsAsync((CatalogSearchCriteria criteria) =>
                 {
-                    var result = new SearchResult();
-                    var categories = _categoriesInternal.Where(x => x.CatalogId == criteria.CatalogId || x.Id == criteria.CategoryId).ToList();
-                    var cloned = categories.Select(x => x.Clone()).ToList();
+                    var result = new CatalogSearchResult();
+                    var categories = _categoriesInternal.Where(x => criteria.CatalogIds.Contains(x.CatalogId) || criteria.ObjectIds.Contains(x.Id)).ToList();
+                    var cloned = categories.Select(x => x.Clone() as Category).ToList();
                     foreach (var category in cloned)
                     {
-                        //search service doesn't return included properties
+                        //    //search service doesn't return included properties
                         category.Properties = new List<Property>();
                     }
-                    result.Categories = cloned;
+                    result.Results = new List<Catalog>(); // cloned;
 
                     return result;
                 });
@@ -1035,17 +1030,17 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             #region ItemService
 
             var itemService = new Mock<IItemService>();
-            itemService.Setup(x => x.GetByIds(
+            itemService.Setup(x => x.GetByIdsAsync(
                 It.IsAny<string[]>(),
-                It.Is<ItemResponseGroup>(c => c == ItemResponseGroup.ItemLarge),
+                It.Is<ItemResponseGroup>(c => c == ItemResponseGroup.ItemLarge).ToString(),
                 It.Is<string>(id => id == null)))
-                .Returns((string[] ids, ItemResponseGroup group, string catalogId) =>
+                .ReturnsAsync((string[] ids, ItemResponseGroup group, string catalogId) =>
                 {
                     var result = _productsInternal.Where(x => ids.Contains(x.Id));
                     return result.ToArray();
                 });
 
-            itemService.Setup(x => x.Update(It.IsAny<CatalogProduct[]>())).Callback((CatalogProduct[] products) =>
+            itemService.Setup(x => x.SaveChangesAsync(It.IsAny<CatalogProduct[]>())).Callback((CatalogProduct[] products) =>
             {
                 _savedProducts = products.ToList();
             });
@@ -1072,7 +1067,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             #region PricingService
 
             var pricingService = new Mock<IPricingService>();
-            pricingService.Setup(x => x.SavePrices(It.IsAny<Price[]>())).Callback((Price[] prices) =>
+            pricingService.Setup(x => x.SavePricesAsync(It.IsAny<Price[]>())).Callback((Price[] prices) =>
             {
                 _pricesInternal.RemoveAll(x => prices.Any(y => y.Id == x.Id));
                 foreach (var price in prices)
@@ -1089,35 +1084,35 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             #region InventoryService
 
             var inventoryService = new Mock<IInventoryService>();
-            inventoryService.Setup(x => x.GetProductsInventoryInfos(It.IsAny<IEnumerable<string>>())).Returns(
+            inventoryService.Setup(x => x.GetProductsInventoryInfosAsync(It.IsAny<IEnumerable<string>>(), null)).ReturnsAsync(
                 (IEnumerable<string> ids) =>
                 {
                     var result = _inventoryInfosInternal.Where(x => ids.Contains(x.ProductId));
                     return result.ToList();
                 });
 
-            inventoryService.Setup(x => x.UpsertInventories(It.IsAny<IEnumerable<InventoryInfo>>())).Callback((IEnumerable<InventoryInfo> inventory) => { });
+            inventoryService.Setup(x => x.SaveChangesAsync(It.IsAny<IEnumerable<InventoryInfo>>())).Callback((IEnumerable<InventoryInfo> inventory) => { });
 
             #endregion
 
             #region CommerceService
 
             var commerceService = new Mock<IFulfillmentCenterSearchService>();
-            commerceService.Setup(x => x.SearchCenters(It.IsAny<FulfillmentCenterSearchCriteria>())).Returns(() => new GenericSearchResult<Domain.Inventory.Model.FulfillmentCenter> { Results = _fulfillmentCentersInternal });
+            commerceService.Setup(x => x.SearchCentersAsync(It.IsAny<FulfillmentCenterSearchCriteria>())).ReturnsAsync(() => new FulfillmentCenterSearchResult() { Results = _fulfillmentCentersInternal });
 
             #endregion
 
             #region PropertyService
 
             var propertyService = new Mock<IPropertyService>();
-            propertyService.Setup(x => x.Update(It.IsAny<Property[]>())).Callback((Property[] properties) => { });
+            propertyService.Setup(x => x.SaveChangesAsync(It.IsAny<Property[]>())).Callback((Property[] properties) => { });
 
             #endregion
 
             #region PropertyDictionaryItemService
             if (propDictItemSearchService == null)
             {
-                var propDictItemSearchServiceMock = new Mock<IProperyDictionaryItemSearchService>();
+                var propDictItemSearchServiceMock = new Mock<IPropertyDictionaryItemSearchService>();
                 var registeredPropDictionaryItems = new[]
                 {
                     new PropertyDictionaryItem { Id = "CatalogProductProperty_1_MultivalueDictionary_1", PropertyId = "CatalogProductProperty_1_MultivalueDictionary", Alias = "1" },
@@ -1141,22 +1136,22 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                     new PropertyDictionaryItem { Id = "TestCategory_ProductProperty_MultivalueDictionary_3", PropertyId = "TestCategory_ProductProperty_MultivalueDictionary", Alias = "3" },
                 };
 
-                propDictItemSearchServiceMock.Setup(x => x.Search(It.IsAny<PropertyDictionaryItemSearchCriteria>())).Returns(new GenericSearchResult<PropertyDictionaryItem> { Results = registeredPropDictionaryItems.ToList() });
+                propDictItemSearchServiceMock.Setup(x => x.SearchAsync(It.IsAny<PropertyDictionaryItemSearchCriteria>())).ReturnsAsync(new PropertyDictionaryItemSearchResult { Results = registeredPropDictionaryItems.ToList() });
                 propDictItemSearchService = propDictItemSearchServiceMock.Object;
             }
             if (propDictItemService == null)
             {
-                propDictItemService = new Mock<IProperyDictionaryItemService>().Object;
+                propDictItemService = new Mock<IPropertyDictionaryItemService>().Object;
             }
             #endregion
 
             #region PricingSearchService
 
             var pricingSearchService = new Mock<IPricingSearchService>();
-            pricingSearchService.Setup(x => x.SearchPrices(It.IsAny<PricesSearchCriteria>()))
-                .Returns((PricesSearchCriteria crietera) =>
+            pricingSearchService.Setup(x => x.SearchPricesAsync(It.IsAny<PricesSearchCriteria>()))
+                .ReturnsAsync((PricesSearchCriteria crietera) =>
                 {
-                    return new PricingSearchResult<Price>
+                    return new PriceSearchResult
                     {
                         Results = _pricesInternal.Where(x => crietera.ProductIds.Contains(x.ProductId)).Select(TestUtils.Clone).ToList()
                     };
@@ -1183,9 +1178,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 repositoryFactory,
                 pricingSearchService.Object,
                 settingsManager.Object,
-                storeService.Object,
-                propDictItemSearchService,
-                propDictItemService
+                storeService.Object
             );
 
             return target;
@@ -1380,7 +1373,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 Category = new Category
                 {
                     Parents = new Category[] { },
-                    Path = "TestCategory"
+                    //Path = "TestCategory"
                 },
                 Code = "TST1",
                 Currency = "USD",
@@ -1408,7 +1401,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 Category = new Category
                 {
                     Parents = new Category[] { },
-                    Path = "TestCategory"
+                    //Path = "TestCategory"
                 },
                 Code = "TST2",
                 Currency = "USD",
@@ -1436,7 +1429,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 Catalog = _catalog,
                 CatalogId = _catalog.Id,
                 Name = existingProduct.Category.Path,
-                Path = existingProduct.CategoryPath,
+                //Path = existingProduct.CategoryPath,
                 Properties = new List<Property>()
             };
             category.Properties.AddRange(CreateProductPropertiesInCategory(category, _catalog));

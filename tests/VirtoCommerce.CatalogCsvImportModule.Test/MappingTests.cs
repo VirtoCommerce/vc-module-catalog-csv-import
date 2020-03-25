@@ -1,14 +1,13 @@
-﻿using System;
-using System.CodeDom;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
-using VirtoCommerce.CatalogCsvImportModule.Data.Model;
+using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Data.Services;
-using VirtoCommerce.Domain.Catalog.Model;
+using VirtoCommerce.CatalogModule.Core.Model;
 using Xunit;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Test
@@ -210,9 +209,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         {
             using (var sw = new StringWriter())
             {
-                using (var csv = new CsvWriter(sw))
+                using (var csv = new CsvWriter(sw, CultureInfo.InvariantCulture))
                 {
-                    CsvExportInfo exportInfo = new CsvExportInfo();
+                    var exportInfo = new CsvExportInfo();
                     exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
                     csv.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
                     csv.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
@@ -230,9 +229,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         private List<CsvProduct> ReadCsvFile(string path, CsvImportInfo importInfo)
         {
             var csvProducts = new List<CsvProduct>();
-            using (FileStream fs = File.Open(path, FileMode.Open))
+            using (var fs = File.Open(path, FileMode.Open))
             {
-                using (var reader = new CsvReader(new StreamReader(fs)))
+                using (var reader = new CsvReader(new StreamReader(fs), CultureInfo.InvariantCulture))
                 {
                     reader.Configuration.Delimiter = importInfo.Configuration.Delimiter;
                     reader.Configuration.RegisterClassMap(new CsvProductMap(importInfo.Configuration));

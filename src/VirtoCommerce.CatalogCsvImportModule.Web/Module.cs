@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VirtoCommerce.CatalogCsvImportModule.Core;
+using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogCsvImportModule.Data.Services;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
