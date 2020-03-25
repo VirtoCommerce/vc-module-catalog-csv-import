@@ -158,25 +158,17 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
             if (exportedCategories != null && exportedCategories.Any())
             {
-                foreach (var categoryId in exportedCategories)
+                var criteria = new ProductSearchCriteria
                 {
-                    // TO DO: Need to propertly find all products in categories recursivly
-                    var criteria = new ProductSearchCriteria
-                    {
-                        CatalogId = catalogId,
-                        CategoryId = categoryId,
-                        Skip = 0,
-                        Take = int.MaxValue,
-                        //ResponseGroup = SearchResponseGroup.WithProducts | SearchResponseGroup.WithCategories,
-                        //WithHidden = true
-                    };
-                    var result = await _productSearchService.SearchProductsAsync(criteria);
-                    productIds.AddRange(result.Results.Select(x => x.Id));
-                    //if (result.Categories != null && result.Categories.Any())
-                    //{
-                    //    retVal.AddRange(LoadProducts(catalogId, result.Categories.Select(x => x.Id).ToArray(), null));
-                    //}
-                }
+                    CatalogId = catalogId,
+                    CategoryIds = exportedCategories,
+                    Skip = 0,
+                    Take = int.MaxValue,
+                    SearchInChildren = true,
+                    SearchInVariations = true,
+                };
+                var result = await _productSearchService.SearchProductsAsync(criteria);
+                productIds.AddRange(result.Results.Select(x => x.Id));
             }
 
             if ((exportedCategories == null || !exportedCategories.Any()) && (exportedProducts == null || !exportedProducts.Any()))
@@ -187,8 +179,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     SearchInChildren = true,
                     Skip = 0,
                     Take = int.MaxValue,
-                    //ResponseGroup = SearchResponseGroup.WithProducts,
-                    //WithHidden = true
+                    SearchInVariations = true,
                 };
                 var result = await _productSearchService.SearchProductsAsync(criteria);
                 productIds = result.Results.Select(x => x.Id).ToList();
