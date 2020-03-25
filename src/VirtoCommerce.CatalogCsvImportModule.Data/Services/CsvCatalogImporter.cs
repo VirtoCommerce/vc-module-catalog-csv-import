@@ -38,19 +38,18 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private readonly ISkuGenerator _skuGenerator;
         private readonly IPricingService _pricingService;
         private readonly IPricingSearchService _pricingSearchService;
+        private readonly ISettingsManager _settingsManager;
         private readonly IInventoryService _inventoryService;
         private readonly IFulfillmentCenterSearchService _fulfillmentCenterSearchService;
-        private readonly IPropertyService _propertyService;
-        private readonly ICatalogSearchService _searchService;
         private readonly ICategorySearchService _categorySearchService;
         private readonly Func<ICatalogRepository> _catalogRepositoryFactory;
-        //private readonly IProperyDictionaryItemSearchService _propDictItemSearchService;
-        //private readonly IProperyDictionaryItemService _propDictItemService;
+        private readonly IPropertyDictionaryItemSearchService _propDictItemSearchService;
+        private readonly IPropertyDictionaryItemService _propDictItemService;
         private readonly IStoreSearchService _storeSearchService;
         private readonly object _lockObject = new object();
 
-        private readonly bool _createPropertyDictionatyValues;
-        private List<Store> _stores = new List<Store>();
+        private readonly List<Store> _stores = new List<Store>();
+        private bool? _createPropertyDictionatyValues;
 
         public CsvCatalogImporter(ICatalogService catalogService,
             ICategoryService categoryService,
@@ -59,13 +58,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             IPricingService pricingService,
             IInventoryService inventoryService,
             IFulfillmentCenterSearchService fulfillmentCenterSearchService,
-            IPropertyService propertyService, ICatalogSearchService searchService,
             Func<ICatalogRepository> catalogRepositoryFactory,
             IPricingSearchService pricingSearchService,
             ISettingsManager settingsManager,
-            //IProperyDictionaryItemSearchService propDictItemSearchService,
-            //IProperyDictionaryItemService propDictItemService,
-            IStoreSearchService storeSearchService
+            IPropertyDictionaryItemSearchService propDictItemSearchService,
+            IPropertyDictionaryItemService propDictItemService,
+            IStoreSearchService storeSearchService,
+            ICategorySearchService categorySearchService
             )
         {
             _catalogService = catalogService;
@@ -75,14 +74,31 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             _pricingService = pricingService;
             _inventoryService = inventoryService;
             _fulfillmentCenterSearchService = fulfillmentCenterSearchService;
-            _propertyService = propertyService;
-            _searchService = searchService;
             _catalogRepositoryFactory = catalogRepositoryFactory;
             _pricingSearchService = pricingSearchService;
+            _settingsManager = settingsManager;
             _storeSearchService = storeSearchService;
-            //_propDictItemSearchService = propDictItemSearchService;
-            //_propDictItemService = propDictItemService;
-            _createPropertyDictionatyValues = settingsManager.GetValue("CsvCatalogImport.CreateDictionaryValues", false);
+            _propDictItemSearchService = propDictItemSearchService;
+            _propDictItemService = propDictItemService;
+            _categorySearchService = categorySearchService;
+        }
+
+        internal bool CreatePropertyDictionatyValues
+        {
+            get
+            {
+                if (_createPropertyDictionatyValues == null)
+                {
+                    _createPropertyDictionatyValues = _settingsManager.GetValue("CsvCatalogImport.CreateDictionaryValues", false);
+                }
+
+                return _createPropertyDictionatyValues.Value;
+            }
+            // For testing purposes only - as cannot mock extension method 'GetValue', no neeed to use
+            set
+            {
+                _createPropertyDictionatyValues = value;
+            }
         }
 
         public async Task DoImportAsync(Stream inputStream, CsvImportInfo importInfo, Action<ExportImportProgressInfo> progressCallback)
@@ -182,7 +198,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             await SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
 
             await LoadProductDependencies(csvProducts, catalog, progressInfo, progressCallback, importInfo);
-            //ResolvePropertyDictionaryItems(csvProducts, progressInfo, progressCallback);
+            await ResolvePropertyDictionaryItems(csvProducts, progressInfo, progressCallback);
 
             //take parentless prodcuts and save them first
             progressInfo.TotalCount = csvProducts.Count;
@@ -287,43 +303,43 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return catalog.DefaultLanguage != null ? catalog.DefaultLanguage.LanguageCode : "en-US";
         }
 
-        //private void ResolvePropertyDictionaryItems(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
-        //{
-        //    var allDictPropertyIds = csvProducts.SelectMany(x => x.Properties).Where(x => x.Dictionary)
-        //                                        .Select(x => x.Id).Distinct()
-        //                                        .ToArray();
+        private async Task ResolvePropertyDictionaryItems(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
+        {
+            var allDictPropertyIds = csvProducts.SelectMany(x => x.Properties).Where(x => x.Dictionary)
+                                                .Select(x => x.Id).Distinct()
+                                                .ToArray();
 
-        //    var allDictItems = _propDictItemSearchService.Search(new PropertyDictionaryItemSearchCriteria
-        //    {
-        //        PropertyIds = allDictPropertyIds,
-        //        Take = int.MaxValue
-        //    }).Results;
+            var allDictItems = (await _propDictItemSearchService.SearchAsync(new PropertyDictionaryItemSearchCriteria
+            {
+                PropertyIds = allDictPropertyIds,
+                Take = int.MaxValue
+            })).Results;
 
-        //    foreach (var dictPropValue in csvProducts.SelectMany(x => x.PropertyValues).Where(x => x.Property != null && x.Property.Dictionary && !string.IsNullOrEmpty(x.Value?.ToString())))
-        //    {
-        //        dictPropValue.Alias = dictPropValue.Value.ToString();
-        //        var existDictItem = allDictItems.FirstOrDefault(x => x.PropertyId == dictPropValue.Property.Id && x.Alias.EqualsInvariant(dictPropValue.Alias));
-        //        if (existDictItem == null)
-        //        {
-        //            if (_createPropertyDictionatyValues)
-        //            {
-        //                existDictItem = new PropertyDictionaryItem
-        //                {
-        //                    Alias = dictPropValue.Alias,
-        //                    PropertyId = dictPropValue.Property.Id
-        //                };
-        //                allDictItems.Add(existDictItem);
-        //                _propDictItemService.SaveChanges(new[] { existDictItem });
-        //            }
-        //            else
-        //            {
-        //                progressInfo.Errors.Add($"The property dictionary '{dictPropValue.Alias}' not found in '{dictPropValue.Property.Name}' dictionary");
-        //                progressCallback(progressInfo);
-        //            }
-        //        }
-        //        dictPropValue.ValueId = existDictItem?.Id;
-        //    }
-        //}
+            foreach (var dictPropValue in csvProducts.SelectMany(x => x.PropertyValues).Where(x => x.Property != null && x.Property.Dictionary && !string.IsNullOrEmpty(x.Value?.ToString())))
+            {
+                dictPropValue.Alias = dictPropValue.Value.ToString();
+                var existDictItem = allDictItems.FirstOrDefault(x => x.PropertyId == dictPropValue.Property.Id && x.Alias.EqualsInvariant(dictPropValue.Alias));
+                if (existDictItem == null)
+                {
+                    if (CreatePropertyDictionatyValues)
+                    {
+                        existDictItem = new PropertyDictionaryItem
+                        {
+                            Alias = dictPropValue.Alias,
+                            PropertyId = dictPropValue.Property.Id
+                        };
+                        allDictItems.Add(existDictItem);
+                        await _propDictItemService.SaveChangesAsync(new[] { existDictItem });
+                    }
+                    else
+                    {
+                        progressInfo.Errors.Add($"The property dictionary '{dictPropValue.Alias}' not found in '{dictPropValue.Property.Name}' dictionary");
+                        progressCallback(progressInfo);
+                    }
+                }
+                dictPropValue.ValueId = existDictItem?.Id;
+            }
+        }
 
         /// <summary>
         /// Try to find (create if not) categories for products with Category.Path
@@ -525,7 +541,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             if (!pricesWithPriceListIds.Any())
                 return new List<Price>();
 
-            var existPrices = new List<Price>();
+            var existentPrices = new List<Price>();
 
             var dictionary = pricesWithPriceListIds.GroupBy(x => x.PricelistId).ToDictionary(g => g.Key, g => g.ToArray());
             foreach (var priceListId in dictionary.Keys)
@@ -534,16 +550,16 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 {
                     PriceListId = priceListId,
                     ProductIds = dictionary[priceListId].Select(x => x.ProductId).ToArray(),
-                    Take = 1000
+                    Take = int.MaxValue,
                 };
 
-                existPrices.AddRange((await _pricingSearchService.SearchPricesAsync(criteria)).Results);
+                existentPrices.AddRange((await _pricingSearchService.SearchPricesAsync(criteria)).Results);
             }
 
             var result = new List<Price>();
             foreach (var price in pricesWithPriceListIds)
             {
-                var existPrice = existPrices.FirstOrDefault(x => x.Currency.EqualsInvariant(price.Currency)
+                var existPrice = existentPrices.FirstOrDefault(x => x.Currency.EqualsInvariant(price.Currency)
                     && x.ProductId.EqualsInvariant(price.ProductId) && x.PricelistId.EqualsInvariant(price.PricelistId));
 
                 if (existPrice != null)
@@ -565,7 +581,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             var criteria = new PricesSearchCriteria
             {
                 ProductIds = restPrices.Select(x => x.ProductId).ToArray(),
-                Take = 1000
+                Take = int.MaxValue,
             };
 
             var result = new List<Price>();

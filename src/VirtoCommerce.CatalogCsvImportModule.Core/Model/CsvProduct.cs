@@ -62,7 +62,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
         public EditorialReview EditorialReview { get; set; }
         public SeoInfo SeoInfo { get; set; }
 
-        // TODO: Need to check if it is needed at all
         public IList<Price> Prices { get; set; }
 
         public string PriceId

@@ -93,7 +93,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_NewProductDictionaryMultivaluePropertyWithNewValue_NewDictPropertyItemCreated()
+        public async Task DoImport_NewProductDictionaryMultivaluePropertyWithNewValue_NewDictPropertyItemCreated()
         {
             //Arrange
             var product = GetCsvProductBase();
@@ -958,8 +958,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             #region StoreServise
 
-            var storeService = new Mock<IStoreSearchService>();
-            storeService.Setup(x => x.SearchStoresAsync(It.IsAny<StoreSearchCriteria>())).ReturnsAsync(new StoreSearchResult());
+            var storeSearchService = new Mock<IStoreSearchService>();
+            storeSearchService.Setup(x => x.SearchStoresAsync(It.IsAny<StoreSearchCriteria>())).ReturnsAsync(new StoreSearchResult());
 
             #endregion
 
@@ -1085,7 +1085,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             var inventoryService = new Mock<IInventoryService>();
             inventoryService.Setup(x => x.GetProductsInventoryInfosAsync(It.IsAny<IEnumerable<string>>(), null)).ReturnsAsync(
-                (IEnumerable<string> ids) =>
+                (IEnumerable<string> ids, string responseGroup) =>
                 {
                     var result = _inventoryInfosInternal.Where(x => ids.Contains(x.ProductId));
                     return result.ToList();
@@ -1099,13 +1099,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             var commerceService = new Mock<IFulfillmentCenterSearchService>();
             commerceService.Setup(x => x.SearchCentersAsync(It.IsAny<FulfillmentCenterSearchCriteria>())).ReturnsAsync(() => new FulfillmentCenterSearchResult() { Results = _fulfillmentCentersInternal });
-
-            #endregion
-
-            #region PropertyService
-
-            var propertyService = new Mock<IPropertyService>();
-            propertyService.Setup(x => x.SaveChangesAsync(It.IsAny<Property[]>())).Callback((Property[] properties) => { });
 
             #endregion
 
@@ -1162,9 +1155,22 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             #region settingsManager
 
             var settingsManager = new Mock<ISettingsManager>();
-            settingsManager.Setup(x => x.GetValue(It.Is<string>(name => name == "CsvCatalogImport.CreateDictionaryValues"), false)).Returns((string name, bool defaultValue) => _createDictionatyValues);
 
             #endregion
+
+            #region ICategorySearchService
+
+            var categorySearchService = new Mock<ICategorySearchService>();
+            categorySearchService.Setup(x => x.SearchCategoriesAsync(It.IsAny<CategorySearchCriteria>())).ReturnsAsync(new CategorySearchResult());
+
+            #endregion ICategorySearchService
+
+            #region IFulfillmentCenterSearchService
+
+            var fulfillmentCenterSearchService = new Mock<IFulfillmentCenterSearchService>();
+            fulfillmentCenterSearchService.Setup(x => x.SearchCentersAsync(It.IsAny<FulfillmentCenterSearchCriteria>())).ReturnsAsync(new FulfillmentCenterSearchResult());
+
+            #endregion IFulfillmentCenterSearchService
 
             var target = new CsvCatalogImporter(catalogService.Object,
                 categoryService.Object,
@@ -1172,13 +1178,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 skuGeneratorService.Object,
                 pricingService.Object,
                 inventoryService.Object,
-                commerceService.Object,
-                propertyService.Object,
-                catalogSearchService.Object,
+                fulfillmentCenterSearchService.Object,
                 repositoryFactory,
                 pricingSearchService.Object,
                 settingsManager.Object,
-                storeService.Object
+                propDictItemSearchService,
+                propDictItemService,
+                storeSearchService.Object,
+                categorySearchService.Object
             );
 
             return target;
