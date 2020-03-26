@@ -264,7 +264,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             firstProduct.Reviews = csvProducts.SelectMany(x => x.Reviews).ToList();
             firstProduct.SeoInfos = csvProducts.SelectMany(x => x.SeoInfos).ToList();
-            firstProduct.PropertyValues = csvProducts.SelectMany(x => x.PropertyValues).ToList();
+            firstProduct.Properties = csvProducts.SelectMany(x => x.Properties).ToList();
             firstProduct.Prices = csvProducts.SelectMany(x => x.Prices).ToList();
 
             return firstProduct;
@@ -292,7 +292,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                 csvProduct.SeoInfos = seoInfos;
 
-                csvProduct.PropertyValues = csvProduct.PropertyValues.GroupBy(x => new { x.PropertyName, x.Value }).Select(g => g.FirstOrDefault()).ToList();
+                csvProduct.Properties = csvProduct.Properties
+                    .Where(x => x.Values?.Any(x => !string.IsNullOrEmpty(x.Value?.ToString())) == true)
+                    .GroupBy(x => x.Name)
+                    .Select(g => g.FirstOrDefault())
+                    .ToList();
 
                 csvProduct.Prices = csvProduct.Prices.Where(x => x.EffectiveValue > 0).GroupBy(x => x.Currency).Select(g => g.FirstOrDefault()).ToList();
             }
@@ -315,29 +319,34 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 Take = int.MaxValue
             })).Results;
 
-            foreach (var dictPropValue in csvProducts.SelectMany(x => x.PropertyValues).Where(x => x.Property != null && x.Property.Dictionary && !string.IsNullOrEmpty(x.Value?.ToString())))
+            foreach (var dictProperty in csvProducts.SelectMany(x => x.Properties).Where(x => x.Dictionary && x.Values?.Any(v => v != null) == true))
             {
-                dictPropValue.Alias = dictPropValue.Value.ToString();
-                var existDictItem = allDictItems.FirstOrDefault(x => x.PropertyId == dictPropValue.Property.Id && x.Alias.EqualsInvariant(dictPropValue.Alias));
-                if (existDictItem == null)
+                foreach (var propertyValue in dictProperty.Values.Where(x => x.Value != null))
                 {
-                    if (CreatePropertyDictionatyValues)
+                    propertyValue.Alias = propertyValue.Value.ToString();
+
+                    var existentDictItem = allDictItems.FirstOrDefault(x => x.PropertyId == propertyValue.PropertyId && x.Alias.EqualsInvariant(propertyValue.Alias));
+
+                    if (existentDictItem == null)
                     {
-                        existDictItem = new PropertyDictionaryItem
+                        if (CreatePropertyDictionatyValues)
                         {
-                            Alias = dictPropValue.Alias,
-                            PropertyId = dictPropValue.Property.Id
-                        };
-                        allDictItems.Add(existDictItem);
-                        await _propDictItemService.SaveChangesAsync(new[] { existDictItem });
+                            existentDictItem = new PropertyDictionaryItem
+                            {
+                                Alias = propertyValue.Alias,
+                                PropertyId = propertyValue.PropertyId
+                            };
+                            allDictItems.Add(existentDictItem);
+                            await _propDictItemService.SaveChangesAsync(new[] { existentDictItem });
+                        }
+                        else
+                        {
+                            progressInfo.Errors.Add($"The property dictionary '{propertyValue.Alias}' not found in '{propertyValue.PropertyName}' dictionary");
+                            progressCallback(progressInfo);
+                        }
                     }
-                    else
-                    {
-                        progressInfo.Errors.Add($"The property dictionary '{dictPropValue.Alias}' not found in '{dictPropValue.Property.Name}' dictionary");
-                        progressCallback(progressInfo);
-                    }
+                    propertyValue.ValueId = existentDictItem?.Id;
                 }
-                dictPropValue.ValueId = existDictItem?.Id;
             }
         }
 
@@ -628,37 +637,55 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     csvProduct.Code = _skuGenerator.GenerateSku(csvProduct);
                 }
                 //Properties inheritance
-                csvProduct.Properties = (csvProduct.Category != null ? csvProduct.Category.Properties : csvProduct.Catalog.Properties).OrderBy(x => x.Name).ToList();
+                var inheritedProperties = (csvProduct.Category != null ? csvProduct.Category.Properties : csvProduct.Catalog.Properties).OrderBy(x => x.Name).ToList();
 
-                foreach (var propertyValue in csvProduct.PropertyValues.ToArray())
+                foreach (var property in csvProduct.Properties.ToArray())
                 {
                     //Try to find property for product
-                    propertyValue.Property = csvProduct.Properties.FirstOrDefault(x => x.Name.EqualsInvariant(propertyValue.PropertyName));
-                    if (propertyValue.Property != null)
+                    var inheritedProperty = inheritedProperties.FirstOrDefault(x => x.Name.EqualsInvariant(property.Name));
+                    if (inheritedProperty != null)
                     {
-                        propertyValue.ValueType = propertyValue.Property.ValueType;
-                        propertyValue.PropertyId = propertyValue.Property.Id;
-                        //Try to split the one value to multiple values for Multivalue properties
-                        if (propertyValue.Property.Multivalue)
+                        property.ValueType = inheritedProperty.ValueType;
+                        property.Id = inheritedProperty.Id;
+
+                        foreach (var propertyValue in property.Values)
                         {
-                            var multivalue = propertyValue.Value.ToString();
-                            var chars = new[] { ",", importInfo.Configuration.Delimiter };
-                            var values = multivalue.Split(chars, StringSplitOptions.RemoveEmptyEntries)
-                                                   .Select(x => x.Trim())
-                                                   .Where(x => !string.IsNullOrEmpty(x))
-                                                   .Distinct().ToArray();
-                            propertyValue.Value = values.FirstOrDefault();
-                            foreach (var value in values.Skip(1))
+                            propertyValue.ValueType = inheritedProperty.ValueType;
+                            propertyValue.PropertyId = inheritedProperty.Id;
+                        }
+                        //Try to split the one value to multiple values for Multivalue properties
+                        if (inheritedProperty.Multivalue)
+                        {
+                            var firstPropertyValue = property.Values.FirstOrDefault(x => !string.IsNullOrEmpty(x.Value?.ToString()));
+
+                            if (firstPropertyValue != null)
                             {
-                                var newPropValue = propertyValue.Clone() as PropertyValue;
-                                newPropValue.Value = value;
-                                csvProduct.PropertyValues.Add(newPropValue);
+                                property.Values.AddRange(ParseValuesFromMultivalueString(firstPropertyValue, importInfo.Configuration.Delimiter));
                             }
                         }
-
                     }
                 }
             }
+        }
+
+        private static List<PropertyValue> ParseValuesFromMultivalueString(PropertyValue firstPropertyValue, string additionalDelimiter)
+        {
+            var result = new List<PropertyValue>();
+            var multivalue = firstPropertyValue.Value?.ToString();
+            var chars = new[] { ",", additionalDelimiter };
+            var valueArray = multivalue?.Split(chars, StringSplitOptions.RemoveEmptyEntries)
+                                   .Select(x => x.Trim())
+                                   .Where(x => !string.IsNullOrEmpty(x))
+                                   .Distinct()
+                                   .ToArray();
+
+            foreach (var singleValue in valueArray ?? Array.Empty<string>())
+            {
+                var valueClone = firstPropertyValue.Clone() as PropertyValue;
+                valueClone.Value = singleValue;
+            }
+
+            return result;
         }
 
         //Merge importing products with already exist to prevent erasing already exist data, import should only update or create data
