@@ -75,7 +75,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         [HttpPost]
         [Route("export")]
         [Authorize(ModuleConstants.Security.Permissions.Export)]
-        public async Task<ActionResult<ExportNotification>> DoExport(CsvExportInfo exportInfo)
+        public async Task<ActionResult<ExportNotification>> DoExport([FromBody] CsvExportInfo exportInfo)
         {
             var criteria = AbstractTypeFactory<CatalogSearchCriteria>.TryCreateInstance();
             var ids = new List<string>();

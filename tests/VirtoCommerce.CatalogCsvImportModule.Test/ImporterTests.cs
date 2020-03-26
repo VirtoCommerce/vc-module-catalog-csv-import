@@ -43,7 +43,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         private List<CatalogProduct> _savedProducts;
 
         [Fact]
-        public void DoImport_NewProductMultivalueDictionaryProperties_PropertyValuesCreated()
+        public async void DoImport_NewProductMultivalueDictionaryProperties_PropertyValuesCreated()
         {
             //Arrange
             var product = GetCsvProductBase();
@@ -58,7 +58,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var progressInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -104,13 +104,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             _createDictionatyValues = true;
 
-            var mockPropDictItemService = new Moq.Mock<IPropertyDictionaryItemService>();
+            var mockPropDictItemService = new Mock<IPropertyDictionaryItemService>();
             var target = GetImporter(mockPropDictItemService.Object);
 
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
 
             //Assert
             mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
@@ -1381,6 +1381,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 {
                     Parents = new Category[] { },
                     //Path = "TestCategory"
+                    Properties = new List<Property>()
+                },
+                Catalog = new Catalog()
+                {
+                    Properties = new List<Property>()
                 },
                 Code = "TST1",
                 Currency = "USD",
@@ -1395,7 +1400,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 Price = new Price(),
                 Quantity = "0",
                 Sku = "TST1",
-                TrackInventory = true
+                TrackInventory = true,
+                Prices = new List<Price>() { new Price() }
             };
         }
 

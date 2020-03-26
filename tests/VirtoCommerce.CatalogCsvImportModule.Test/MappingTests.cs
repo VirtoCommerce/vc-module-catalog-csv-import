@@ -22,7 +22,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             importInfo.Configuration.PropertyCsvColumns = new[] { "ProductProperty", "ProductProperty_Multivalue" };
             importInfo.Configuration.Delimiter = ",";
 
-            string path = @"../../data/product-propertyvalues.csv";
+            var path = @"../../data/product-propertyvalues.csv";
             var csvProducts = ReadCsvFile(path, importInfo);
 
             Action<PropertyValue>[] inspectorsFirstProduct = {

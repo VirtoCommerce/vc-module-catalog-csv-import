@@ -1,16 +1,26 @@
-﻿angular.module('virtoCommerce.catalogCsvImportModule')
-.controller('virtoCommerce.catalogCsvImportModule.catalogCSVexportController', ['$scope', 'platformWebApp.bladeNavigationService', 'virtoCommerce.catalogCsvImportModule.export', 'platformWebApp.notifications', 'virtoCommerce.coreModule.fulfillment.fulfillments', 'virtoCommerce.pricingModule.pricelists',
-    function ($scope, bladeNavigationService, exportResourse, notificationsResource, fulfillments, pricelists) {
+angular.module('virtoCommerce.catalogCsvImportModule')
+.controller('virtoCommerce.catalogCsvImportModule.catalogCSVexportController', ['$scope', 'platformWebApp.bladeNavigationService', 'virtoCommerce.catalogCsvImportModule.export', 'virtoCommerce.inventoryModule.fulfillments', 'virtoCommerce.pricingModule.pricelists',
+    function ($scope, bladeNavigationService, exportResourse, fulfillments, pricelists) {
 
-        var blade = $scope.blade;
+        const blade = $scope.blade;
         blade.fulfilmentCenterId = undefined;
         blade.pricelistId = undefined;
         blade.isLoading = false;
         blade.title = 'catalogCsvImportModule.blades.catalog-CSV-export.title';
         blade.titleValues = { name: blade.catalog ? blade.catalog.name : '' };
 
+        function initializeBlade() {
+            fulfillments.search({}, function (data) {
+                    if(data.totalCount > 0){
+                        $scope.fulfillmentCenters = data.results;
+                        blade.fulfilmentCenterId = _.first(data.results).id;
+                    }
+                },
+                function (error) { bladeNavigationService.setError('Error ' + error.status, $scope.blade); });
+        }
+
         $scope.$on("new-notification-event", function (event, notification) {
-            if (blade.notification && notification.id == blade.notification.id) {
+            if (blade.notification && notification.id === blade.notification.id) {
                 angular.copy(notification, blade.notification);
             }
         });
@@ -25,16 +35,11 @@
             },
             function (data) { blade.notification = data; },
             function (error) { bladeNavigationService.setError('Error ' + error.status, $scope.blade); });
-        }
+        };
 
         $scope.setForm = function (form) {
             $scope.formScope = form;
-        }
-
-        $scope.fulfillmentCenters = fulfillments.query({}, function (data) {
-            blade.fulfilmentCenterId = angular.isArray(data) ? data[0].id : undefined;
-        },
-        function (error) { bladeNavigationService.setError('Error ' + error.status, $scope.blade); });
+        };
 
         pricelists.search({ take: 1000 }, function (result) {
             $scope.pricelists = _.filter(result.results,
@@ -47,4 +52,6 @@
         });
 
         $scope.blade.headIcon = 'fa-file-archive-o';
+
+        initializeBlade();
     }]);
