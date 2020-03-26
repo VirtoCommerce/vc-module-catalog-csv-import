@@ -177,7 +177,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var importInfo = new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() };
             importInfo.Configuration.Delimiter = ",";
 
-            string path = GetDataFilePath("product -productproperties-boolean.csv");
+            string path = GetDataFilePath("product-productproperties-boolean.csv");
             var csvProducts = ReadCsvFile(path, importInfo);
 
             Assert.False(csvProducts[0].HasUserAgreement);
