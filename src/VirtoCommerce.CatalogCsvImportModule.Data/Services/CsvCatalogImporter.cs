@@ -197,7 +197,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             await SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
 
-            await LoadProductDependencies(csvProducts, catalog, progressInfo, progressCallback, importInfo);
+            await LoadProductDependencies(csvProducts, catalog, importInfo);
             await ResolvePropertyDictionaryItems(csvProducts, progressInfo, progressCallback);
 
             //take parentless prodcuts and save them first
@@ -443,7 +443,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     lock (_lockObject)
                     {
                         //Raise notification
-                        progressInfo.ProcessedCount += products.Count();
+                        progressInfo.ProcessedCount += products.Count;
                         progressInfo.Description =
                             $"Saving products: {progressInfo.ProcessedCount} of {progressInfo.TotalCount} created";
                         progressCallback(progressInfo);
@@ -460,7 +460,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 if (defaultFulfilmentCenter != null || product.Inventory.FulfillmentCenterId != null)
                 {
                     product.Inventory.ProductId = product.Id;
-                    product.Inventory.FulfillmentCenterId = product.Inventory.FulfillmentCenterId ?? defaultFulfilmentCenter.Id;
+                    product.Inventory.FulfillmentCenterId = product.Inventory.FulfillmentCenterId ?? defaultFulfilmentCenter?.Id;
                 }
                 else
                 {
@@ -612,7 +612,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         }
 
 
-        private async Task LoadProductDependencies(IEnumerable<CsvProduct> csvProducts, Catalog catalog, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback, CsvImportInfo importInfo)
+        private async Task LoadProductDependencies(IEnumerable<CsvProduct> csvProducts, Catalog catalog, CsvImportInfo importInfo)
         {
             var allCategoriesIds = csvProducts.Select(x => x.CategoryId).Distinct().ToArray();
             var categoriesMap = (await _categoryService.GetByIdsAsync(allCategoriesIds, CategoryResponseGroup.Full.ToString())).ToDictionary(x => x.Id);

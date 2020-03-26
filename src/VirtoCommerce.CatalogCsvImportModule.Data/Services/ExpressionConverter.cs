@@ -25,19 +25,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return OutExpression != null;
         }
 
-        [CLSCompliant(false)]
-        public object ConvertFromString(TypeConverterOptions options, string text)
-        {
-            return InExpression(text);
-        }
-
-        [CLSCompliant(false)]
         public string ConvertToString(TypeConverterOptions options, object value)
         {
             return OutExpression((T)value);
         }
-
-        #region Implementation of ITypeConverter
 
         public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
         {
@@ -52,7 +43,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
 
             return value.ToString();
-            //return string.Empty;
+        }
+
+        public object ConvertFromString(TypeConverterOptions options, string text)
+        {
+            return InExpression(text);
         }
 
         public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
@@ -67,13 +62,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             return null;
         }
-
-        #endregion
     }
 
     public static class CsvHelperExtensions
     {
-        [CLSCompliant(false)]
         public static MemberMap UsingExpression<T>(this MemberMap map, Func<string, T> readExpression,
             Func<T, string> writeExpression)
         {

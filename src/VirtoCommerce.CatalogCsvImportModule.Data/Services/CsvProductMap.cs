@@ -25,7 +25,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 {
                     var newMap = MemberMap.CreateGeneric(typeof(CsvProduct), propertyInfo);
 
-                    //var newMap = new CsvPropertyMap(propertyInfo);
                     newMap.Data.TypeConverterOptions.CultureInfo = CultureInfo.InvariantCulture;
                     newMap.Data.TypeConverterOptions.NumberStyle = NumberStyles.Any;
                     newMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange(new List<string>() { "yes", "true" });
@@ -43,7 +42,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     {
                         var typeConverter = TypeDescriptor.GetConverter(propertyInfo.PropertyType);
                         newMap.Data.ReadingConvertExpression = (Expression<Func<IReaderRow, object>>)(x => typeConverter.ConvertFromString(mappingItem.CustomValue));
-                        //newMap.ConvertUsing(row => typeConverter.ConvertFromString(mappingItem.CustomValue));
                         newMap.Default(mappingItem.CustomValue);
                     }
                     MemberMaps.Add(newMap);
