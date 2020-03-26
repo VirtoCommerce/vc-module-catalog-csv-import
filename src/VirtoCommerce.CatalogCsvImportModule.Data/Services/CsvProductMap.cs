@@ -59,26 +59,21 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     // create CsvPropertyMap manually, because this.Map(x =>...) does not allow
                     // to export multiple entries for the same property
 
-                    var propertyValuesInfo = typeof(CsvProduct).GetProperty("PropertyValues");
+                    var propertyValuesInfo = typeof(CsvProduct).GetProperty(nameof(CsvProduct.Properties));
                     var csvPropertyMap = MemberMap.CreateGeneric(typeof(CsvProduct), propertyValuesInfo);
                     csvPropertyMap.Name(propertyCsvColumn);
 
                     csvPropertyMap.Data.Index = ++index;
 
                     // create custom converter instance which will get the required record from the collection
-                    csvPropertyMap.UsingExpression<ICollection<PropertyValue>>(null, propValues =>
+                    csvPropertyMap.UsingExpression<ICollection<Property>>(null, properties =>
                          {
-                             var multiValueProperty = propValues.Where(x => x.PropertyName == propertyCsvColumn).ToList();
-                             if (multiValueProperty.Count == 1)
-                             {
-                                 var propValue = multiValueProperty.First();
-                                 return propValue.Alias ?? propValue.Value?.ToString() ?? string.Empty;
-                             }
+                             var property = properties.FirstOrDefault(x => x.Name == propertyCsvColumn && x.Values.Any());
 
-                             if (multiValueProperty.Count > 1)
+                             if (property != null)
                              {
-                                 var props = multiValueProperty.Where(x => x.Value != null || x.Alias != null).Select(x => x.Alias ?? x.Value.ToString());
-                                 var result = string.Join(mappingCfg.Delimiter, props);
+                                 var propertyValues = property.Values.Where(x => x.Value != null || x.Alias != null).Select(x => x.Alias ?? x.Value.ToString());
+                                 var result = string.Join(mappingCfg.Delimiter, propertyValues);
                                  return result;
                              }
 
@@ -88,10 +83,21 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     MemberMaps.Add(csvPropertyMap);
                 }
 
-                var newPropInfo = typeof(CsvProduct).GetProperty("PropertyValues");
+                var newPropInfo = typeof(CsvProduct).GetProperty(nameof(CsvProduct.Properties));
                 var newPropMap = MemberMap.CreateGeneric(typeof(CsvProduct), newPropInfo);
                 newPropMap.Data.ReadingConvertExpression =
-                    (Expression<Func<IReaderRow, object>>)(x => mappingCfg.PropertyCsvColumns.Select(column => new PropertyValue { PropertyName = column, Value = x.GetField<string>(column) }).ToList());
+                    (Expression<Func<IReaderRow, object>>)(x => mappingCfg.PropertyCsvColumns.Select(column =>
+                        new Property
+                        {
+                            Name = column,
+                            Values = new List<PropertyValue>() {
+                                new PropertyValue()
+                                {
+                                    PropertyName = column,
+                                    Value = x.GetField<string>(column)
+                                }
+                            }
+                        }).ToList());
                 newPropMap.UsingExpression<ICollection<PropertyValue>>(null, null);
 
                 newPropMap.Data.Index = ++index;
