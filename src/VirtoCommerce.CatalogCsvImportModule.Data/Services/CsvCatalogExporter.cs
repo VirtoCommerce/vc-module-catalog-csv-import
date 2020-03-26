@@ -87,7 +87,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var allProductInventories = (await _inventorySearchService.SearchInventoriesAsync(inventorySearchCriteria)).Results.ToList();
 
                 //Export configuration
-                exportInfo.Configuration.PropertyCsvColumns = products.SelectMany(x => x.PropertyValues).Select(x => x.PropertyName).Distinct().ToArray();
+                exportInfo.Configuration.PropertyCsvColumns = products.SelectMany(x => x.Properties).Select(x => x.Name).Distinct().ToArray();
 
                 csvWriter.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
                 csvWriter.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));

@@ -341,16 +341,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             var reviewsComparer = AnonymousComparer.Create((EditorialReview x) => string.Join(":", x.ReviewType, x.LanguageCode));
             Reviews = Reviews.Concat(product.Reviews).Distinct(reviewsComparer).ToList();
 
-            var properyValueComparer = AnonymousComparer.Create((PropertyValue x) => x.PropertyName);
-            foreach (var propertyValue in PropertyValues)
-            {
-                var array = product.PropertyValues.Where(x => properyValueComparer.Equals(x, propertyValue)).ToArray();
-                foreach (var productPropertyValue in array)
-                {
-                    product.PropertyValues.Remove(productPropertyValue);
-                }
-            }
-            PropertyValues = product.PropertyValues.Concat(PropertyValues).ToList();
+            // Leave properties that are not presented in CSV and add all from the CSV (with replacing existing ones)
+            Properties = product.Properties
+                .Where(x => !Properties.Any(x => x.Name.EqualsInvariant(x.Name)))
+                .Concat(Properties)
+                .ToList();
 
             //merge seo infos
             var seoComparer = AnonymousComparer.Create((SeoInfo x) => string.Join(":", x.SemanticUrl, x.LanguageCode?.ToLower(), x.StoreId));
