@@ -243,6 +243,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 var parents = Category.Parents ?? new Category[] { };
                 return string.Join("/", parents.Select(x => x.Path ?? x.Name).Concat(new[] { Category.Path ?? Category.Name }));
             }
+            set
+            {
+                // TODO: Need to handle it by adding CSV categories or adding path setter
+                //Category = new Category { Path = value };
+            }
         }
 
         public string ReviewType
