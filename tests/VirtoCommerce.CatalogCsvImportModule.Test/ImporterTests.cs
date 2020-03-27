@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Moq;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
@@ -42,15 +43,34 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
         private List<CatalogProduct> _savedProducts;
 
+        static ImporterTests()
+        {
+            // To fix the error:  'Cyrillic' is not a supported encoding name. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method. (Parameter 'name')
+            // https://github.com/dotnet/runtime/issues/17516
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+
         [Fact]
-        public async void DoImport_NewProductMultivalueDictionaryProperties_PropertyValuesCreated()
+        public async Task DoImport_NewProductMultivalueDictionaryProperties_PropertyValuesCreated()
         {
             //Arrange
             var product = GetCsvProductBase();
-            product.PropertyValues = new List<PropertyValue>
+            product.Properties = new[]
             {
-                new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1, 3", ValueType = PropertyValueType.ShortText },
-                new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "2, 1", ValueType = PropertyValueType.ShortText}
+                new Property()
+                {
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1, 3", ValueType = PropertyValueType.ShortText },
+                    }
+                },
+                new Property()
+                {
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "2, 1", ValueType = PropertyValueType.ShortText}
+                    }
+                },
             };
 
             var target = GetImporter();
@@ -67,26 +87,30 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_3" && x.Alias == "3"),
                 x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_1" && x.Alias == "1")
             };
-            Assert.Collection(product.PropertyValues, inspectors);
+            Assert.Collection(product.Properties.SelectMany(x => x.Values), inspectors);
             Assert.True(!progressInfo.Errors.Any());
         }
 
         [Fact]
-        public void DoImport_NewProductDictionaryMultivaluePropertyWithNotExistingValue_ErrorIsPresent()
+        public async Task DoImport_NewProductDictionaryMultivaluePropertyWithNotExistingValue_ErrorIsPresent()
         {
             //Arrange
             var product = GetCsvProductBase();
-            product.PropertyValues = new List<PropertyValue>
-            {
-                new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "NotExistingValue", ValueType = PropertyValueType.ShortText }
-            };
+            product.Properties = new[] {
+                new Property()
+                {
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "NotExistingValue", ValueType = PropertyValueType.ShortText }
+                    }
+            }};
 
             var target = GetImporter();
 
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
 
             //Assert
             Assert.True(exportInfo.Errors.Any());
@@ -976,7 +1000,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             categoryService.Setup(x => x.SaveChangesAsync(It.IsAny<Category[]>()))
                 .Returns((Category[] cats) =>
                 {
-                    foreach (var category in cats)
+                    foreach (var category in cats.Where(x => x.Id == null))
                     {
                         category.Id = Guid.NewGuid().ToString();
                         category.Catalog = _catalog;
@@ -988,9 +1012,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             categoryService.Setup(x => x.GetByIdsAsync(
                 It.IsAny<string[]>(),
-                It.Is<CategoryResponseGroup>(c => c == CategoryResponseGroup.Full).ToString(),
+                It.Is<string>(c => c == CategoryResponseGroup.Full.ToString()),
                 It.Is<string>(id => id == null)))
-                .ReturnsAsync((string[] ids, CategoryResponseGroup group, string catalogId) =>
+                .ReturnsAsync((string[] ids, string group, string catalogId) =>
                 {
                     var result = ids.Select(id => _categoriesInternal.FirstOrDefault(x => x.Id == id));
                     result = result.Where(x => x != null).Select(x => x.Clone() as Category).ToList();
@@ -1032,9 +1056,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var itemService = new Mock<IItemService>();
             itemService.Setup(x => x.GetByIdsAsync(
                 It.IsAny<string[]>(),
-                It.Is<ItemResponseGroup>(c => c == ItemResponseGroup.ItemLarge).ToString(),
+                It.Is<string>(c => c == ItemResponseGroup.ItemLarge.ToString()),
                 It.Is<string>(id => id == null)))
-                .ReturnsAsync((string[] ids, ItemResponseGroup group, string catalogId) =>
+                .ReturnsAsync((string[] ids, string group, string catalogId) =>
                 {
                     var result = _productsInternal.Where(x => ids.Contains(x.Id));
                     return result.ToArray();
