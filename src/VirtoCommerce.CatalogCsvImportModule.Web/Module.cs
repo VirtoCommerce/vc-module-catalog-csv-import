@@ -10,6 +10,7 @@ using VirtoCommerce.CatalogCsvImportModule.Data.Services;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.Modularity;
+using VirtoCommerce.Platform.Core.Settings;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Web
 {
@@ -26,6 +27,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web
 
         public void PostInitialize(IApplicationBuilder appBuilder)
         {
+            var settingsRegistrar = appBuilder.ApplicationServices.GetRequiredService<ISettingsRegistrar>();
+            settingsRegistrar.RegisterSettings(ModuleConstants.Settings.AllSettings, ModuleInfo.Id);
+
 
         }
 

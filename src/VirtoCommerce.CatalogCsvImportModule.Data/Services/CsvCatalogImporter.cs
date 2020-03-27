@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -113,7 +112,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             var encoding = DetectEncoding(inputStream);
 
-            using (var reader = new CsvReader(new StreamReader(inputStream, encoding), CultureInfo.InvariantCulture))
+            using (var reader = new CsvReader(new StreamReader(inputStream, encoding)))
             {
                 reader.Configuration.Delimiter = importInfo.Configuration.Delimiter;
                 reader.Configuration.RegisterClassMap(new CsvProductMap(importInfo.Configuration));

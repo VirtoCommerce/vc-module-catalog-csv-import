@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,6 +23,7 @@ using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Settings;
+using CsvModuleConstants = VirtoCommerce.CatalogCsvImportModule.Core.ModuleConstants;
 using ModuleConstants = VirtoCommerce.CatalogModule.Core.ModuleConstants;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
@@ -122,7 +122,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
             //Read csv headers and try to auto map fields by name
 
-            using (var reader = new CsvReader(new StreamReader(_blobStorageProvider.OpenRead(fileUrl)), CultureInfo.InvariantCulture))
+            using (var reader = new CsvReader(new StreamReader(_blobStorageProvider.OpenRead(fileUrl))))
             {
                 reader.Configuration.Delimiter = decodedDelimiter;
 
@@ -229,7 +229,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                     await _csvExporter.DoExportAsync(stream, exportInfo, progressCallback);
 
                     stream.Position = 0;
-                    var fileNameTemplate = _settingsManager.GetValue("CsvCatalogImport.ExportFileNameTemplate", string.Empty);
+                    var fileNameTemplate = await _settingsManager.GetValueAsync(CsvModuleConstants.Settings.General.ExportFileNameTemplate.Name, CsvModuleConstants.Settings.General.ExportFileNameTemplate.DefaultValue.ToString());
                     var fileName = string.Format(fileNameTemplate, DateTime.UtcNow);
                     fileName = Path.ChangeExtension(fileName, ".csv");
 

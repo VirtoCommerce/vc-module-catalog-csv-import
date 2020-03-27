@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using VirtoCommerce.Platform.Core.Settings;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Core
@@ -24,6 +25,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core
 
                 };
             }
+
+            public static IEnumerable<SettingDescriptor> AllSettings
+            {
+                get
+                {
+                    return new List<SettingDescriptor>
+                    {
+                        General.CreateDictionaryValues,
+                        General.ExportFileNameTemplate
+                    };
+                }
+            }
+
         }
     }
 }

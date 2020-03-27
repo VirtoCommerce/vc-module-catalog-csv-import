@@ -53,7 +53,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             };
 
             var streamWriter = new StreamWriter(outStream, Encoding.UTF8, 1024, true) { AutoFlush = true };
-            using (var csvWriter = new CsvWriter(streamWriter, CultureInfo.InvariantCulture))
+            using (var csvWriter = new CsvWriter(streamWriter))
             {
                 //Notification
                 progressCallback(prodgressInfo);

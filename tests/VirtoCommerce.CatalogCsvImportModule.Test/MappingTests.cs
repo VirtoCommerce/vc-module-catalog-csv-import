@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper;
@@ -209,7 +208,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         {
             using (var sw = new StringWriter())
             {
-                using (var csv = new CsvWriter(sw, CultureInfo.InvariantCulture))
+                using (var csv = new CsvWriter(sw))
                 {
                     var exportInfo = new CsvExportInfo();
                     exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
@@ -231,7 +230,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var csvProducts = new List<CsvProduct>();
             using (var fs = File.Open(path, FileMode.Open))
             {
-                using (var reader = new CsvReader(new StreamReader(fs), CultureInfo.InvariantCulture))
+                using (var reader = new CsvReader(new StreamReader(fs)))
                 {
                     reader.Configuration.Delimiter = importInfo.Configuration.Delimiter;
                     reader.Configuration.RegisterClassMap(new CsvProductMap(importInfo.Configuration));
