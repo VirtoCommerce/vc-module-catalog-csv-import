@@ -22,15 +22,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web
             var configuration = serviceCollection.BuildServiceProvider().GetRequiredService<IConfiguration>();
             serviceCollection.AddTransient<ICsvCatalogExporter, CsvCatalogExporter>();
             serviceCollection.AddTransient<ICsvCatalogImporter, CsvCatalogImporter>();
-
         }
 
         public void PostInitialize(IApplicationBuilder appBuilder)
         {
             var settingsRegistrar = appBuilder.ApplicationServices.GetRequiredService<ISettingsRegistrar>();
             settingsRegistrar.RegisterSettings(ModuleConstants.Settings.AllSettings, ModuleInfo.Id);
-
-
         }
 
         public void Uninstall()
