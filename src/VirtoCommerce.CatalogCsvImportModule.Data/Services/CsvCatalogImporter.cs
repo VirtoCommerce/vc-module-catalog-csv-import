@@ -659,7 +659,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                             if (firstPropertyValue != null)
                             {
-                                property.Values.AddRange(ParseValuesFromMultivalueString(firstPropertyValue, importInfo.Configuration.Delimiter));
+                                property.Values = ParseValuesFromMultivalueString(firstPropertyValue, importInfo.Configuration.Delimiter);
                             }
                         }
                     }
@@ -682,6 +682,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             {
                 var valueClone = firstPropertyValue.Clone() as PropertyValue;
                 valueClone.Value = singleValue;
+                result.Add(valueClone);
             }
 
             return result;

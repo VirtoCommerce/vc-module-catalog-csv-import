@@ -30,16 +30,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 {
     public class ImporterTests
     {
-        private Catalog _catalog = CreateCatalog();
+        private readonly Catalog _catalog = CreateCatalog();
 
-        private List<Category> _categoriesInternal = new List<Category>();
+        private readonly List<Category> _categoriesInternal = new List<Category>();
         private List<CatalogProduct> _productsInternal = new List<CatalogProduct>();
 
         private List<Price> _pricesInternal = new List<Price>();
-        private List<FulfillmentCenter> _fulfillmentCentersInternal = new List<FulfillmentCenter>();
-        private List<InventoryInfo> _inventoryInfosInternal = new List<InventoryInfo>();
-
-        private bool _createDictionatyValues = false;
+        private readonly List<FulfillmentCenter> _fulfillmentCentersInternal = new List<FulfillmentCenter>();
+        private readonly List<InventoryInfo> _inventoryInfosInternal = new List<InventoryInfo>();
 
         private List<CatalogProduct> _savedProducts;
 
@@ -55,22 +53,21 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         {
             //Arrange
             var product = GetCsvProductBase();
+            var mutliValueProperty1 = _catalog.Properties.First(x => x.Id == "CatalogProductProperty_1_MultivalueDictionary").Clone() as Property;
+            mutliValueProperty1.Values = new[]
+            {
+                new PropertyValue{ PropertyName = mutliValueProperty1.Name, Value = "1, 3", ValueType = PropertyValueType.ShortText },
+            };
+            var mutliValueProperty2 = _catalog.Properties.First(x => x.Id == "CatalogProductProperty_2_MultivalueDictionary").Clone() as Property;
+            mutliValueProperty2.Values = new[]
+            {
+                new PropertyValue{ PropertyName = mutliValueProperty2.Name, Value = "2, 1", ValueType = PropertyValueType.ShortText}
+            };
+
             product.Properties = new[]
             {
-                new Property()
-                {
-                    Values = new List<PropertyValue>
-                    {
-                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1, 3", ValueType = PropertyValueType.ShortText },
-                    }
-                },
-                new Property()
-                {
-                    Values = new List<PropertyValue>
-                    {
-                        new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "2, 1", ValueType = PropertyValueType.ShortText}
-                    }
-                },
+                mutliValueProperty1,
+                mutliValueProperty2,
             };
 
             var target = GetImporter();
@@ -83,8 +80,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             //Assert
             Action<PropertyValue>[] inspectors = {
                 x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_1" && x.Alias == "1"),
-                x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_2" && x.Alias == "2"),
                 x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_3" && x.Alias == "3"),
+                x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_2" && x.Alias == "2"),
                 x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_1" && x.Alias == "1")
             };
             Assert.Collection(product.Properties.SelectMany(x => x.Values), inspectors);
@@ -125,8 +122,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             {
                 new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "NewValue", ValueType = PropertyValueType.ShortText }
             };
-
-            _createDictionatyValues = true;
 
             var mockPropDictItemService = new Mock<IPropertyDictionaryItemService>();
             var target = GetImporter(mockPropDictItemService.Object);
@@ -331,8 +326,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             {
                 new PropertyValue{ PropertyName = "CatalogProductProperty_1_Dictionary", Value = "NewValue", ValueType = PropertyValueType.ShortText }
             };
-
-            _createDictionatyValues = true;
 
             var mockPropDictItemService = new Moq.Mock<IPropertyDictionaryItemService>();
             var target = GetImporter(mockPropDictItemService.Object);
@@ -1405,11 +1398,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 {
                     Parents = new Category[] { },
                     Path = "TestCategory",
-                    Properties = new List<Property>()
-                },
-                Catalog = new Catalog()
-                {
-                    Properties = new List<Property>()
                 },
                 Code = "TST1",
                 Currency = "USD",
@@ -1425,7 +1413,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 Quantity = "0",
                 Sku = "TST1",
                 TrackInventory = true,
-                Prices = new List<Price>() { new Price() }
             };
         }
 
