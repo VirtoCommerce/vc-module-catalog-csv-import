@@ -14,6 +14,17 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Remove="dist\**" />
+        <Compile Remove="node_modules\**" />
+        <Content Remove="dist\**" />
+        <Content Remove="node_modules\**" />
+        <EmbeddedResource Remove="dist\**" />
+        <EmbeddedResource Remove="node_modules\**" />
+        <None Remove="dist\**" />
+        <None Remove="node_modules\**" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="CsvHelper" Version="12.2.2" />
         <PackageReference Include="FluentValidation" Version="8.6.2" />
         <PackageReference Include="Hangfire" Version="1.7.9" />
