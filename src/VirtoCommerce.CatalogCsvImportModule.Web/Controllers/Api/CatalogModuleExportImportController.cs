@@ -147,7 +147,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         [HttpPost]
         [Route("import")]
         [Authorize(ModuleConstants.Security.Permissions.Import)]
-        public async Task<ActionResult<ImportNotification>> DoImport(CsvImportInfo importInfo)
+        public async Task<ActionResult<ImportNotification>> DoImport([FromBody] CsvImportInfo importInfo)
         {
             var criteria = AbstractTypeFactory<CatalogSearchCriteria>.TryCreateInstance();
             criteria.CatalogIds = new[] { importInfo.CatalogId };
