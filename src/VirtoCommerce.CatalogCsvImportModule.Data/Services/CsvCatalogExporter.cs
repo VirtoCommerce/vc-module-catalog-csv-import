@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -149,7 +148,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private async Task<List<CatalogProduct>> LoadProducts(string catalogId, string[] exportedCategories, string[] exportedProducts)
         {
-            var retVal = new List<CatalogProduct>();
+            var result = new List<CatalogProduct>();
 
             var productIds = new List<string>();
             if (exportedProducts != null)
@@ -167,8 +166,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     SearchInChildren = true,
                     SearchInVariations = true,
                 };
-                var result = await _productSearchService.SearchProductsAsync(criteria);
-                productIds.AddRange(result.Results.Select(x => x.Id));
+                var searchResult = await _productSearchService.SearchProductsAsync(criteria);
+                productIds.AddRange(searchResult.Results.Select(x => x.Id));
             }
 
             if ((exportedCategories == null || !exportedCategories.Any()) && (exportedProducts == null || !exportedProducts.Any()))
@@ -181,21 +180,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     Take = int.MaxValue,
                     SearchInVariations = true,
                 };
-                var result = await _productSearchService.SearchProductsAsync(criteria);
-                productIds = result.Results.Select(x => x.Id).ToList();
+                var searchResult = await _productSearchService.SearchProductsAsync(criteria);
+                productIds = searchResult.Results.Select(x => x.Id).ToList();
             }
 
             var products = await _productService.GetByIdsAsync(productIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
-            foreach (var product in products)
-            {
-                retVal.Add(product);
-                if (product.Variations != null)
-                {
-                    retVal.AddRange(product.Variations);
-                }
-            }
 
-            return retVal;
+            var variationsIds = products.SelectMany(product => product.Variations.Select(variation => variation.Id));
+
+            var variations = await _productService.GetByIdsAsync(variationsIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
+            result.AddRange(products);
+            result.AddRange(variations);
+
+            return result;
         }
     }
 }
