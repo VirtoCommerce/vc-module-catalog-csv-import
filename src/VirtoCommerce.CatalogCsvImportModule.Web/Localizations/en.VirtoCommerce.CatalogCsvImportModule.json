@@ -1,4 +1,4 @@
-﻿{
+{
   "catalogCsvImportModule": {
     "blades": {
       "catalog-CSV-export": {
@@ -95,7 +95,7 @@
       }
     }
   },
-  "setting": {
+  "settings": {
     "CatalogCsvImport": {
       "CreateDictionaryValues": {
         "title": "Create new Dictionary Values",

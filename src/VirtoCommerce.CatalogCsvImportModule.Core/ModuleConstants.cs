@@ -11,16 +11,16 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core
             {
                 public static SettingDescriptor CreateDictionaryValues { get; } = new SettingDescriptor
                 {
-                    Name = "CsvCatalogImport.CreateDictionaryValues",
-                    GroupName = "CsvCatalogImport|General",
+                    Name = "CatalogCsvImport.CreateDictionaryValues",
+                    GroupName = "CatalogCsvImport|General",
                     ValueType = SettingValueType.Boolean,
                 };
 
                 public static SettingDescriptor ExportFileNameTemplate { get; } = new SettingDescriptor
                 {
-                    Name = "CsvCatalogImport.ExportFileNameTemplate",
+                    Name = "CatalogCsvImport.ExportFileNameTemplate",
                     ValueType = SettingValueType.ShortText,
-                    GroupName = "CsvCatalogImport|General",
+                    GroupName = "CatalogCsvImport|General",
                     DefaultValue = "products_{0:yyyy-MM-dd_HH-mm-ss}"
 
                 };
