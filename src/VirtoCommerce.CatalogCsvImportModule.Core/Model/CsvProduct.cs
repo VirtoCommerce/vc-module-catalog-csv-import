@@ -22,6 +22,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             Properties = new List<Property>();
             Images = new List<Image>();
             Assets = new List<Asset>();
+            Prices = new List<Price>();
             Price = new CsvPrice() { Currency = "USD" };
             Inventory = new InventoryInfo();
             EditorialReview = new EditorialReview();
