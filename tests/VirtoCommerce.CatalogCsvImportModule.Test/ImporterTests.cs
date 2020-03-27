@@ -53,21 +53,28 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         {
             //Arrange
             var product = GetCsvProductBase();
-            var mutliValueProperty1 = _catalog.Properties.First(x => x.Id == "CatalogProductProperty_1_MultivalueDictionary").Clone() as Property;
-            mutliValueProperty1.Values = new[]
-            {
-                new PropertyValue{ PropertyName = mutliValueProperty1.Name, Value = "1, 3", ValueType = PropertyValueType.ShortText },
-            };
-            var mutliValueProperty2 = _catalog.Properties.First(x => x.Id == "CatalogProductProperty_2_MultivalueDictionary").Clone() as Property;
-            mutliValueProperty2.Values = new[]
-            {
-                new PropertyValue{ PropertyName = mutliValueProperty2.Name, Value = "2, 1", ValueType = PropertyValueType.ShortText}
-            };
-
             product.Properties = new[]
             {
-                mutliValueProperty1,
-                mutliValueProperty2,
+                new Property()
+                {
+                    Name = "CatalogProductProperty_1_MultivalueDictionary",
+                    Dictionary = true,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1, 3", ValueType = PropertyValueType.ShortText },
+                    }
+                },
+                new Property()
+                {
+                    Name = "CatalogProductProperty_2_MultivalueDictionary",
+                    Dictionary = true,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "2, 1", ValueType = PropertyValueType.ShortText}
+                    }
+                },
             };
 
             var target = GetImporter();
@@ -1278,7 +1285,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             {
                 Name = "CatalogProductProperty_1_MultivalueDictionary",
                 Id = "CatalogProductProperty_1_MultivalueDictionary",
-                //Catalog = catalog,
                 CatalogId = catalog.Id,
                 Dictionary = true,
                 Multivalue = true,
@@ -1286,12 +1292,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 ValueType = PropertyValueType.ShortText
             };
 
-            var productProperty2Id = Guid.NewGuid().ToString();
             var catalogProductProperty2 = new Property
             {
                 Name = "CatalogProductProperty_2_MultivalueDictionary",
                 Id = "CatalogProductProperty_2_MultivalueDictionary",
-                //Catalog = catalog,
                 CatalogId = catalog.Id,
                 Dictionary = true,
                 Multivalue = true,
@@ -1303,7 +1307,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             {
                 Name = "CatalogProductProperty_1_Multivalue",
                 Id = "CatalogProductProperty_1_Multivalue",
-                //Catalog = catalog,
                 CatalogId = catalog.Id,
                 Dictionary = false,
                 Multivalue = true,
@@ -1315,7 +1318,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             {
                 Name = "CatalogProductProperty_2_Multivalue",
                 Id = "CatalogProductProperty_2_Multivalue",
-                //Catalog = catalog,
                 CatalogId = catalog.Id,
                 Dictionary = false,
                 Multivalue = true,
@@ -1323,12 +1325,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 ValueType = PropertyValueType.ShortText
             };
 
-            var productProperty5Id = Guid.NewGuid().ToString();
             var catalogProductProperty5 = new Property
             {
                 Name = "CatalogProductProperty_1_Dictionary",
                 Id = "CatalogProductProperty_1_Dictionary",
-                //Catalog = catalog,
                 CatalogId = catalog.Id,
                 Dictionary = true,
                 Multivalue = false,
@@ -1336,12 +1336,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 ValueType = PropertyValueType.ShortText
             };
 
-            var productProperty6Id = Guid.NewGuid().ToString();
             var catalogProductProperty6 = new Property
             {
                 Name = "CatalogProductProperty_2_Dictionary",
                 Id = "CatalogProductProperty_2_Dictionary",
-                //Catalog = catalog,
                 CatalogId = catalog.Id,
                 Dictionary = true,
                 Multivalue = false,
@@ -1353,7 +1351,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             {
                 Name = "CatalogProductProperty_1",
                 Id = "CatalogProductProperty_1",
-                //Catalog = catalog,
                 CatalogId = catalog.Id,
                 Dictionary = false,
                 Multivalue = false,
@@ -1365,7 +1362,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             {
                 Name = "CatalogProductProperty_2",
                 Id = "CatalogProductProperty_2",
-                //Catalog = catalog,
                 CatalogId = catalog.Id,
                 Dictionary = false,
                 Multivalue = false,
