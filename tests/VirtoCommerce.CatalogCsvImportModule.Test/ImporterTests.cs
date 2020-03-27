@@ -1380,7 +1380,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 Category = new Category
                 {
                     Parents = new Category[] { },
-                    //Path = "TestCategory"
+                    Path = "TestCategory",
                     Properties = new List<Property>()
                 },
                 Catalog = new Catalog()
@@ -1414,7 +1414,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 Category = new Category
                 {
                     Parents = new Category[] { },
-                    //Path = "TestCategory"
+                    Path = "TestCategory"
                 },
                 Code = "TST2",
                 Currency = "USD",
@@ -1442,7 +1442,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 Catalog = _catalog,
                 CatalogId = _catalog.Id,
                 Name = existingProduct.Category.Path,
-                //Path = existingProduct.CategoryPath,
+                Path = existingProduct.CategoryPath,
                 Properties = new List<Property>()
             };
             category.Properties.AddRange(CreateProductPropertiesInCategory(category, _catalog));

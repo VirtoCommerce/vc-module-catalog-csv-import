@@ -32,8 +32,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 x => Assert.True((string) x.Value == "Product-2-propertyvalue-test" && x.PropertyName =="ProductProperty"),
                 x => Assert.True((string) x.Value == "Product-2-multivalue-1, Product-2-multivalue-1, Product-2-multivalue-3" && x.PropertyName =="ProductProperty_Multivalue")
             };
-            Assert.Collection(csvProducts.FirstOrDefault().PropertyValues, inspectorsFirstProduct);
-            Assert.Collection(csvProducts.LastOrDefault().PropertyValues, inspectorsSecond);
+            Assert.Collection(csvProducts.FirstOrDefault().Properties.SelectMany(x => x.Values), inspectorsFirstProduct);
+            Assert.Collection(csvProducts.LastOrDefault().Properties.SelectMany(x => x.Values), inspectorsSecond);
         }
 
         [Fact]

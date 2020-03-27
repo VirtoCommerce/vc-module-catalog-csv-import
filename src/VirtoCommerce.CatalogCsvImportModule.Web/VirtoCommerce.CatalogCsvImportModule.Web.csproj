@@ -17,7 +17,7 @@
         <PackageReference Include="CsvHelper" Version="12.2.2" />
         <PackageReference Include="FluentValidation" Version="8.6.2" />
         <PackageReference Include="Hangfire" Version="1.7.9" />
-        <PackageReference Include="VirtoCommerce.CatalogModule.Core" Version="3.0.0-rc.5-001" />
+        <PackageReference Include="VirtoCommerce.CatalogModule.Core" Version="3.0.0-rc.5-002" />
         <PackageReference Include="VirtoCommerce.Platform.Core" Version="3.0.0-rc4-0207" />
         <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.0.0-rc4-0207" />
         <PackageReference Include="VirtoCommerce.Platform.Security" Version="3.0.0-rc4-0207" />

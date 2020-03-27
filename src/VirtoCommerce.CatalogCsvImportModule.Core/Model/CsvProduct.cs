@@ -245,8 +245,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             }
             set
             {
-                // TODO: Need to handle it by adding CSV categories or adding path setter
-                //Category = new Category { Path = value };
+                Category = new Category { Path = value };
             }
         }
 
