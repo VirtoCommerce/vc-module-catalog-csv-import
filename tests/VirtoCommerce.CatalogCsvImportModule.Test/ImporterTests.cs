@@ -1080,22 +1080,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 return result;
             });
 
-            var catalogSearchService = new Mock<ICatalogSearchService>();
-            catalogSearchService.Setup(x => x.SearchCatalogsAsync(It.IsAny<CatalogSearchCriteria>())).ReturnsAsync((CatalogSearchCriteria criteria) =>
-            {
-                var result = new CatalogSearchResult();
-                var categories = _categoriesInternal.Where(x => criteria.CatalogIds.Contains(x.CatalogId) || criteria.ObjectIds.Contains(x.Id)).ToList();
-                var cloned = categories.Select(x => x.Clone() as Category).ToList();
-                foreach (var category in cloned)
-                {
-                    //    //search service doesn't return included properties
-                    category.Properties = new List<Property>();
-                }
-                result.Results = new List<Catalog>(); // cloned;
-
-                return result;
-            });
-
             #endregion ICategorySearchService
 
             #region ItemService
