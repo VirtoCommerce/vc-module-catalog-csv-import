@@ -72,7 +72,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                     Multivalue = true,
                     Values = new List<PropertyValue>
                     {
-                        new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "2, 1", ValueType = PropertyValueType.ShortText}
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "2, 1", ValueType = PropertyValueType.ShortText },
                     }
                 },
             };
@@ -108,7 +108,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                     Multivalue = true,
                     Values = new List<PropertyValue>
                     {
-                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "NotExistingValue", ValueType = PropertyValueType.ShortText }
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "NotExistingValue", ValueType = PropertyValueType.ShortText },
                     }
             }};
 
@@ -128,13 +128,21 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         {
             //Arrange
             var product = GetCsvProductBase();
-            product.PropertyValues = new List<PropertyValue>
-            {
-                new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "NewValue", ValueType = PropertyValueType.ShortText }
+            product.Properties = new[] {
+                new Property()
+                {
+                    Name = "CatalogProductProperty_1_MultivalueDictionary",
+                    Dictionary = true,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "NewValue", ValueType = PropertyValueType.ShortText },
+                    }
+                },
             };
 
             var mockPropDictItemService = new Mock<IPropertyDictionaryItemService>();
-            var target = GetImporter(mockPropDictItemService.Object);
+            var target = GetImporter(propDictItemService: mockPropDictItemService.Object, createDictionayValues: true);
 
             var exportInfo = new ExportImportProgressInfo();
 
@@ -307,13 +315,23 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_NewProductDictionaryPropertyWithNotExistingValue_ErrorIsPresent()
+        public async Task DoImport_NewProductDictionaryPropertyWithNotExistingValue_ErrorIsPresent()
         {
             //Arrange
             var product = GetCsvProductBase();
-            product.PropertyValues = new List<PropertyValue>
+
+            product.Properties = new[]
             {
-                new PropertyValue{ PropertyName = "CatalogProductProperty_1_Dictionary", Value = "NotExistingValue", ValueType = PropertyValueType.ShortText }
+                new Property()
+                {
+                    Name = "CatalogProductProperty_1_Dictionary",
+                    Dictionary = true,
+                    Multivalue = false,
+                    Values = new []
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_Dictionary", Value = "NewValue", ValueType = PropertyValueType.ShortText },
+                    }
+                },
             };
 
             var target = GetImporter();
@@ -321,30 +339,40 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
 
             //Assert
             Assert.True(exportInfo.Errors.Any());
         }
 
         [Fact]
-        public void DoImport_NewProductDictionaryPropertyWithNewValue_NewPropertyValueCreated()
+        public async Task DoImport_NewProductDictionaryPropertyWithNewValue_NewPropertyValueCreated()
         {
             //Arrange
             var product = GetCsvProductBase();
-            product.PropertyValues = new List<PropertyValue>
+
+            product.Properties = new[]
             {
-                new PropertyValue{ PropertyName = "CatalogProductProperty_1_Dictionary", Value = "NewValue", ValueType = PropertyValueType.ShortText }
+                new Property()
+                {
+                    Name = "CatalogProductProperty_1_Dictionary",
+                    Dictionary = true,
+                    Multivalue = false,
+                    Values = new []
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_Dictionary", Value = "NewValue", ValueType = PropertyValueType.ShortText },
+                    }
+                },
             };
 
-            var mockPropDictItemService = new Moq.Mock<IPropertyDictionaryItemService>();
-            var target = GetImporter(mockPropDictItemService.Object);
+            var mockPropDictItemService = new Mock<IPropertyDictionaryItemService>();
+            var target = GetImporter(propDictItemService: mockPropDictItemService.Object, createDictionayValues: true);
 
 
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
 
             //Assert
             mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
@@ -980,7 +1008,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
 
-        private CsvCatalogImporter GetImporter(IPropertyDictionaryItemService propDictItemService = null, IPropertyDictionaryItemSearchService propDictItemSearchService = null)
+        private CsvCatalogImporter GetImporter(IPropertyDictionaryItemService propDictItemService = null, IPropertyDictionaryItemSearchService propDictItemSearchService = null, bool? createDictionayValues = false)
         {
 
             #region StoreServise
@@ -1215,7 +1243,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 categorySearchService.Object
             );
 
-            target.CreatePropertyDictionatyValues = false;
+            target.CreatePropertyDictionatyValues = createDictionayValues ?? false;
 
             return target;
         }
