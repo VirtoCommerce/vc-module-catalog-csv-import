@@ -291,13 +291,31 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 csvProduct.SeoInfos = seoInfos;
 
                 csvProduct.Properties = csvProduct.Properties
-                    .Where(x => x.Values?.Any(x => !string.IsNullOrEmpty(x.Value?.ToString())) == true)
+                    .Where(property => property.Values?.Any(propertyValue => !string.IsNullOrEmpty(propertyValue.Value?.ToString())) == true)
                     .GroupBy(x => x.Name)
-                    .Select(g => g.FirstOrDefault())
+                    .Select(propertyGroup => GetMergedProperty(propertyGroup))
                     .ToList();
 
                 csvProduct.Prices = csvProduct.Prices.Where(x => x.EffectiveValue > 0).GroupBy(x => x.Currency).Select(g => g.FirstOrDefault()).ToList();
             }
+        }
+
+        private static Property GetMergedProperty(IGrouping<string, Property> propertyGroup)
+        {
+            var result = propertyGroup.FirstOrDefault();
+
+            foreach (var property in propertyGroup.Skip(1))
+            {
+                foreach (var propertyValue in property.Values)
+                {
+                    if (!result.Values.Any(x => x.Value == propertyValue.Value))
+                    {
+                        result.Values.Add(propertyValue);
+                    }
+                }
+            }
+
+            return result;
         }
 
         private string GetDefaultLanguage(Catalog catalog)
