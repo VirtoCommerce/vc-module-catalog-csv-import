@@ -185,10 +185,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
 
             var products = await _productService.GetByIdsAsync(productIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
-
-            var variationsIds = products.SelectMany(product => product.Variations.Select(variation => variation.Id));
-
+            // Variations in products go without properties, only VariationProperties are included. Have to use GetByIdsAsync to receive all properties for variations.
+            var variationsIds = products.SelectMany(product => product.Variations.Where(variation=> !productIds.Contains(variation.Id)).Select(variation => variation.Id));
             var variations = await _productService.GetByIdsAsync(variationsIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
+
             result.AddRange(products);
             result.AddRange(variations);
 
