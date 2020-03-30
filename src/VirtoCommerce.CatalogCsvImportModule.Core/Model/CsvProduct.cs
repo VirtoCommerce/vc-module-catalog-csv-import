@@ -348,7 +348,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 
             // Leave properties that are not presented in CSV and add all from the CSV (with replacing existing ones)
             Properties = product.Properties
-                .Where(x => !Properties.Any(x => x.Name.EqualsInvariant(x.Name)))
+                .Where(existingProperty => !Properties.Any(csvProperty => csvProperty.Name.EqualsInvariant(existingProperty.Name)))
                 .Concat(Properties)
                 .ToList();
 

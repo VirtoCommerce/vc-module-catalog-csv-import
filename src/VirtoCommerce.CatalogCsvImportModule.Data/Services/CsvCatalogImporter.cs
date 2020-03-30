@@ -651,15 +651,18 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                             propertyValue.ValueType = inheritedProperty.ValueType;
                             propertyValue.PropertyId = inheritedProperty.Id;
                         }
+
                         //Try to split the one value to multiple values for Multivalue properties
                         if (inheritedProperty.Multivalue)
                         {
-                            var firstPropertyValue = property.Values.FirstOrDefault(x => !string.IsNullOrEmpty(x.Value?.ToString()));
+                            var parsedValues = new List<PropertyValue>();
 
-                            if (firstPropertyValue != null)
+                            foreach (var propertyValue in property.Values)
                             {
-                                property.Values = ParseValuesFromMultivalueString(firstPropertyValue, importInfo.Configuration.Delimiter);
+                                parsedValues.AddRange(ParseValuesFromMultivalueString(propertyValue, importInfo.Configuration.Delimiter));
                             }
+
+                            property.Values = parsedValues;
                         }
                     }
                 }

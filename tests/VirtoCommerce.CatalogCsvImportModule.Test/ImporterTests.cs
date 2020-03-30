@@ -156,19 +156,48 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductDictionaryMultivalueProperties_PropertyValuesMerged()
+        public async Task DoImport_UpdateProductDictionaryMultivalueProperties_PropertyValuesMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
-            existingProduct.PropertyValues = new List<PropertyValue>
+
+            existingProduct.Properties = new[]
             {
-                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText }
+                new Property()
+                {
+                    Name = "CatalogProductProperty_1_MultivalueDictionary",
+                    Dictionary = true,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText },
+                    }
+                },
+                new Property()
+                {
+                    Name = "CatalogProductProperty_2_MultivalueDictionary",
+                    Dictionary = true,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText },
+                    }
+                },
+                 new Property()
+                {
+                    Name = "TestCategory_ProductProperty_MultivalueDictionary",
+                    Dictionary = true,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue{ PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText },
+                    }
+                },
             };
+
             _productsInternal = new List<CatalogProduct> { existingProduct };
 
             var existringCategory = CreateCategory(existingProduct);
@@ -176,27 +205,45 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             var product = GetCsvProductBase();
 
-            product.PropertyValues = new List<PropertyValue>
+            product.Properties = new[]
             {
-                new PropertyValue { PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "2,3", ValueType = PropertyValueType.ShortText },
-                new PropertyValue { PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText }
+                new Property()
+                {
+                    Name = "CatalogProductProperty_2_MultivalueDictionary",
+                    Dictionary = true,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "2,3", ValueType = PropertyValueType.ShortText },
+                    }
+                },
+                new Property()
+                {
+                    Name = "TestCategory_ProductProperty_MultivalueDictionary",
+                    Dictionary = true,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue{ PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText },
+                    }
+                },
             };
 
             var target = GetImporter();
             var progressInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
                 x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_1" && x.Alias == "1"),
                 x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_2" && x.Alias == "2"),
                 x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_2" && x.Alias == "2"),
+                x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_3" && x.Alias == "3"),
                 x => Assert.True(x.ValueId == "TestCategory_ProductProperty_MultivalueDictionary_2" && x.Alias == "2"),
-                x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_3" && x.Alias == "3")
             };
-            Assert.Collection(product.PropertyValues, inspectors);
+            Assert.Collection(product.Properties.SelectMany(x => x.Values), inspectors);
             Assert.True(!progressInfo.Errors.Any());
         }
 
@@ -224,7 +271,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductNameIsNull_NameIsNotUpdated()
+        public async Task DoImport_UpdateProductNameIsNull_NameIsNotUpdated()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -240,7 +287,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Assert.True(product.Name == existingProduct.Name);
@@ -249,7 +296,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
 
         [Fact]
-        public void DoImport_UpdateProductMultivalueProperties_PropertyValuesMerged()
+        public async Task DoImport_UpdateProductMultivalueProperties_PropertyValuesMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -276,7 +323,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             var target = GetImporter();
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -291,7 +338,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
 
         [Fact]
-        public void DoImport_NewProductDictionaryProperties_PropertyValuesCreated()
+        public async Task DoImport_NewProductDictionaryProperties_PropertyValuesCreated()
         {
             //Arrange
             var product = GetCsvProductBase();
@@ -304,7 +351,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -380,7 +427,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_NewProductProperties_PropertyValuesCreated()
+        public async Task DoImport_NewProductProperties_PropertyValuesCreated()
         {
             //Arrange
             var target = GetImporter();
@@ -393,7 +440,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             };
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -405,7 +452,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
 
         [Fact]
-        public void DoImport_UpdateProductSeoInfoIsEmpty_SeoInfosNotClearedUp()
+        public async Task DoImport_UpdateProductSeoInfoIsEmpty_SeoInfosNotClearedUp()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -428,7 +475,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Assert.True(product.SeoInfos.Count == 1);
@@ -436,7 +483,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductReviewIsEmpty_ReviewsNotClearedUp()
+        public async Task DoImport_UpdateProductReviewIsEmpty_ReviewsNotClearedUp()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -459,7 +506,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Assert.True(product.Reviews.Count == 1);
@@ -467,7 +514,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductTwoProductsWithSameCode_ProductsMerged()
+        public async Task DoImport_UpdateProductTwoProductsWithSameCode_ProductsMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -487,14 +534,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Assert.True(_savedProducts.Count == 1);
         }
 
         [Fact]
-        public void DoImport_TwoProductsSameCodeDifferentReviewTypes_ReviewsMerged()
+        public async Task DoImport_TwoProductsSameCodeDifferentReviewTypes_ReviewsMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -517,7 +564,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<EditorialReview>[] inspectors = {
@@ -528,7 +575,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_TwoProductsSameCodeSameReviewTypes_ReviewsMerged()
+        public async Task DoImport_TwoProductsSameCodeSameReviewTypes_ReviewsMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -549,7 +596,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<EditorialReview>[] inspectors = {
@@ -559,7 +606,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductTwoProductsSameCodeDifferentReviewTypes_ReviewsMerged()
+        public async Task DoImport_UpdateProductTwoProductsSameCodeDifferentReviewTypes_ReviewsMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -582,7 +629,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<EditorialReview>[] inspectors = {
@@ -593,7 +640,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_TwoProductsSameCodeDifferentSeoInfo_SeoInfosMerged()
+        public async Task DoImport_TwoProductsSameCodeDifferentSeoInfo_SeoInfosMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -614,7 +661,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<SeoInfo>[] inspectors = {
@@ -625,7 +672,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_TwoProductsSameCodeSameSeoInfo_SeoInfosMerged()
+        public async Task DoImport_TwoProductsSameCodeSameSeoInfo_SeoInfosMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -646,7 +693,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<SeoInfo>[] inspectors = {
@@ -656,7 +703,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductTwoProductsSameCodeDifferentSeoInfo_SeoInfosMerged()
+        public async Task DoImport_UpdateProductTwoProductsSameCodeDifferentSeoInfo_SeoInfosMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -677,7 +724,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<SeoInfo>[] inspectors = {
@@ -689,7 +736,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductsTwoProductsSamePropertyName_PropertyValuesMerged()
+        public async Task DoImport_UpdateProductsTwoProductsSamePropertyName_PropertyValuesMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -725,7 +772,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(list, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
+            await target.DoImport(list, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -741,7 +788,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductHasPriceCurrency_PriceUpdated()
+        public async Task DoImport_UpdateProductHasPriceCurrency_PriceUpdated()
         {
             //Arrange
             var listPrice = 555.5m;
@@ -775,7 +822,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<Price>[] inspectors =
@@ -786,7 +833,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductHasPriceId_PriceUpdated()
+        public async Task DoImport_UpdateProductHasPriceId_PriceUpdated()
         {
             //Arrange
             var listPrice = 555.5m;
@@ -828,7 +875,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<Price>[] inspectors =
@@ -840,7 +887,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductHasPriceListId_PriceUpdated()
+        public async Task DoImport_UpdateProductHasPriceListId_PriceUpdated()
         {
             //Arrange
             var listPrice = 555.5m;
@@ -882,7 +929,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<Price>[] inspectors =
@@ -894,7 +941,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductsTwoProductDifferentPriceCurrency_PricesMerged()
+        public async Task DoImport_UpdateProductsTwoProductDifferentPriceCurrency_PricesMerged()
         {
             //Arrange
             var listPrice = 555.5m;
@@ -919,7 +966,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { firstProduct, secondProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct, secondProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<Price>[] inspectors =
@@ -932,7 +979,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
 
         [Fact]
-        public void DoImport_UpdateProducts_OnlyExistringProductsMerged()
+        public async Task DoImport_UpdateProducts_OnlyExistringProductsMerged()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
@@ -960,7 +1007,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<CatalogProduct>[] inspectors = {
@@ -972,7 +1019,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_NewProductWithVariationsProductUseSku()
+        public async Task DoImport_NewProductWithVariationsProductUseSku()
         {
             //Arrange
             var mainProduct = GetCsvProductBase();
@@ -983,14 +1030,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { mainProduct, variationProduct }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { mainProduct, variationProduct }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
 
             //Assert
             Assert.True(variationProduct.MainProductId == mainProduct.Id);
         }
 
         [Fact]
-        public void DoImport_NewProductWithVariationsProductUseId()
+        public async Task DoImport_NewProductWithVariationsProductUseId()
         {
             //Arrange
             var mainProduct = GetCsvProductBase();
@@ -1001,7 +1048,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            target.DoImport(new List<CsvProduct> { mainProduct, variationProduct }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { mainProduct, variationProduct }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
 
             //Assert
             Assert.True(variationProduct.MainProductId == mainProduct.Id);
