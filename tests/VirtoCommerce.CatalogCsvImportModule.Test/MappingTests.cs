@@ -228,7 +228,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         private List<CsvProduct> ReadCsvFile(string path, CsvImportInfo importInfo)
         {
             var csvProducts = new List<CsvProduct>();
+#pragma warning disable S3966 // Objects should not be disposed more than once - no problem in this case
             using (var fs = File.Open(path, FileMode.Open))
+#pragma warning restore S3966 // Objects should not be disposed more than once
             {
                 using (var reader = new CsvReader(new StreamReader(fs)))
                 {
