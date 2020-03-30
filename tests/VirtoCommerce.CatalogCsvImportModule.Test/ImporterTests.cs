@@ -201,11 +201,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void DoImport_UpdateProductCategory_CategoryIsNotUpdated()
+        public async Task DoImport_UpdateProductCategory_CategoryIsNotUpdated()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
-            existingProduct.PropertyValues = new List<PropertyValue>();
+            existingProduct.Properties = new List<Property>();
             _productsInternal = new List<CatalogProduct> { existingProduct };
 
             var existringCategory = CreateCategory(existingProduct);
@@ -217,7 +217,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var target = GetImporter();
 
             //Act
-            target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Assert.True(product.Category.Id == existingProduct.Category.Id);
@@ -1062,25 +1062,41 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             #endregion
 
-            #region CatalogSearchService
+            #region ICategorySearchService
+
+            var categorySearchService = new Mock<ICategorySearchService>();
+            categorySearchService.Setup(x => x.SearchCategoriesAsync(It.IsAny<CategorySearchCriteria>())).ReturnsAsync((CategorySearchCriteria criteria) =>
+            {
+                var result = new CategorySearchResult();
+                var categories = _categoriesInternal.Where(x => criteria.CatalogIds.Contains(x.CatalogId) || criteria.ObjectIds.Contains(x.Id)).ToList();
+                var cloned = categories.Select(x => x.Clone() as Category).ToList();
+                foreach (var category in cloned)
+                {
+                    //search service doesn't return included properties
+                    category.Properties = new List<Property>();
+                }
+                result.Results = cloned;
+
+                return result;
+            });
 
             var catalogSearchService = new Mock<ICatalogSearchService>();
             catalogSearchService.Setup(x => x.SearchCatalogsAsync(It.IsAny<CatalogSearchCriteria>())).ReturnsAsync((CatalogSearchCriteria criteria) =>
+            {
+                var result = new CatalogSearchResult();
+                var categories = _categoriesInternal.Where(x => criteria.CatalogIds.Contains(x.CatalogId) || criteria.ObjectIds.Contains(x.Id)).ToList();
+                var cloned = categories.Select(x => x.Clone() as Category).ToList();
+                foreach (var category in cloned)
                 {
-                    var result = new CatalogSearchResult();
-                    var categories = _categoriesInternal.Where(x => criteria.CatalogIds.Contains(x.CatalogId) || criteria.ObjectIds.Contains(x.Id)).ToList();
-                    var cloned = categories.Select(x => x.Clone() as Category).ToList();
-                    foreach (var category in cloned)
-                    {
-                        //    //search service doesn't return included properties
-                        category.Properties = new List<Property>();
-                    }
-                    result.Results = new List<Catalog>(); // cloned;
+                    //    //search service doesn't return included properties
+                    category.Properties = new List<Property>();
+                }
+                result.Results = new List<Catalog>(); // cloned;
 
-                    return result;
-                });
+                return result;
+            });
 
-            #endregion
+            #endregion ICategorySearchService
 
             #region ItemService
 
@@ -1212,13 +1228,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var settingsManager = new Mock<ISettingsManager>();
 
             #endregion
-
-            #region ICategorySearchService
-
-            var categorySearchService = new Mock<ICategorySearchService>();
-            categorySearchService.Setup(x => x.SearchCategoriesAsync(It.IsAny<CategorySearchCriteria>())).ReturnsAsync(new CategorySearchResult());
-
-            #endregion ICategorySearchService
 
             #region IFulfillmentCenterSearchService
 
