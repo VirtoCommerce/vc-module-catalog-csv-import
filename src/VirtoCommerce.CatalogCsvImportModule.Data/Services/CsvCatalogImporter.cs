@@ -82,7 +82,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             _categorySearchService = categorySearchService;
         }
 
-        internal bool CreatePropertyDictionatyValues
+        public bool CreatePropertyDictionatyValues
         {
             get
             {
@@ -93,7 +93,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                 return _createPropertyDictionatyValues.Value;
             }
-            // For testing purposes only - as cannot mock extension method 'GetValue', no neeed to use
             set
             {
                 _createPropertyDictionatyValues = value;

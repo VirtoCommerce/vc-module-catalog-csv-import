@@ -103,6 +103,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             product.Properties = new[] {
                 new Property()
                 {
+                    Name = "CatalogProductProperty_1_MultivalueDictionary",
+                    Dictionary = true,
+                    Multivalue = true,
                     Values = new List<PropertyValue>
                     {
                         new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "NotExistingValue", ValueType = PropertyValueType.ShortText }
@@ -1211,6 +1214,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 storeSearchService.Object,
                 categorySearchService.Object
             );
+
+            target.CreatePropertyDictionatyValues = false;
 
             return target;
         }
