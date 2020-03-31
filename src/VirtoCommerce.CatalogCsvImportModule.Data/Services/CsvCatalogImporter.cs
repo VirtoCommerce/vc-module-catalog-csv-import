@@ -126,7 +126,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     try
                     {
                         var csvProduct = reader.GetRecord<CsvProduct>();
-                        csvProduct.Id = string.IsNullOrEmpty(csvProduct.Id) ? null : csvProduct.Id;
+                        ConvertEmptyStringToNull(csvProduct);
                         csvProducts.Add(csvProduct);
                     }
                     catch (Exception ex)
@@ -143,6 +143,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
 
             await DoImport(csvProducts, importInfo, progressInfo, progressCallback);
+        }
+
+        private void ConvertEmptyStringToNull(CsvProduct csvProduct)
+        {
+            csvProduct.Id = string.IsNullOrEmpty(csvProduct.Id) ? null : csvProduct.Id;
+            csvProduct.CategoryId = string.IsNullOrEmpty(csvProduct.CategoryId) ? null : csvProduct.CategoryId;
+            csvProduct.MainProductId = string.IsNullOrEmpty(csvProduct.MainProductId) ? null : csvProduct.MainProductId;
+            csvProduct.PriceId = string.IsNullOrEmpty(csvProduct.PriceId) ? null : csvProduct.PriceId;
+            csvProduct.PriceListId = string.IsNullOrEmpty(csvProduct.PriceListId) ? null : csvProduct.PriceListId;
         }
 
         private Encoding DetectEncoding(Stream stream)
@@ -578,7 +587,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     Take = int.MaxValue,
                 };
 
-                existentPrices.AddRange((await _pricingSearchService.SearchPricesAsync(criteria)).Results);
+                var searchResult = await _pricingSearchService.SearchPricesAsync(criteria);
+                existentPrices.AddRange(searchResult.Results);
             }
 
             var result = new List<Price>();

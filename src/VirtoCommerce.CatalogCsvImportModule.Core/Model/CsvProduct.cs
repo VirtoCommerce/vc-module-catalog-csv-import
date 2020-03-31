@@ -22,8 +22,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             Properties = new List<Property>();
             Images = new List<Image>();
             Assets = new List<Asset>();
-            Prices = new List<Price>();
-            Price = new CsvPrice() { Currency = "USD" };
+            Price = new CsvPrice { Currency = "USD" };
+            Prices = new List<Price> { Price };
             Inventory = new InventoryInfo();
             EditorialReview = new EditorialReview();
             Reviews = new List<EditorialReview> { EditorialReview };
@@ -62,9 +62,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
         public InventoryInfo Inventory { get; set; }
         public EditorialReview EditorialReview { get; set; }
         public SeoInfo SeoInfo { get; set; }
-
         public IList<Price> Prices { get; set; }
-
         public string PriceId
         {
             get
