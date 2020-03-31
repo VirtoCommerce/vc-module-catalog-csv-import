@@ -85,7 +85,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var newPropMap = MemberMap.CreateGeneric(typeof(CsvProduct), newPropInfo);
                 newPropMap.Data.ReadingConvertExpression =
                     (Expression<Func<IReaderRow, object>>)(x => mappingCfg.PropertyCsvColumns.Select(column =>
-                        new Property
+                        (Property)new CsvProperty
                         {
                             Name = column,
                             Values = new List<PropertyValue>() {

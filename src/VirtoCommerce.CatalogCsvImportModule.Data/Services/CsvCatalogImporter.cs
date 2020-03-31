@@ -368,7 +368,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         }
                         else
                         {
-                            progressInfo.Errors.Add($"The property dictionary '{propertyValue.Alias}' not found in '{propertyValue.PropertyName}' dictionary");
+                            progressInfo.Errors.Add($"The '{propertyValue.Alias}' dictionary item is not found in '{propertyValue.PropertyName}' dictionary");
                             progressCallback(progressInfo);
                         }
                     }

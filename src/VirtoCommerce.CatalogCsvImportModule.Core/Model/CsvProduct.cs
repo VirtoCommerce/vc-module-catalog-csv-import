@@ -344,10 +344,23 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             var reviewsComparer = AnonymousComparer.Create((EditorialReview x) => string.Join(":", x.ReviewType, x.LanguageCode));
             Reviews = Reviews.Concat(product.Reviews).Distinct(reviewsComparer).ToList();
 
-            // Leave properties that are not presented in CSV and add all from the CSV (with replacing existing ones)
-            Properties = product.Properties
-                .Where(existingProperty => !Properties.Any(csvProperty => csvProperty.Name.EqualsInvariant(existingProperty.Name)))
-                .Concat(Properties)
+            // Merge Properties - leave properties that are not presented in CSV and add all from the CSV (with merging metadata and replacing existing ones)
+            var propertyComparer = AnonymousComparer.Create((Property x) => x.Name);
+            var skippedExistingProperties = new List<Property>();
+
+            foreach (var property in Properties.OfType<CsvProperty>())
+            {
+                var existingProperty = product.Properties.FirstOrDefault(x => propertyComparer.Equals(x, property));
+                if (existingProperty != null)
+                {
+                    property.MergeFrom(existingProperty);
+                    skippedExistingProperties.Add(existingProperty);
+                }
+            }
+
+            Properties = Properties.Where(x => !x.Name.IsNullOrEmpty())
+                .Concat(product.Properties
+                    .Where(x => !skippedExistingProperties.Any(existingProperty => propertyComparer.Equals(x, existingProperty))))
                 .ToList();
 
             //merge seo infos

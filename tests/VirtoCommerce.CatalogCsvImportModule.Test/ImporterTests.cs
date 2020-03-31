@@ -53,9 +53,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         {
             //Arrange
             var product = GetCsvProductBase();
-            product.Properties = new[]
+            product.Properties = new List<Property>
             {
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_1_MultivalueDictionary",
                     Dictionary = true,
@@ -65,7 +65,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                         new PropertyValue{ PropertyName = "CatalogProductProperty_1_MultivalueDictionary", Value = "1, 3", ValueType = PropertyValueType.ShortText },
                     }
                 },
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_2_MultivalueDictionary",
                     Dictionary = true,
@@ -100,8 +100,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         {
             //Arrange
             var product = GetCsvProductBase();
-            product.Properties = new[] {
-                new Property()
+            product.Properties = new List<Property>
+            {
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_1_MultivalueDictionary",
                     Dictionary = true,
@@ -128,8 +129,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         {
             //Arrange
             var product = GetCsvProductBase();
-            product.Properties = new[] {
-                new Property()
+            product.Properties = new List<Property>
+            {
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_1_MultivalueDictionary",
                     Dictionary = true,
@@ -161,7 +163,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             //Arrange
             var existingProduct = GetCsvProductBase();
 
-            existingProduct.Properties = new[]
+            existingProduct.Properties = new List<Property>
             {
                 new Property()
                 {
@@ -205,23 +207,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             var product = GetCsvProductBase();
 
-            product.Properties = new[]
+            product.Properties = new List<Property>
             {
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_2_MultivalueDictionary",
-                    Dictionary = true,
-                    Multivalue = true,
                     Values = new List<PropertyValue>
                     {
                         new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "2,3", ValueType = PropertyValueType.ShortText },
                     }
                 },
-                new Property()
+                new CsvProperty()
                 {
                     Name = "TestCategory_ProductProperty_MultivalueDictionary",
-                    Dictionary = true,
-                    Multivalue = true,
                     Values = new List<PropertyValue>
                     {
                         new PropertyValue{ PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "2", ValueType = PropertyValueType.ShortText },
@@ -237,11 +235,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             //Assert
             Action<PropertyValue>[] inspectors = {
-                x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_1" && x.Alias == "1"),
-                x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_2" && x.Alias == "2"),
                 x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_2" && x.Alias == "2"),
                 x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_3" && x.Alias == "3"),
                 x => Assert.True(x.ValueId == "TestCategory_ProductProperty_MultivalueDictionary_2" && x.Alias == "2"),
+                x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_1" && x.Alias == "1"),
+                x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_2" && x.Alias == "2"),
             };
             Assert.Collection(product.Properties.SelectMany(x => x.Values), inspectors);
             Assert.True(!progressInfo.Errors.Any());
@@ -301,7 +299,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             //Arrange
             var existingProduct = GetCsvProductBase();
 
-            existingProduct.Properties = new[]
+            existingProduct.Properties = new List<Property>
             {
                 new Property()
                 {
@@ -342,21 +340,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             var product = GetCsvProductBase();
 
-            product.Properties = new[]
+            product.Properties = new List<Property>
             {
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_2_Multivalue",
-                    Multivalue = true,
                     Values = new List<PropertyValue>
                     {
                         new PropertyValue{ PropertyName = "CatalogProductProperty_2_Multivalue", Value = "TestValue1, TestValue2", ValueType = PropertyValueType.ShortText },
                     }
                 },
-                new Property()
+                new CsvProperty()
                 {
                     Name = "TestCategory_ProductProperty_Multivalue",
-                    Multivalue = true,
                     Values = new List<PropertyValue>
                     {
                         new PropertyValue{ PropertyName = "TestCategory_ProductProperty_Multivalue", Value = "TestValue3", ValueType = PropertyValueType.ShortText },
@@ -370,11 +366,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             //Assert
             Action<PropertyValue>[] inspectors = {
-                x => Assert.True(x.PropertyName == "CatalogProductProperty_1_Multivalue" && (string) x.Value == "TestValue1"),
-                x => Assert.True(x.PropertyName == "CatalogProductProperty_1_Multivalue" && (string) x.Value == "TestValue2"),
                 x => Assert.True(x.PropertyName == "CatalogProductProperty_2_Multivalue" && (string) x.Value == "TestValue1"),
                 x => Assert.True(x.PropertyName == "CatalogProductProperty_2_Multivalue" && (string) x.Value == "TestValue2"),
                 x => Assert.True(x.PropertyName == "TestCategory_ProductProperty_Multivalue" && (string) x.Value == "TestValue3"),
+                x => Assert.True(x.PropertyName == "CatalogProductProperty_1_Multivalue" && (string) x.Value == "TestValue1"),
+                x => Assert.True(x.PropertyName == "CatalogProductProperty_1_Multivalue" && (string) x.Value == "TestValue2"),
             };
             Assert.Collection(product.Properties.SelectMany(x => x.Values), inspectors);
         }
@@ -386,9 +382,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             //Arrange
             var product = GetCsvProductBase();
 
-            product.Properties = new[]
+            product.Properties = new List<Property>
             {
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_1_Dictionary",
                     Values = new List<PropertyValue>
@@ -396,7 +392,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                         new PropertyValue{ PropertyName = "CatalogProductProperty_1_Dictionary", Value = "1", ValueType = PropertyValueType.ShortText },
                     }
                 },
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_2_Dictionary",
                     Values = new List<PropertyValue>
@@ -425,9 +421,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             //Arrange
             var product = GetCsvProductBase();
 
-            product.Properties = new[]
+            product.Properties = new List<Property>
             {
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_1_Dictionary",
                     Dictionary = true,
@@ -456,9 +452,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             //Arrange
             var product = GetCsvProductBase();
 
-            product.Properties = new[]
+            product.Properties = new List<Property>
             {
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_1_Dictionary",
                     Dictionary = true,
@@ -492,9 +488,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             var product = GetCsvProductBase();
 
-            product.Properties = new[]
+            product.Properties = new List<Property>
             {
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_1",
                     Values = new []
@@ -502,7 +498,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                         new PropertyValue{ PropertyName = "CatalogProductProperty_1", Value = "1", ValueType = PropertyValueType.ShortText },
                     },
                 },
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_2",
                     Values = new []
@@ -814,7 +810,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             //Arrange
             var existingProduct = GetCsvProductBase();
 
-            existingProduct.Properties = new[]
+            existingProduct.Properties = new List<Property>
             {
                 new Property()
                 {
@@ -837,6 +833,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                         new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "1", ValueType = PropertyValueType.ShortText },
                     }
                 },
+                new Property()
+                {
+                    Name = "TestCategory_ProductProperty_MultivalueDictionary",
+                    Dictionary = true,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>(),
+                },
             };
 
             _productsInternal = new List<CatalogProduct> { existingProduct };
@@ -847,23 +850,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             var firstProduct = GetCsvProductBase();
             var secondProduct = GetCsvProductBase();
 
-            firstProduct.Properties = new[]
+            firstProduct.Properties = new List<Property>
             {
-                new Property()
+                new CsvProperty()
                 {
                     Name = "CatalogProductProperty_2_MultivalueDictionary",
-                    Dictionary = true,
-                    Multivalue = true,
                     Values = new List<PropertyValue>
                     {
                         new PropertyValue{ PropertyName = "CatalogProductProperty_2_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText },
                     }
                 },
-                new Property()
+                new CsvProperty()
                 {
                     Name = "TestCategory_ProductProperty_MultivalueDictionary",
-                    Dictionary = true,
-                    Multivalue = true,
                     Values = new List<PropertyValue>
                     {
                         new PropertyValue{ PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "1,2", ValueType = PropertyValueType.ShortText },
@@ -871,13 +870,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 },
             };
 
-            secondProduct.Properties = new[]
+            secondProduct.Properties = new List<Property>
             {
-                new Property()
+                new CsvProperty()
                 {
                     Name = "TestCategory_ProductProperty_MultivalueDictionary",
-                    Dictionary = true,
-                    Multivalue = true,
                     Values = new List<PropertyValue>
                     {
                         new PropertyValue{ PropertyName = "TestCategory_ProductProperty_MultivalueDictionary", Value = "3", ValueType = PropertyValueType.ShortText },
@@ -896,12 +893,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
 
             //Assert
             Action<PropertyValue>[] inspectors = {
-                x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_1" && x.Alias == "1"),
-                x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_2" && x.Alias == "2"),
                 x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_3" && x.Alias == "3"),
                 x => Assert.True(x.ValueId == "TestCategory_ProductProperty_MultivalueDictionary_1" && x.Alias == "1"),
                 x => Assert.True(x.ValueId == "TestCategory_ProductProperty_MultivalueDictionary_2" && x.Alias == "2"),
                 x => Assert.True(x.ValueId == "TestCategory_ProductProperty_MultivalueDictionary_3" && x.Alias == "3"),
+                x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_1" && x.Alias == "1"),
+                x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_2" && x.Alias == "2"),
             };
             Assert.Collection(_savedProducts.FirstOrDefault().Properties.SelectMany(x => x.Values), inspectors);
             Assert.True(!progressInfo.Errors.Any());
