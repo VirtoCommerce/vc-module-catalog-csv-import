@@ -126,7 +126,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     try
                     {
                         var csvProduct = reader.GetRecord<CsvProduct>();
-                        ConvertEmptyStringToNull(csvProduct);
+
+                        ReplaceEmptyStringsWithNull(csvProduct);
+
                         csvProducts.Add(csvProduct);
                     }
                     catch (Exception ex)
@@ -145,7 +147,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             await DoImport(csvProducts, importInfo, progressInfo, progressCallback);
         }
 
-        private void ConvertEmptyStringToNull(CsvProduct csvProduct)
+        private void ReplaceEmptyStringsWithNull(CsvProduct csvProduct)
         {
             csvProduct.Id = string.IsNullOrEmpty(csvProduct.Id) ? null : csvProduct.Id;
             csvProduct.CategoryId = string.IsNullOrEmpty(csvProduct.CategoryId) ? null : csvProduct.CategoryId;
@@ -749,7 +751,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     csvProduct.MergeFrom(existProduct);
                 }
             }
-
         }
 
         #region Import allowed
