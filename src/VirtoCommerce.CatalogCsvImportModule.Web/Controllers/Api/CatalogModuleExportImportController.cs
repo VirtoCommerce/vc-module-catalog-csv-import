@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +12,7 @@ using Omu.ValueInjecter;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogCsvImportModule.Web.Model.PushNotifications;
+using VirtoCommerce.CatalogModule.Core.Model;
 using VirtoCommerce.CatalogModule.Core.Model.Search;
 using VirtoCommerce.CatalogModule.Core.Services;
 using VirtoCommerce.CatalogModule.Data.Authorization;
@@ -24,8 +24,8 @@ using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.PushNotifications;
 using VirtoCommerce.Platform.Core.Security;
 using VirtoCommerce.Platform.Core.Settings;
+using CatalogModuleConstants = VirtoCommerce.CatalogModule.Core.ModuleConstants;
 using CsvModuleConstants = VirtoCommerce.CatalogCsvImportModule.Core.ModuleConstants;
-using ModuleConstants = VirtoCommerce.CatalogModule.Core.ModuleConstants;
 
 namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 {
@@ -43,6 +43,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         private readonly IUserNameResolver _userNameResolver;
         private readonly ISettingsManager _settingsManager;
         private readonly IBlobUrlResolver _blobUrlResolver;
+        private readonly IItemService _itemService;
+        private readonly ICategoryService _categoryService;
 
         public ExportImportController(ICatalogService catalogService,
             IPushNotificationManager pushNotificationManager,
@@ -53,7 +55,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             ICsvCatalogExporter csvExporter,
             ICsvCatalogImporter csvImporter,
             IUserNameResolver userNameResolver,
-            ISettingsManager settingsManager)
+            ISettingsManager settingsManager,
+            IItemService itemService,
+            ICategoryService categoryService)
         {
             _catalogService = catalogService;
             _notifier = pushNotificationManager;
@@ -63,6 +67,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             _userNameResolver = userNameResolver;
             _settingsManager = settingsManager;
             _blobUrlResolver = blobUrlResolver;
+            _itemService = itemService;
+            _categoryService = categoryService;
 
             _csvExporter = csvExporter;
             _csvImporter = csvImporter;
@@ -75,24 +81,39 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         /// <param name="exportInfo">The export configuration.</param>
         [HttpPost]
         [Route("export")]
-        [Authorize(ModuleConstants.Security.Permissions.Export)]
+        [Authorize(CatalogModuleConstants.Security.Permissions.Export)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ExportNotification), StatusCodes.Status200OK)]
         public async Task<ActionResult<ExportNotification>> DoExport([FromBody] CsvExportInfo exportInfo)
         {
-            var criteria = AbstractTypeFactory<CatalogSearchCriteria>.TryCreateInstance();
-            var ids = new List<string>();
-            ids.AddRange(exportInfo.CategoryIds);
-            ids.AddRange(exportInfo.ProductIds);
-            criteria.ObjectIds = ids.ToArray();
+            var hasPermissions = true;
 
+            if (!exportInfo.ProductIds.IsNullOrEmpty())
+            {
+                var items = await _itemService.GetByIdsAsync(exportInfo.ProductIds, ItemResponseGroup.ItemInfo.ToString());
+                hasPermissions = await CheckCatalogPermission(items, CatalogModuleConstants.Security.Permissions.Read);
+            }
 
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, criteria, new CatalogAuthorizationRequirement(ModuleConstants.Security.Permissions.Update));
-            if (!authorizationResult.Succeeded)
+            if (hasPermissions && !exportInfo.CategoryIds.IsNullOrEmpty())
+            {
+                var categories = await _categoryService.GetByIdsAsync(exportInfo.CategoryIds, CategoryResponseGroup.Info.ToString());
+                hasPermissions = await CheckCatalogPermission(categories, CatalogModuleConstants.Security.Permissions.Read);
+            }
+
+            if (hasPermissions && !exportInfo.CatalogId.IsNullOrEmpty())
+            {
+                var catalogs = await _catalogService.GetByIdsAsync(new[] { exportInfo.CatalogId }, CategoryResponseGroup.Info.ToString());
+
+                if (!catalogs.IsNullOrEmpty())
+                {
+                    hasPermissions = await CheckCatalogPermission(catalogs.First(), CatalogModuleConstants.Security.Permissions.Read);
+                }
+            }
+
+            if (!hasPermissions)
             {
                 return Unauthorized();
             }
-
 
             var notification = new ExportNotification(_userNameResolver.GetCurrentUserName())
             {
@@ -128,12 +149,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             {
                 reader.Configuration.Delimiter = decodedDelimiter;
 
-                if (await reader.ReadAsync())
+                if (await reader.ReadAsync() && reader.ReadHeader())
                 {
-                    if (reader.ReadHeader())
-                    {
-                        result.AutoMap(reader.Context.HeaderRecord);
-                    }
+                    result.AutoMap(reader.Context.HeaderRecord);
                 }
             }
 
@@ -148,16 +166,33 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         /// <returns></returns>
         [HttpPost]
         [Route("import")]
-        [Authorize(ModuleConstants.Security.Permissions.Import)]
+        [Authorize(CatalogModuleConstants.Security.Permissions.Import)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ImportNotification), StatusCodes.Status200OK)]
 
         public async Task<ActionResult<ImportNotification>> DoImport([FromBody] CsvImportInfo importInfo)
         {
+            var hasPermissions = true;
+
+            if (!importInfo.CatalogId.IsNullOrEmpty())
+            {
+                var catalogs = await _catalogService.GetByIdsAsync(new[] { importInfo.CatalogId }, CategoryResponseGroup.Info.ToString());
+
+                if (!catalogs.IsNullOrEmpty())
+                {
+                    hasPermissions = await CheckCatalogPermission(catalogs.First(), CatalogModuleConstants.Security.Permissions.Update);
+                }
+            }
+
+            if (!hasPermissions)
+            {
+                return Unauthorized();
+            }
+
             var criteria = AbstractTypeFactory<CatalogSearchCriteria>.TryCreateInstance();
             criteria.CatalogIds = new[] { importInfo.CatalogId };
 
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, criteria, new CatalogAuthorizationRequirement(ModuleConstants.Security.Permissions.Update));
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, criteria, new CatalogAuthorizationRequirement(CatalogModuleConstants.Security.Permissions.Update));
             if (!authorizationResult.Succeeded)
             {
                 return Unauthorized();
@@ -217,7 +252,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             var catalog = await _catalogService.GetByIdsAsync(new[] { exportInfo.CatalogId });
             if (catalog == null)
             {
-                throw new NullReferenceException("catalog");
+                throw new InvalidOperationException($"Cannot get catalog with id '{exportInfo.CatalogId}'");
             }
 
             Action<ExportImportProgressInfo> progressCallback = async x =>
@@ -261,6 +296,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                     await _notifier.SendAsync(notifyEvent);
                 }
             }
+        }
+
+        private async Task<bool> CheckCatalogPermission(object checkedEntities, string permission)
+        {
+            var result = true;
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, checkedEntities, new CatalogAuthorizationRequirement(permission));
+
+            if (!authorizationResult.Succeeded)
+            {
+                result = false;
+            }
+
+            return result;
         }
     }
 }
