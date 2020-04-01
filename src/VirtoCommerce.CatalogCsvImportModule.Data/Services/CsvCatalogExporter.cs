@@ -164,7 +164,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     Skip = 0,
                     Take = int.MaxValue,
                     SearchInChildren = true,
-                    SearchInVariations = true,
+                    SearchInVariations = false,
                 };
                 var searchResult = await _productSearchService.SearchProductsAsync(criteria);
                 productIds.AddRange(searchResult.Results.Select(x => x.Id));
@@ -178,7 +178,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     SearchInChildren = true,
                     Skip = 0,
                     Take = int.MaxValue,
-                    SearchInVariations = true,
+                    SearchInVariations = false,
                 };
                 var searchResult = await _productSearchService.SearchProductsAsync(criteria);
                 productIds = searchResult.Results.Select(x => x.Id).ToList();
@@ -186,11 +186,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             var products = await _productService.GetByIdsAsync(productIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
             // Variations in products go without properties, only VariationProperties are included. Have to use GetByIdsAsync to receive all properties for variations.
-            var variationsIds = products.SelectMany(product => product.Variations.Where(variation=> !productIds.Contains(variation.Id)).Select(variation => variation.Id));
+            var variationsIds = products.SelectMany(product => product.Variations.Select(variation => variation.Id));
             var variations = await _productService.GetByIdsAsync(variationsIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
 
-            result.AddRange(products);
-            result.AddRange(variations);
+            foreach (var catalogProduct in products)
+            {
+                result.Add(catalogProduct);
+                result.AddRange(variations.Where(x => x.MainProductId == catalogProduct.Id));
+            }
 
             return result;
         }
