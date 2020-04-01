@@ -7,6 +7,7 @@ using System.Web;
 using CsvHelper;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Omu.ValueInjecter;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
@@ -75,6 +76,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         [HttpPost]
         [Route("export")]
         [Authorize(ModuleConstants.Security.Permissions.Export)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ExportNotification), StatusCodes.Status200OK)]
         public async Task<ActionResult<ExportNotification>> DoExport([FromBody] CsvExportInfo exportInfo)
         {
             var criteria = AbstractTypeFactory<CatalogSearchCriteria>.TryCreateInstance();
@@ -113,8 +116,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         /// <returns></returns>
         [HttpGet]
         [Route("import/mappingconfiguration")]
-        public async Task<ActionResult<CsvProductMappingConfiguration>> GetMappingConfiguration([FromQuery] string fileUrl,
-            [FromQuery] string delimiter = ";")
+        public async Task<ActionResult<CsvProductMappingConfiguration>> GetMappingConfiguration([FromQuery] string fileUrl, [FromQuery] string delimiter = ";")
         {
             var result = CsvProductMappingConfiguration.GetDefaultConfiguration();
             var decodedDelimiter = HttpUtility.UrlDecode(delimiter);
@@ -147,6 +149,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         [HttpPost]
         [Route("import")]
         [Authorize(ModuleConstants.Security.Permissions.Import)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ImportNotification), StatusCodes.Status200OK)]
+
         public async Task<ActionResult<ImportNotification>> DoImport([FromBody] CsvImportInfo importInfo)
         {
             var criteria = AbstractTypeFactory<CatalogSearchCriteria>.TryCreateInstance();
