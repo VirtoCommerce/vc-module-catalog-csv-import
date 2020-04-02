@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<module>
+    <id>VirtoCommerce.CatalogCsvImportModule</id>
+    <version>3.0.0</version>
+    <version-tag>rc.4</version-tag>
+    <platformVersion>3.0.0</platformVersion>
+    <dependencies>
+        <dependency id="VirtoCommerce.Core" version="3.0.0" />
+        <dependency id="VirtoCommerce.Catalog" version="3.0.0" />
+        <dependency id="VirtoCommerce.Inventory" version="3.0.0" />
+        <dependency id="VirtoCommerce.Pricing" version="3.0.0" />
+        <dependency id="VirtoCommerce.Store" version="3.0.0" />
+    </dependencies>
+
+    <title>Csv Catalog Import Module</title>
+    <description>Adds CSV import functionality to catalog</description>
+    <authors>
+        <author>ksa</author>
+    </authors>
+    <owners>
+        <owner>Virto Commerce</owner>
+    </owners>
+    <groups>
+        <group>commerce</group>
+    </groups>
+    <copyright>Copyright © 2011-2020 Virto Commerce. All rights reserved</copyright>
+    <tags>catalog csv export import</tags>
+
+    <assemblyFile>VirtoCommerce.CatalogCsvImportModule.Web.dll</assemblyFile>
+    <moduleType>VirtoCommerce.CatalogCsvImportModule.Web.Module, VirtoCommerce.CatalogCsvImportModule.Web</moduleType>
+</module>
