@@ -289,6 +289,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                 {
                     notifyEvent.Description = "Export failed";
                     notifyEvent.Errors.Add(ex.ExpandExceptionMessage());
+                    notifyEvent.ErrorCount++;
                 }
                 finally
                 {
