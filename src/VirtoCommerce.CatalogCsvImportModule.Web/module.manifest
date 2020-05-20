@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <module>
   <id>VirtoCommerce.CatalogCsvImportModule</id>
   <version>3.0.1</version>
@@ -7,7 +7,7 @@
   <platformVersion>3.0.0</platformVersion>
   <dependencies>
     <dependency id="VirtoCommerce.Core" version="3.0.0" />
-    <dependency id="VirtoCommerce.Catalog" version="3.0.0" />
+    <dependency id="VirtoCommerce.Catalog" version="3.0.3" />
     <dependency id="VirtoCommerce.Inventory" version="3.0.0" />
     <dependency id="VirtoCommerce.Pricing" version="3.0.0" />
     <dependency id="VirtoCommerce.Store" version="3.0.0" />
