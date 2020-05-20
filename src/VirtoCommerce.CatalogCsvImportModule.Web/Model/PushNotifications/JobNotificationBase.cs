@@ -41,7 +41,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Model.PushNotifications
         public long ProcessedCount { get; set; }
 
         /// <summary>
-        /// Gets or sets the count of errors during processing.
+        /// Gets the count of errors during processing.
         /// </summary>
         /// <value>
         /// The error count.
