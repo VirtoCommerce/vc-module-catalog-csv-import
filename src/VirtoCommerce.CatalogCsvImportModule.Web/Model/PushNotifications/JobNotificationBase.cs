@@ -47,7 +47,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Model.PushNotifications
         /// The error count.
         /// </value>
         [JsonProperty("errorCount")]
-        public long ErrorCount => Errors.Count;
+        public long ErrorCount => Errors?.Count ?? 0;
         /// <summary>
         /// Gets or sets the errors that has occurred during processing.
         /// </summary>
