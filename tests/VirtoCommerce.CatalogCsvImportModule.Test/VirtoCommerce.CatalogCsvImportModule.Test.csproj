@@ -15,7 +15,7 @@
     <PackageReference Include="Moq" Version="4.13.1" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.1.0" />
     <PackageReference Include="MSTest.TestFramework" Version="2.1.0" />
-    <PackageReference Include="VirtoCommerce.StoreModule.Core" Version="3.0.1" />
+    <PackageReference Include="VirtoCommerce.StoreModule.Core" Version="3.1.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.console" Version="2.4.1">
       <PrivateAssets>all</PrivateAssets>
@@ -28,9 +28,9 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="VirtoCommerce.CatalogModule.Core" Version="3.0.1" />
-    <PackageReference Include="VirtoCommerce.Platform.Core" Version="3.0.0-rc5" />
-    <PackageReference Include="VirtoCommerce.PricingModule.Core" Version="3.0.1" />
+    <PackageReference Include="VirtoCommerce.CatalogModule.Core" Version="3.1.0" />
+    <PackageReference Include="VirtoCommerce.Platform.Core" Version="3.0.0" />
+    <PackageReference Include="VirtoCommerce.PricingModule.Core" Version="3.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\VirtoCommerce.CatalogCsvImportModule.Core\VirtoCommerce.CatalogCsvImportModule.Core.csproj" />
