@@ -230,7 +230,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                 catch (Exception ex)
                 {
                     notifyEvent.Description = "Export error";
-                    notifyEvent.ErrorCount++;
                     notifyEvent.Errors.Add(ex.ToString());
                 }
                 finally
