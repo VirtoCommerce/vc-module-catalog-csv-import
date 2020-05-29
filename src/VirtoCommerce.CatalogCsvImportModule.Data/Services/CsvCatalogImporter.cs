@@ -400,8 +400,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         {
                             CatalogId = catalog.Id,
                             CategoryId = parentCategoryId,
+                            SearchOnlyInRoot = parentCategoryId == null,
+                            Keyword = categoryName
                         };
-                        category = (await _categorySearchService.SearchCategoriesAsync(searchCriteria)).Results.FirstOrDefault(x => x.Name == categoryName);
+                        category = (await _categorySearchService.SearchCategoriesAsync(searchCriteria)).Results.FirstOrDefault();
                     }
 
                     if (category == null)
@@ -675,6 +677,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     {
                         property.ValueType = inheritedProperty.ValueType;
                         property.Id = inheritedProperty.Id;
+                        property.Dictionary = inheritedProperty.Dictionary;
+                        property.Multivalue = inheritedProperty.Multivalue;
 
                         foreach (var propertyValue in property.Values)
                         {
