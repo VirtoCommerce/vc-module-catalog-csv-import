@@ -15,6 +15,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
 {
     public sealed class CsvProduct : CatalogProduct
     {
+        private readonly string[] _csvCellDelimiter = { "--", "|" };
         private readonly IBlobUrlResolver _blobUrlResolver;
         public CsvProduct()
         {
@@ -185,7 +186,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
                     Images.Add(new Image
                     {
                         Url = value,
-                        SortOrder = 0
+                        SortOrder = 0,
+                        Group = "images",
+                        Name = value.Split('/').Last()
                     });
                 }
             }
@@ -211,11 +214,17 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Model
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    Images.Add(new Image
+                    var altImages = value.Split(_csvCellDelimiter, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (string url in altImages)
                     {
-                        Url = value,
-                        SortOrder = 1
-                    });
+                        Images.Add(new Image
+                        {
+                            Url = url,
+                            SortOrder = 1,
+                            Group = "images",
+                            Name = url.Split('/').Last()
+                        });
+                    }
                 }
             }
         }
