@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
@@ -130,6 +131,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         ReplaceEmptyStringsWithNull(csvProduct);
 
                         csvProducts.Add(csvProduct);
+                    }
+                    catch (TypeConverterException ex)
+                    {
+                        progressInfo.Errors.Add($"Column: {ex.MemberMapData.Member.Name}, {ex.Message}");
+                        progressCallback(progressInfo);
                     }
                     catch (Exception ex)
                     {
