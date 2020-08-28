@@ -346,6 +346,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             var imgComparer = AnonymousComparer.Create((Image x) => x.Url);
             Images = Images.Concat(product.Images).Distinct(imgComparer).ToList();
 
+            foreach (var image in Images)
+            {
+                var existedImage = product.Images.FirstOrDefault(x => imgComparer.Equals(x, image));
+                if (existedImage != null)
+                {
+                    image.Id = existedImage.Id;
+                }
+            }
+
             var assetComparer = AnonymousComparer.Create((Asset x) => x.Url);
             Assets = Assets.Concat(product.Assets).Distinct(assetComparer).ToList();
 
