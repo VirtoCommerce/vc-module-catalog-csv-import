@@ -343,15 +343,16 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 Vendor = product.Vendor;
             }
 
-            var imgComparer = AnonymousComparer.Create((Image x) => x.Url);
-            Images = Images.Concat(product.Images).Distinct(imgComparer).ToList();
-
-            foreach (var image in Images)
+            foreach (var image in product.Images)
             {
-                var existedImage = product.Images.FirstOrDefault(x => imgComparer.Equals(x, image));
+                var existedImage = Images.FirstOrDefault(x => x.Url.Equals(image.Url, StringComparison.InvariantCultureIgnoreCase));
                 if (existedImage != null)
                 {
-                    image.Id = existedImage.Id;
+                    existedImage.Id = image.Id;
+                }
+                else
+                {
+                    Images.Add(image);
                 }
             }
 
