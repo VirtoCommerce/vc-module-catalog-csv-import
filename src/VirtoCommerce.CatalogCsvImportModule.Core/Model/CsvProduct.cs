@@ -343,6 +343,59 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 Vendor = product.Vendor;
             }
 
+            if (string.IsNullOrEmpty(Gtin))
+            {
+                Gtin = product.Gtin;
+            }
+
+            if (string.IsNullOrEmpty(OuterId))
+            {
+                OuterId = product.OuterId;
+            }
+
+            if (string.IsNullOrEmpty(PackageType))
+            {
+                PackageType = product.PackageType;
+            }
+
+            if (string.IsNullOrEmpty(ManufacturerPartNumber))
+            {
+                ManufacturerPartNumber = product.ManufacturerPartNumber;
+            }
+
+            if (string.IsNullOrEmpty(WeightUnit))
+            {
+                WeightUnit = product.WeightUnit;
+            }
+
+            if (string.IsNullOrEmpty(MeasureUnit))
+            {
+                MeasureUnit = product.MeasureUnit;
+            }
+
+            if (string.IsNullOrEmpty(DownloadType))
+            {
+                DownloadType = product.DownloadType;
+            }
+
+            if (string.IsNullOrEmpty(ShippingType))
+            {
+                ShippingType = product.ShippingType;
+            }
+
+            if (string.IsNullOrEmpty(TaxType))
+            {
+                TaxType = product.TaxType;
+            }
+
+            Weight ??= product.Weight;
+            Height ??= product.Height;
+            Length ??= product.Length;
+            Width ??= product.Width;
+
+            MaxQuantity ??= product.MaxQuantity;
+            MinQuantity ??= product.MinQuantity;
+
             foreach (var image in product.Images)
             {
                 var existedImage = Images.FirstOrDefault(x => x.Url.Equals(image.Url, StringComparison.InvariantCultureIgnoreCase));
