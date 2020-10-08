@@ -343,50 +343,58 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 Vendor = product.Vendor;
             }
 
-            if (string.IsNullOrWhiteSpace(Gtin))
+            if (string.IsNullOrEmpty(Gtin))
             {
                 Gtin = product.Gtin;
             }
 
-            if (string.IsNullOrWhiteSpace(OuterId))
+            if (string.IsNullOrEmpty(OuterId))
             {
                 OuterId = product.OuterId;
             }
 
-            if (string.IsNullOrWhiteSpace(PackageType))
+            if (string.IsNullOrEmpty(PackageType))
             {
-                PackageType = product.OuterId;
+                PackageType = product.PackageType;
             }
 
-            if (string.IsNullOrWhiteSpace(ManufacturerPartNumber))
+            if (string.IsNullOrEmpty(ManufacturerPartNumber))
             {
                 ManufacturerPartNumber = product.ManufacturerPartNumber;
             }
 
-            if (string.IsNullOrWhiteSpace(WeightUnit))
+            if (string.IsNullOrEmpty(WeightUnit))
             {
                 WeightUnit = product.WeightUnit;
             }
 
-            if (string.IsNullOrWhiteSpace(MeasureUnit))
+            if (string.IsNullOrEmpty(MeasureUnit))
             {
                 MeasureUnit = product.MeasureUnit;
             }
 
-            if (string.IsNullOrWhiteSpace(DownloadType))
+            if (string.IsNullOrEmpty(DownloadType))
             {
                 DownloadType = product.DownloadType;
             }
 
-            if (string.IsNullOrWhiteSpace(ShippingType))
+            if (string.IsNullOrEmpty(ShippingType))
             {
                 ShippingType = product.ShippingType;
             }
 
-            if (string.IsNullOrWhiteSpace(TaxType))
+            if (string.IsNullOrEmpty(TaxType))
             {
                 TaxType = product.TaxType;
             }
+
+            Weight ??= product.Weight;
+            Height ??= product.Height;
+            Length ??= product.Length;
+            Width ??= product.Width;
+
+            MaxQuantity ??= product.MaxQuantity;
+            MinQuantity ??= product.MinQuantity;
 
             foreach (var image in product.Images)
             {
