@@ -353,6 +353,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 OuterId = product.OuterId;
             }
 
+            if (string.IsNullOrEmpty(OuterId))
+            {
+                OuterId = product.OuterId;
+            }
+
             if (string.IsNullOrEmpty(PackageType))
             {
                 PackageType = product.PackageType;
@@ -395,6 +400,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 
             MaxQuantity ??= product.MaxQuantity;
             MinQuantity ??= product.MinQuantity;
+
+            if (Priority == default)
+            {
+                Priority = product.Priority;
+            }
+
+            EndDate ??= product.EndDate;
 
             foreach (var image in product.Images)
             {
