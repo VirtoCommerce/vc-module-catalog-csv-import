@@ -366,7 +366,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
                 .With(x => x.Variations, new List<Variation>())
                 .With(x => x.Associations, new List<ProductAssociation>())
                 .With(x => x.ReferencedAssociations, new List<ProductAssociation>())
-                .With(x => x.PropertyValues, new List<PropertyValue>())
                 .Create();
         }
 
