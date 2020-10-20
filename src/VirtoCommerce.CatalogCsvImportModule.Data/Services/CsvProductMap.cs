@@ -73,7 +73,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                                  if (property.Dictionary)
                                  {
                                      propertyValues = property.Values
-                                         ?.Where(x => !string.IsNullOrWhiteSpace(x.Alias))
+                                         ?.Where(x => !string.IsNullOrEmpty(x.Alias))
                                          .Select(x => x.Alias)
                                          .Distinct()
                                          .ToArray();

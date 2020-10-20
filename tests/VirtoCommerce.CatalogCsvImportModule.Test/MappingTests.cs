@@ -230,7 +230,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void CsvDictionaryMultilangExportTest_OnlyOneValueExported()
+        public void CsvProductMapTest_DictionaryMultilanguage_OnlyOneAliasExported()
         {
             //Arrange
             var product = GetProduct();
@@ -260,7 +260,41 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public void CsvMultilangExportTest_AllValueExported()
+        public void CsvProductMapTest_DictionaryMultivalue_OnlyUniqAliasesExported()
+        {
+            //Arrange
+            var product = GetProduct();
+            product.Properties = new List<Property>
+            {
+                new Property()
+                {
+                    Id = "property1",
+                    Name = "Dictionary_Multivalue",
+                    Dictionary = true,
+                    Multilanguage = false,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue { Alias = "A", Value = "EN_A", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Alias = "A", Value = "DE_A", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Alias = "B", Value = "EN_B", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Alias = "B", Value = "DE_B", ValueType = PropertyValueType.ShortText }
+                    }
+                }
+            };
+
+            //Act
+            var importedCsvProduct = ExportAndImportProduct(product);
+
+            //Assert
+            importedCsvProduct.Properties.Should().HaveCount(1);
+            importedCsvProduct.Properties.First().Values.Should().HaveCount(1);
+            importedCsvProduct.Properties.First().Values.First().Value.ToString().Should().BeEquivalentTo("A;B");
+        }
+
+
+        [Fact]
+        public void CsvProductMapTest_Multilanguage_AllValueExported()
         {
             //Arrange
             var product = GetProduct();
