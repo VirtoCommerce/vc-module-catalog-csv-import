@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+using AutoFixture;
 using CsvHelper;
 using CsvHelper.Configuration;
+using FluentAssertions;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Data.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
@@ -225,6 +229,102 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             }
         }
 
+        [Fact]
+        public void CsvProductMapTest_DictionaryMultilanguage_OnlyOneAliasExported()
+        {
+            //Arrange
+            var product = GetProduct();
+            product.Properties = new List<Property>
+            {
+                new Property()
+                {
+                    Id = "property1",
+                    Name = "Dictionary_Multilanguage",
+                    Dictionary = true,
+                    Multilanguage = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue { Alias = "A", Value = "EN_A", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Alias = "A", Value = "DE_A", ValueType = PropertyValueType.ShortText }
+                    }
+                }
+            };
+
+            //Act
+            var importedCsvProduct = ExportAndImportProduct(product);
+
+            //Assert
+            importedCsvProduct.Properties.Should().HaveCount(1);
+            importedCsvProduct.Properties.First().Values.Should().HaveCount(1);
+            importedCsvProduct.Properties.First().Values.First().Value.ToString().Should().BeEquivalentTo("A");
+        }
+
+        [Fact]
+        public void CsvProductMapTest_DictionaryMultivalue_OnlyUniqAliasesExported()
+        {
+            //Arrange
+            var product = GetProduct();
+            product.Properties = new List<Property>
+            {
+                new Property()
+                {
+                    Id = "property1",
+                    Name = "Dictionary_Multivalue",
+                    Dictionary = true,
+                    Multilanguage = false,
+                    Multivalue = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue { Alias = "A", Value = "EN_A", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Alias = "A", Value = "DE_A", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Alias = "B", Value = "EN_B", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Alias = "B", Value = "DE_B", ValueType = PropertyValueType.ShortText }
+                    }
+                }
+            };
+
+            //Act
+            var importedCsvProduct = ExportAndImportProduct(product);
+
+            //Assert
+            importedCsvProduct.Properties.Should().HaveCount(1);
+            importedCsvProduct.Properties.First().Values.Should().HaveCount(1);
+            importedCsvProduct.Properties.First().Values.First().Value.ToString().Should().BeEquivalentTo("A;B");
+        }
+
+
+        [Fact]
+        public void CsvProductMapTest_Multilanguage_AllValueExported()
+        {
+            //Arrange
+            var product = GetProduct();
+            product.Properties = new List<Property>
+            {
+                new Property()
+                {
+                    Id = "property1",
+                    Name = "Multilanguage",
+                    Dictionary = false,
+                    Multilanguage = true,
+                    Values = new List<PropertyValue>
+                    {
+                        new PropertyValue { Value = "EN_A", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Value = "DE_A", ValueType = PropertyValueType.ShortText }
+                    }
+                }
+            };
+
+            //Act
+            var importedCsvProduct = ExportAndImportProduct(product);
+
+            //Assert
+            importedCsvProduct.Properties.Should().HaveCount(1);
+            importedCsvProduct.Properties.First().Values.Should().HaveCount(1);
+            importedCsvProduct.Properties.First().Values.First().Value.ToString().Should().BeEquivalentTo("EN_A;DE_A");
+        }
+
+
+        // Support methods
         private List<CsvProduct> ReadCsvFile(string path, CsvImportInfo importInfo)
         {
             var csvProducts = new List<CsvProduct>();
@@ -256,6 +356,54 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         private string GetDataFilePath(string fileName)
         {
             return $"../../../data/{fileName}";
+        }
+
+        private CatalogProduct GetProduct()
+        {
+            var fixture = new Fixture();
+            fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+            return fixture.Build<CatalogProduct>()
+                .With(x => x.Variations, new List<Variation>())
+                .With(x => x.Associations, new List<ProductAssociation>())
+                .With(x => x.ReferencedAssociations, new List<ProductAssociation>())
+                .Create();
+        }
+
+        private CsvProduct ExportAndImportProduct(CatalogProduct product)
+        {
+            var exportInfo = new CsvExportInfo();
+            using (var stream = new MemoryStream())
+            {
+                var streamWriter = new StreamWriter(stream, Encoding.UTF8, 1024, true) { AutoFlush = true };
+                using (var csvWriter = new CsvWriter(streamWriter))
+                {
+                    exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
+                    exportInfo.Configuration.PropertyCsvColumns = product.Properties.Select(x => x.Name).Distinct().ToArray();
+                    csvWriter.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
+                    csvWriter.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
+
+                    csvWriter.WriteHeader<CsvProduct>();
+                    csvWriter.NextRecord();
+                    var csvProduct = new CsvProduct(product, null, null, null, null);
+                    csvWriter.WriteRecord(csvProduct);
+                    csvWriter.Flush();
+                    stream.Position = 0;
+                }
+
+                using (var reader = new CsvReader(new StreamReader(stream, Encoding.UTF8)))
+                {
+                    reader.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
+                    reader.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
+                    reader.Configuration.MissingFieldFound = (strings, i, arg3) =>
+                    {
+                        //do nothing
+                    };
+                    reader.Configuration.TrimOptions = TrimOptions.Trim;
+                    reader.Read();
+                    return reader.GetRecord<CsvProduct>();
+                }
+            }
+
         }
     }
 }

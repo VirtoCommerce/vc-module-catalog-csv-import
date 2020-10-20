@@ -356,7 +356,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             {
                 foreach (var propertyValue in dictProperty.Values.Where(x => x.Value != null))
                 {
-                    propertyValue.Alias = propertyValue.Value.ToString();
+                    // VP-5516:
+                    // For imported propertyValue the Alias field is empty - need to fill it from value.
+                    // For existing propertyValue Alias should be already filled, we shouldn't rewrite it.
+                    propertyValue.Alias = string.IsNullOrEmpty(propertyValue.Alias) ? propertyValue.Value.ToString() : propertyValue.Alias;
 
                     var existentDictItem = allDictItems.FirstOrDefault(x => x.PropertyId == propertyValue.PropertyId && x.Alias.EqualsInvariant(propertyValue.Alias));
 
