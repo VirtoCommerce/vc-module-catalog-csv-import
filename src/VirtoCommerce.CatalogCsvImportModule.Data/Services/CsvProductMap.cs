@@ -67,9 +67,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     csvPropertyMap.UsingExpression<ICollection<Property>>(null, properties =>
                          {
                              var property = properties.FirstOrDefault(x => x.Name == propertyCsvColumn && x.Values.Any());
-                             var propertyValue = property?.Values.FirstOrDefault(x => x.Value != null || x.Alias != null);
 
-                             return propertyValue?.Alias ?? propertyValue?.Value.ToString() ?? string.Empty;
+                             if (property != null)
+                             {
+                                 if (property.Dictionary)
+                                 {
+                                     return property.Values?.GroupBy(x => x.Alias).FirstOrDefault()?.Key ?? string.Empty;
+                                 }
+
+                                 var propertyValues = property.Values.Where(x => x.Value != null || x.Alias != null).Select(x => x.Alias ?? x.Value.ToString());
+                                 return string.Join(mappingCfg.Delimiter, propertyValues);
+                             }
+
+                             return string.Empty;
                          });
 
                     MemberMaps.Add(csvPropertyMap);
