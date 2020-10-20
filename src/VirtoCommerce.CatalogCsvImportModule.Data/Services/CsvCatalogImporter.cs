@@ -356,7 +356,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             {
                 foreach (var propertyValue in dictProperty.Values.Where(x => x.Value != null))
                 {
-                    propertyValue.Alias = !string.IsNullOrEmpty(propertyValue.Alias) ? propertyValue.Alias : propertyValue.Value.ToString();
+                    //https://virtocommerce.atlassian.net/browse/VP-5516
+                    //For new propertyValue the Alias field is empty.
+                    //For propertyValue that already exist the Alias can be filled we mustn't rewrite it.   
+                    if (string.IsNullOrEmpty(propertyValue.Alias))
+                    {
+                        propertyValue.Alias = propertyValue.Value.ToString();
+                    }
 
                     var existentDictItem = allDictItems.FirstOrDefault(x => x.PropertyId == propertyValue.PropertyId && x.Alias.EqualsInvariant(propertyValue.Alias));
 
