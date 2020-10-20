@@ -356,7 +356,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             {
                 foreach (var propertyValue in dictProperty.Values.Where(x => x.Value != null))
                 {
-                    propertyValue.Alias = propertyValue.Value.ToString();
+                    propertyValue.Alias = !string.IsNullOrEmpty(propertyValue.Alias) ? propertyValue.Alias : propertyValue.Value.ToString();
 
                     var existentDictItem = allDictItems.FirstOrDefault(x => x.PropertyId == propertyValue.PropertyId && x.Alias.EqualsInvariant(propertyValue.Alias));
 
