@@ -7,13 +7,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F53AF5F4-412
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F05CD705-BA10-416E-8100-D079808DC27E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtoCommerce.CatalogCsvImportModule.Core", "src\VirtoCommerce.CatalogCsvImportModule.Core\VirtoCommerce.CatalogCsvImportModule.Core.csproj", "{681A2884-CB0C-42D1-A1F7-EC17CA12B5C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtoCommerce.CatalogCsvImportModule.Core", "src\VirtoCommerce.CatalogCsvImportModule.Core\VirtoCommerce.CatalogCsvImportModule.Core.csproj", "{681A2884-CB0C-42D1-A1F7-EC17CA12B5C0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtoCommerce.CatalogCsvImportModule.Data", "src\VirtoCommerce.CatalogCsvImportModule.Data\VirtoCommerce.CatalogCsvImportModule.Data.csproj", "{A7C31AAB-EF6F-4879-9A8C-E2DDBA4D1714}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtoCommerce.CatalogCsvImportModule.Web", "src\VirtoCommerce.CatalogCsvImportModule.Web\VirtoCommerce.CatalogCsvImportModule.Web.csproj", "{3DD1152B-6FCA-4D63-B6FE-FA7586B0AB01}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtoCommerce.CatalogCsvImportModule.Test", "tests\VirtoCommerce.CatalogCsvImportModule.Test\VirtoCommerce.CatalogCsvImportModule.Test.csproj", "{DB77F914-5A33-4FA9-B330-44C41CF6E115}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtoCommerce.CatalogCsvImportModule.Tests", "tests\VirtoCommerce.CatalogCsvImportModule.Test\VirtoCommerce.CatalogCsvImportModule.Tests.csproj", "{DB77F914-5A33-4FA9-B330-44C41CF6E115}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
