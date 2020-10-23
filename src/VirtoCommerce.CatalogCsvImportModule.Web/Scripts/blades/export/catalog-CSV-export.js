@@ -2,6 +2,7 @@ angular.module('virtoCommerce.catalogCsvImportModule')
 .controller('virtoCommerce.catalogCsvImportModule.catalogCSVexportController', ['$scope', 'platformWebApp.bladeNavigationService', 'virtoCommerce.catalogCsvImportModule.export', 'virtoCommerce.inventoryModule.fulfillments', 'virtoCommerce.pricingModule.pricelists',
     function ($scope, bladeNavigationService, exportResourse, fulfillments, pricelists) {
 
+        $scope.pageSize = 20;
         const blade = $scope.blade;
         blade.fulfilmentCenterId = undefined;
         blade.pricelistId = undefined;
@@ -10,13 +11,32 @@ angular.module('virtoCommerce.catalogCsvImportModule')
         blade.titleValues = { name: blade.catalog ? blade.catalog.name : '' };
 
         function initializeBlade() {
-            fulfillments.search({}, function (data) {
+            fulfillments.search({skip:0, take: 1}, (data) => {
                     if(data.totalCount > 0){
                         $scope.fulfillmentCenters = data.results;
                         blade.fulfilmentCenterId = _.first(data.results).id;
                     }
-                },
-                function (error) { bladeNavigationService.setError('Error ' + error.status, $scope.blade); });
+                })
+        }
+
+
+        $scope.fetchfulfillmentCenters = ($select) => {
+            $select.page = 0;
+            $scope.fulfillmentCenters = [];
+            $scope.fetchNextfulfillmentCenters($select);
+        }
+    
+        $scope.fetchNextfulfillmentCenters = ($select) => {
+            let criteria = {
+                SearchPhrase: $select.search,
+                take: $scope.pageSize,
+                skip: $select.page * $scope.pageSize
+            }
+
+            fulfillments.search(criteria, (data) => {
+                $scope.fulfillmentCenters = $scope.fulfillmentCenters.concat(data.results);
+                $select.page++;
+            });
         }
 
         $scope.$on("new-notification-event", function (event, notification) {
@@ -24,6 +44,7 @@ angular.module('virtoCommerce.catalogCsvImportModule')
                 angular.copy(notification, blade.notification);
             }
         });
+
 
         $scope.startExport = function () {
             exportResourse.run({
