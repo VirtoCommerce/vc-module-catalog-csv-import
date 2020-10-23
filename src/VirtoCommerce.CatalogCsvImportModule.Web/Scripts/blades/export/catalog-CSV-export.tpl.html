@@ -13,8 +13,8 @@
 							<div class="form-group">
 								<label class="form-label">{{ 'catalogCsvImportModule.blades.catalog-CSV-export.labels.select-fulfillment' | translate }}</label>
 								<div class="form-input">
-									<ui-select ng-model="blade.fulfilmentCenterId">
-										<ui-select-match allow-clear="true" placeholder="{{ 'catalogCsvImportModule.blades.catalog-CSV-export.placeholders.select-fulfillment' | translate }}">{{$select.selected.name}}</ui-select-match>
+									<ui-select ng-model="blade.fulfilmentCenterId" >
+										<ui-select-match allow-clear="true" placeholder="{{ fulfillmentCenters.length > 0 ? ('catalogCsvImportModule.blades.catalog-CSV-export.placeholders.select-fulfillment' | translate) : 'Loading...'}}">{{ $select.selected.name  }}</ui-select-match>
 										<ui-select-choices repeat="x.id as x in fulfillmentCenters | filter: { name: $select.search }" refresh="fetchfulfillmentCenters($select)" when-scrolled="fetchNextfulfillmentCenters($select)">
 											<span ng-bind-html="x.name | highlight: $select.search"></span>
 										</ui-select-choices>

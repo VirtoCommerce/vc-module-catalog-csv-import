@@ -3,6 +3,7 @@ angular.module('virtoCommerce.catalogCsvImportModule')
     function ($scope, bladeNavigationService, exportResourse, fulfillments, pricelists) {
 
         $scope.pageSize = 20;
+        $scope.fulfillmentCenters = [];
         const blade = $scope.blade;
         blade.fulfilmentCenterId = undefined;
         blade.pricelistId = undefined;
@@ -11,19 +12,18 @@ angular.module('virtoCommerce.catalogCsvImportModule')
         blade.titleValues = { name: blade.catalog ? blade.catalog.name : '' };
 
         function initializeBlade() {
-            fulfillments.search({skip:0, take: 1}, (data) => {
-                    if(data.totalCount > 0){
-                        $scope.fulfillmentCenters = data.results;
-                        blade.fulfilmentCenterId = _.first(data.results).id;
-                    }
-                })
         }
 
 
         $scope.fetchfulfillmentCenters = ($select) => {
             $select.page = 0;
             $scope.fulfillmentCenters = [];
-            $scope.fetchNextfulfillmentCenters($select);
+            
+            $scope.fetchNextfulfillmentCenters($select).then(() => {
+                if(!blade.fulfilmentCenterId) {
+                    blade.fulfilmentCenterId =  _.first($scope.fulfillmentCenters).id;
+                }
+            });
         }
     
         $scope.fetchNextfulfillmentCenters = ($select) => {
@@ -33,10 +33,10 @@ angular.module('virtoCommerce.catalogCsvImportModule')
                 skip: $select.page * $scope.pageSize
             }
 
-            fulfillments.search(criteria, (data) => {
+            return fulfillments.search(criteria, data => {
                 $scope.fulfillmentCenters = $scope.fulfillmentCenters.concat(data.results);
                 $select.page++;
-            });
+            }).$promise;
         }
 
         $scope.$on("new-notification-event", function (event, notification) {
