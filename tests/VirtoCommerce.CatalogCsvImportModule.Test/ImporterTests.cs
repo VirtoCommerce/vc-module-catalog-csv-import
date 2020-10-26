@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Moq;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Data.Services;
@@ -1056,6 +1057,77 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             };
             Assert.Collection(_pricesInternal, inspectors);
         }
+
+        [Fact]
+        public async Task DoImport_UpdateProductHasPriceListIdWithoutCurrency_PriceUpdated()
+        {
+            //Arrange
+            var newPrice = 555.5m;
+            var oldPrice = 333.3m;
+            var existingPriceId = "ExistingPrice_ID";
+            var existingPriceId2 = "ExistingPrice_ID_2";
+
+            var existingProduct = GetCsvProductBase();
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var firstProduct = GetCsvProductBase();
+            firstProduct.Prices = new List<Price> {
+                new CsvPrice { List = newPrice, Sale = newPrice, PricelistId = "DefaultEUR" },
+                new CsvPrice { List = newPrice, Sale = newPrice, PricelistId = "DefaultUSD" }
+            };
+
+            _pricesInternal = new List<Price>
+            {
+                new Price { Currency = "EUR", PricelistId = "DefaultEUR", List = oldPrice, Id = existingPriceId, ProductId = firstProduct.Id },
+                new Price { Currency = "USD", PricelistId = "DefaultUSD", List = oldPrice, Id = existingPriceId2, ProductId = firstProduct.Id }
+            };
+
+            var target = GetImporter();
+
+            //Act
+            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            _pricesInternal.Should().HaveCount(2);
+            _pricesInternal.Should().Contain(x => x.List == newPrice && x.PricelistId == "DefaultEUR");
+            _pricesInternal.Should().Contain(x => x.List == newPrice && x.PricelistId == "DefaultUSD");
+        }
+
+        [Fact]
+        public async Task DoImport_UpdateProductHasPriceListId_PriceAdded()
+        {
+            //Arrange
+            var newPrice = 555.5m;
+            var oldPrice = 333.3m;
+            var existingPriceId = "ExistingPrice_ID";
+            var existingPriceId2 = "ExistingPrice_ID_2";
+
+            var existingProduct = GetCsvProductBase();
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var firstProduct = GetCsvProductBase();
+            firstProduct.Prices = new List<Price> {
+                new CsvPrice { List = newPrice, Sale = newPrice, PricelistId = "NewDefaultEUR" },
+            };
+
+            _pricesInternal = new List<Price>
+            {
+                new Price { Currency = "EUR", PricelistId = "DefaultEUR", List = oldPrice, Id = existingPriceId, ProductId = firstProduct.Id },
+                new Price { Currency = "USD", PricelistId = "DefaultUSD", List = oldPrice, Id = existingPriceId2, ProductId = firstProduct.Id }
+            };
+
+            var target = GetImporter();
+
+            //Act
+            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            _pricesInternal.Should().HaveCount(3);
+            _pricesInternal.Should().Contain(x => x.List == newPrice && x.PricelistId == "NewDefaultEUR");
+            _pricesInternal.Should().Contain(x => x.List == oldPrice && x.PricelistId == "DefaultEUR");
+            _pricesInternal.Should().Contain(x => x.List == oldPrice && x.PricelistId == "DefaultUSD");
+        }
+
 
         [Fact]
         public async Task DoImport_UpdateProductsTwoProductDifferentPriceCurrency_PricesMerged()
