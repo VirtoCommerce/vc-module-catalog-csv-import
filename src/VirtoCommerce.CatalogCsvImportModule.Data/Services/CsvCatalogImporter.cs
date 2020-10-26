@@ -607,8 +607,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             var result = new List<Price>();
             foreach (var price in pricesWithPriceListIds)
             {
-                var existPrice = existentPrices.FirstOrDefault(x => x.Currency.EqualsInvariant(price.Currency)
-                    && x.ProductId.EqualsInvariant(price.ProductId) && x.PricelistId.EqualsInvariant(price.PricelistId));
+                var existPrice = existentPrices.FirstOrDefault(x => x.ProductId.EqualsInvariant(price.ProductId) && x.PricelistId.EqualsInvariant(price.PricelistId));
 
                 if (existPrice != null)
                 {
