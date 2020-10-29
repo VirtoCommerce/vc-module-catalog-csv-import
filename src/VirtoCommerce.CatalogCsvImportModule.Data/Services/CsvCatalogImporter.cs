@@ -289,7 +289,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             foreach (var csvProduct in csvProducts)
             {
-                var reviews = csvProduct.Reviews.Where(x => x.Content != null).GroupBy(x => x.ReviewType).Select(g => g.FirstOrDefault()).ToList();
+                var reviews = csvProduct.Reviews.Where(x => !string.IsNullOrEmpty(x.Content)).GroupBy(x => x.ReviewType).Select(g => g.FirstOrDefault()).ToList();
 
                 foreach (var review in reviews.Where(x => x.LanguageCode.IsNullOrEmpty()))
                 {
