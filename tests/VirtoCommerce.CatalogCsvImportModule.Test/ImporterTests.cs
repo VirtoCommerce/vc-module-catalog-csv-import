@@ -676,16 +676,17 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
         }
 
         [Fact]
-        public async Task DoImport_UpdateProductTwoProductsSameCodeDifferentReviewTypes_ReviewsMerged()
+        public async Task DoImport_UpdateProductTwoProductsSameCodeDifferentReviewTypes_ProductsMerged_ReviewsAdded()
         {
             //Arrange
             var existingProduct = GetCsvProductBase();
 
             _productsInternal = new List<CatalogProduct> { existingProduct };
-            existingProduct.Reviews = new List<EditorialReview>() { new EditorialReview() { Content = "Review Content 3", Id = "1", LanguageCode = "en-US", ReviewType = "QuickReview" } };
+            existingProduct.Reviews = new List<EditorialReview>
+            {
+                new EditorialReview { Content = "Review Content 3", ReviewType = "QuickReview", Id = "1", LanguageCode = "en-US"}
+            };
 
-            var existringCategory = CreateCategory(existingProduct);
-            _categoriesInternal.Add(existringCategory);
 
             var firstProduct = GetCsvProductBase();
             var secondProduct = GetCsvProductBase();
@@ -693,6 +694,43 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             firstProduct.EditorialReview.Content = "Review Content 1";
             secondProduct.EditorialReview.ReviewType = "QuickReview";
             secondProduct.EditorialReview.Content = "Review Content 2";
+            var list = new List<CsvProduct> { firstProduct, secondProduct };
+
+            var target = GetImporter();
+
+            //Act
+            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+
+            var savedReview = _savedProducts.FirstOrDefault()?.Reviews;
+
+            _savedProducts.Should().HaveCount(1);
+            savedReview.Should().HaveCount(3);
+            savedReview.Should().Contain(x => x.LanguageCode == "en-US" && x.Content == "Review Content 1" && x.ReviewType == "FullReview");
+            savedReview.Should().Contain(x => x.LanguageCode == "en-US" && x.Content == "Review Content 2" && x.ReviewType == "QuickReview");
+            savedReview.Should().Contain(x => x.LanguageCode == "en-US" && x.Content == "Review Content 3" && x.ReviewType == "QuickReview");
+        }
+
+        [Fact]
+        public async Task DoImport_UpdateProductTwoProductsSameCodeDifferentReviewTypes_ProductsMerged_ReviewsMerged()
+        {
+            //Arrange
+            var existingProduct = GetCsvProductBase();
+
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+            existingProduct.Reviews = new List<EditorialReview>
+            {
+                new EditorialReview { Content = "Review Content 1", ReviewType = "FullReview" , Id = "1", LanguageCode = "en-US" },
+                new EditorialReview { Content = "Review Content 2", ReviewType = "QuickReview", Id = "2", LanguageCode = "en-US" }
+            };
+
+            var firstProduct = GetCsvProductBase();
+            var secondProduct = GetCsvProductBase();
+
+            firstProduct.EditorialReview = new EditorialReview  { Content = "Review Content 1", ReviewType = "FullReview" };
+            secondProduct.EditorialReview = new EditorialReview { Content = "Review Content 2", ReviewType = "QuickReview" };
+
 
             var list = new List<CsvProduct> { firstProduct, secondProduct };
 
@@ -702,12 +740,16 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
-            Action<EditorialReview>[] inspectors = {
-                x => Assert.True(x.LanguageCode == "en-US" && x.Content == "Review Content 1" && x.ReviewType == "FullReview"),
-                x => Assert.True(x.LanguageCode == "en-US" && x.Content == "Review Content 2" && x.ReviewType == "QuickReview")
-            };
-            Assert.Collection(_savedProducts.FirstOrDefault().Reviews, inspectors);
+
+            var savedReview = _savedProducts.FirstOrDefault()?.Reviews;
+
+            _savedProducts.Should().HaveCount(1);
+            savedReview.Should().HaveCount(2);
+            savedReview.Should().Contain(x => x.LanguageCode == "en-US" && x.Content == "Review Content 1" && x.ReviewType == "FullReview");
+            savedReview.Should().Contain(x => x.LanguageCode == "en-US" && x.Content == "Review Content 2" && x.ReviewType == "QuickReview");
         }
+
+
 
         [Fact]
         public async Task DoImport_TwoProductsSameCodeDifferentSeoInfo_SeoInfosMerged()

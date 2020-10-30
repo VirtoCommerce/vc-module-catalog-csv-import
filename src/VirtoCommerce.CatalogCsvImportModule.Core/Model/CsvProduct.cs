@@ -424,7 +424,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             var assetComparer = AnonymousComparer.Create((Asset x) => x.Url);
             Assets = Assets.Concat(product.Assets).Distinct(assetComparer).ToList();
 
-            var reviewsComparer = AnonymousComparer.Create((EditorialReview x) => string.Join(":", x.ReviewType, x.LanguageCode));
+            var reviewsComparer = AnonymousComparer.Create((EditorialReview x) => string.Join(":", x.ReviewType, x.LanguageCode, x.Content));
             Reviews = Reviews.Concat(product.Reviews).Distinct(reviewsComparer).ToList();
 
             // Merge Properties - leave properties that are not presented in CSV and add all from the CSV (with merging metadata and replacing existing ones)
