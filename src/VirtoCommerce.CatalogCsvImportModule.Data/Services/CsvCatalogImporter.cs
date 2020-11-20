@@ -156,10 +156,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private void ReplaceEmptyStringsWithNull(CsvProduct csvProduct)
         {
             csvProduct.Id = string.IsNullOrEmpty(csvProduct.Id) ? null : csvProduct.Id;
+            csvProduct.OuterId = string.IsNullOrEmpty(csvProduct.OuterId) ? null : csvProduct.OuterId;
             csvProduct.CategoryId = string.IsNullOrEmpty(csvProduct.CategoryId) ? null : csvProduct.CategoryId;
             csvProduct.MainProductId = string.IsNullOrEmpty(csvProduct.MainProductId) ? null : csvProduct.MainProductId;
             csvProduct.PriceId = string.IsNullOrEmpty(csvProduct.PriceId) ? null : csvProduct.PriceId;
             csvProduct.PriceListId = string.IsNullOrEmpty(csvProduct.PriceListId) ? null : csvProduct.PriceListId;
+            csvProduct.FulfillmentCenterId = string.IsNullOrEmpty(csvProduct.FulfillmentCenterId) ? null : csvProduct.FulfillmentCenterId;
+            csvProduct.PackageType = string.IsNullOrEmpty(csvProduct.PackageType) ? null : csvProduct.PackageType;
+            csvProduct.ParentSku = string.IsNullOrEmpty(csvProduct.ParentSku) ? null : csvProduct.ParentSku;
             csvProduct.Reviews = csvProduct.Reviews.Where(x => !string.IsNullOrEmpty(x.Content) && !string.IsNullOrEmpty(x.ReviewType)).ToList();
         }
 
