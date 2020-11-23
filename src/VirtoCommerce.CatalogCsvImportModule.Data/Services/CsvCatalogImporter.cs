@@ -163,7 +163,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             csvProduct.PriceListId = string.IsNullOrEmpty(csvProduct.PriceListId) ? null : csvProduct.PriceListId;
             csvProduct.FulfillmentCenterId = string.IsNullOrEmpty(csvProduct.FulfillmentCenterId) ? null : csvProduct.FulfillmentCenterId;
             csvProduct.PackageType = string.IsNullOrEmpty(csvProduct.PackageType) ? null : csvProduct.PackageType;
-            csvProduct.ParentSku = string.IsNullOrEmpty(csvProduct.ParentSku) ? null : csvProduct.ParentSku;
             csvProduct.Reviews = csvProduct.Reviews.Where(x => !string.IsNullOrEmpty(x.Content) && !string.IsNullOrEmpty(x.ReviewType)).ToList();
         }
 
