@@ -353,11 +353,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 OuterId = product.OuterId;
             }
 
-            if (string.IsNullOrEmpty(OuterId))
-            {
-                OuterId = product.OuterId;
-            }
-
             if (string.IsNullOrEmpty(PackageType))
             {
                 PackageType = product.PackageType;

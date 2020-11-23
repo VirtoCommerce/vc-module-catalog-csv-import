@@ -27,7 +27,7 @@ using VirtoCommerce.StoreModule.Core.Model.Search;
 using VirtoCommerce.StoreModule.Core.Services;
 using Xunit;
 
-namespace VirtoCommerce.CatalogCsvImportModule.Test
+namespace VirtoCommerce.CatalogCsvImportModule.Tests
 {
     public class ImporterTests
     {
