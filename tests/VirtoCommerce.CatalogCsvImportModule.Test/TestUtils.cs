@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using Newtonsoft.Json;
 using VirtoCommerce.Platform.Core.Common;
 
-namespace VirtoCommerce.CatalogCsvImportModule.Test
+namespace VirtoCommerce.CatalogCsvImportModule.Tests
 {
     public static class TestUtils
     {

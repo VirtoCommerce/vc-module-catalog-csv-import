@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,7 +12,7 @@ using VirtoCommerce.CatalogCsvImportModule.Data.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
 using Xunit;
 
-namespace VirtoCommerce.CatalogCsvImportModule.Test
+namespace VirtoCommerce.CatalogCsvImportModule.Tests
 {
     public class MappingTests
     {
@@ -60,6 +59,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Test
             Assert.Equal("ProductType_value", product.ProductType);
             Assert.Equal("ShippingType_value", product.ShippingType);
             Assert.Equal("DownloadType_value", product.DownloadType);
+            Assert.Equal("OuterId", product.OuterId);
+            Assert.Equal("PackageType", product.PackageType);
+            Assert.Equal("FulfillmentCenterId", product.FulfillmentCenterId);
+            Assert.Equal(1, product.MaxNumberOfDownload);
+
             Assert.True(product.HasUserAgreement);
             Assert.True(product.IsBuyable);
             Assert.True(product.TrackInventory);

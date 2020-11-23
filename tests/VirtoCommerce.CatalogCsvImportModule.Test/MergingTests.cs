@@ -5,7 +5,7 @@ using VirtoCommerce.CatalogModule.Core.Model;
 using VirtoCommerce.CoreModule.Core.Seo;
 using Xunit;
 
-namespace VirtoCommerce.CatalogCsvImportModule.Test
+namespace VirtoCommerce.CatalogCsvImportModule.Tests
 {
     public class MergingTests
     {
