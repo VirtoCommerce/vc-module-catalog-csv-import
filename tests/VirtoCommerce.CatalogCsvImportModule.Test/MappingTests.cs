@@ -60,6 +60,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             Assert.Equal("ShippingType_value", product.ShippingType);
             Assert.Equal("DownloadType_value", product.DownloadType);
             Assert.Equal("OuterId", product.OuterId);
+            Assert.Equal(1, product.Priority);
+            Assert.Equal(10, product.MaxQuantity);
+            Assert.Equal(5, product.MinQuantity);
             Assert.Equal("PackageType", product.PackageType);
             Assert.Equal("FulfillmentCenterId", product.FulfillmentCenterId);
             Assert.Equal(1, product.MaxNumberOfDownload);
