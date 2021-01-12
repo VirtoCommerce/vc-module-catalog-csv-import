@@ -1171,7 +1171,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
         }
 
         [Fact]
-        public async Task DoImport_UpdateProductHasPriceListId_PricesWithAdded()
+        public async Task DoImport_UpdateProductHasPriceListId_PricesWithDifferentQuanitiesAdded()
         {
             //Arrange
             var newPrice1 = 555.5m;
