@@ -317,7 +317,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     .Select(propertyGroup => GetMergedProperty(propertyGroup))
                     .ToList();
 
-                csvProduct.Prices = csvProduct.Prices.Where(x => x.EffectiveValue > 0).GroupBy(x => new { x.Currency , x.PricelistId} ).Select(g => g.FirstOrDefault()).ToList();
+                csvProduct.Prices = csvProduct.Prices.Where(x => x.EffectiveValue > 0).GroupBy(x => new { x.Currency, x.PricelistId, x.MinQuantity }).Select(g => g.FirstOrDefault()).ToList();
             }
         }
 

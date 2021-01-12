@@ -728,7 +728,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var firstProduct = GetCsvProductBase();
             var secondProduct = GetCsvProductBase();
 
-            firstProduct.EditorialReview = new EditorialReview  { Content = "Review Content 1", ReviewType = "FullReview" };
+            firstProduct.EditorialReview = new EditorialReview { Content = "Review Content 1", ReviewType = "FullReview" };
             secondProduct.EditorialReview = new EditorialReview { Content = "Review Content 2", ReviewType = "QuickReview" };
 
 
@@ -1168,6 +1168,40 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             _pricesInternal.Should().Contain(x => x.List == newPrice && x.PricelistId == "NewDefaultEUR");
             _pricesInternal.Should().Contain(x => x.List == oldPrice && x.PricelistId == "DefaultEUR");
             _pricesInternal.Should().Contain(x => x.List == oldPrice && x.PricelistId == "DefaultUSD");
+        }
+
+        [Fact]
+        public async Task DoImport_UpdateProductHasPriceListId_PricesWithAdded()
+        {
+            //Arrange
+            var newPrice1 = 555.5m;
+            var newPrice2 = 333.3m;
+            var existingPricelistId = "ExistingPricelist_ID";
+            var minQuantity1 = 1;
+            var minQuantity2 = 2;
+
+            var existingProduct = GetCsvProductBase();
+            _productsInternal = new List<CatalogProduct> { existingProduct };
+
+            var firstProduct = GetCsvProductBase();
+            firstProduct.Prices = new List<Price> {
+                new CsvPrice { List = newPrice1, Sale = newPrice1, PricelistId = existingPricelistId, MinQuantity = minQuantity1 },
+                new CsvPrice { List = newPrice2, Sale = newPrice2, PricelistId = existingPricelistId, MinQuantity = minQuantity2 },
+            };
+
+            _pricesInternal = new List<Price>
+            {
+            };
+
+            var target = GetImporter();
+
+            //Act
+            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+
+            //Assert
+            _pricesInternal.Should().HaveCount(2);
+            _pricesInternal.Should().Contain(x => x.List == newPrice1 && x.PricelistId == existingPricelistId && x.MinQuantity == minQuantity1);
+            _pricesInternal.Should().Contain(x => x.List == newPrice2 && x.PricelistId == existingPricelistId && x.MinQuantity == minQuantity2);
         }
 
 
