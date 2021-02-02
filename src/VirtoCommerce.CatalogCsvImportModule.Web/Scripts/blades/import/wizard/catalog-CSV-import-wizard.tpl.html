@@ -1,4 +1,4 @@
-﻿<div class="blade-static __bottom">
+<div class="blade-static __bottom">
     <button class="btn" ng-click="startImport()" ng-disabled="!blade.canImport">
         {{ 'catalogCsvImportModule.commands.start-import' | translate }}
     </button>
@@ -24,7 +24,7 @@
                             <input type="file" uploader="uploader" nv-file-select style="z-index: 0;" tabindex="-1">
                             <input type="text" readonly="" ng-model="blade.csvFileUrl">
                             <button class="btn __file" type="button" onclick="$('input[type=file]').trigger('click')">
-                                <i class="btn-ico fa fa-image"></i>
+                                <i class="btn-ico fas fa-image"></i>
                             </button>
                         </div>
                     </div>
