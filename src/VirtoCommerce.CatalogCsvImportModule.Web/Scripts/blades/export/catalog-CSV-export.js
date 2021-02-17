@@ -72,7 +72,7 @@ angular.module('virtoCommerce.catalogCsvImportModule')
                 });
         });
 
-        $scope.blade.headIcon = 'fa-file-archive-o';
+        $scope.blade.headIcon = 'fa fa-file-archive-o';
 
         initializeBlade();
     }]);
