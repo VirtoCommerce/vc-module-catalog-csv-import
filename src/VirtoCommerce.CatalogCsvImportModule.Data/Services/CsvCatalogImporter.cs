@@ -89,7 +89,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             {
                 if (_createPropertyDictionatyValues == null)
                 {
-                    _createPropertyDictionatyValues = _settingsManager.GetValue("CsvCatalogImport.CreateDictionaryValues", false);
+                    _createPropertyDictionatyValues = _settingsManager.GetValue(Core.ModuleConstants.Settings.General.CreateDictionaryValues.Name,
+                                                                          (bool)Core.ModuleConstants.Settings.General.CreateDictionaryValues.DefaultValue);
                 }
 
                 return _createPropertyDictionatyValues.Value;

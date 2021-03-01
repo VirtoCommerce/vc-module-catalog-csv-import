@@ -14,6 +14,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core
                     Name = "CatalogCsvImport.CreateDictionaryValues",
                     GroupName = "CatalogCsvImport|General",
                     ValueType = SettingValueType.Boolean,
+                    DefaultValue = false
                 };
 
                 public static SettingDescriptor ExportFileNameTemplate { get; } = new SettingDescriptor
@@ -22,7 +23,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core
                     ValueType = SettingValueType.ShortText,
                     GroupName = "CatalogCsvImport|General",
                     DefaultValue = "products_{0:yyyy-MM-dd_HH-mm-ss}"
-
                 };
             }
 
@@ -30,14 +30,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core
             {
                 get
                 {
-                    return new List<SettingDescriptor>
-                    {
-                        General.CreateDictionaryValues,
-                        General.ExportFileNameTemplate
-                    };
+                    yield return General.CreateDictionaryValues;
+                    yield return General.ExportFileNameTemplate;
                 }
             }
-
         }
     }
 }
