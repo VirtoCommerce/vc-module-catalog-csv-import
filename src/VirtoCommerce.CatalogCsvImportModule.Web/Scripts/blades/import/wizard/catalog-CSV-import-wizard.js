@@ -74,7 +74,7 @@
                 title: 'catalogCsvImportModule.wizards.catalog-CSV-import-wizard-mapping-step.title',
                 subtitle: 'catalogCsvImportModule.wizards.catalog-CSV-import-wizard-mapping-step.subtitle',
                 controller: 'virtoCommerce.catalogCsvImportModule.catalogCSVimportWizardMappingStepController',
-                template: 'Modules/$(VirtoCommerce.CatalogCsvImport)/Scripts/blades/import/wizard/catalog-CSV-import-wizard-mapping-step.tpl.html'
+                template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/import/wizard/catalog-CSV-import-wizard-mapping-step.tpl.html'
             };
 
             blade.canImport = true;
@@ -96,7 +96,7 @@
                     notification: notification,
                     importConfiguration: blade.importConfiguration,
                     controller: 'virtoCommerce.catalogCsvImportModule.catalogCSVimportController',
-                    template: 'Modules/$(VirtoCommerce.CatalogCsvImport)/Scripts/blades/import/catalog-CSV-import.tpl.html'
+                    template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/import/catalog-CSV-import.tpl.html'
                 };
 
                 $scope.$on("new-notification-event", function (event, notification) {
