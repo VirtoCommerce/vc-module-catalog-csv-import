@@ -282,10 +282,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                     Multivalue = true,
                     Values = new List<PropertyValue>
                     {
-                        new PropertyValue { Alias = "A", Value = "EN_A", ValueType = PropertyValueType.ShortText },
-                        new PropertyValue { Alias = "A", Value = "DE_A", ValueType = PropertyValueType.ShortText },
-                        new PropertyValue { Alias = "B", Value = "EN_B", ValueType = PropertyValueType.ShortText },
-                        new PropertyValue { Alias = "B", Value = "DE_B", ValueType = PropertyValueType.ShortText }
+                        new PropertyValue { Alias = "A", Value = "EN_A", LanguageCode = "en-US", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Alias = "A", Value = "DE_A", LanguageCode = "de-DE", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Alias = "B", Value = "EN_B", LanguageCode = "en-US", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Alias = "B", Value = "DE_B", LanguageCode = "de-DE", ValueType = PropertyValueType.ShortText }
                     }
                 }
             };
@@ -295,8 +295,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
 
             //Assert
             importedCsvProduct.Properties.Should().HaveCount(1);
-            importedCsvProduct.Properties.First().Values.Should().HaveCount(1);
-            importedCsvProduct.Properties.First().Values.First().Value.ToString().Should().BeEquivalentTo("A;B");
+            importedCsvProduct.Properties.First().Values.Should().HaveCount(2);
+            importedCsvProduct.Properties.First().Values.First().Value.ToString().Should().BeEquivalentTo("A");
+            importedCsvProduct.Properties.First().Values.Last().Value.ToString().Should().BeEquivalentTo("B");
         }
 
 
@@ -315,8 +316,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                     Multilanguage = true,
                     Values = new List<PropertyValue>
                     {
-                        new PropertyValue { Value = "EN_A", ValueType = PropertyValueType.ShortText },
-                        new PropertyValue { Value = "DE_A", ValueType = PropertyValueType.ShortText }
+                        new PropertyValue { Value = "EN_A", LanguageCode = "en-US", ValueType = PropertyValueType.ShortText },
+                        new PropertyValue { Value = "DE_A", LanguageCode = "de-DE", ValueType = PropertyValueType.ShortText }
                     }
                 }
             };
@@ -326,8 +327,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
 
             //Assert
             importedCsvProduct.Properties.Should().HaveCount(1);
-            importedCsvProduct.Properties.First().Values.Should().HaveCount(1);
-            importedCsvProduct.Properties.First().Values.First().Value.ToString().Should().BeEquivalentTo("EN_A;DE_A");
+            importedCsvProduct.Properties.First().Values.Should().HaveCount(2);
+            importedCsvProduct.Properties.First().Values.First().Value.ToString().Should().BeEquivalentTo("EN_A");
+            importedCsvProduct.Properties.First().Values.Last().Value.ToString().Should().BeEquivalentTo("DE_A");
         }
 
 
