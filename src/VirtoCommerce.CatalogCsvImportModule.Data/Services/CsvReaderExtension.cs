@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using CsvHelper;
 using VirtoCommerce.CatalogModule.Core.Model;
 
@@ -27,7 +26,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     LanguageCode = multilanguage ? languageCode : string.Empty
                 };
             }
-            yield break;
         }
     }
 }
