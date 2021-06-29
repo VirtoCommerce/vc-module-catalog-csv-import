@@ -104,7 +104,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         (Property)new CsvProperty
                         {
                             Name = column,
-                            Values = x.GetPropertiesByColumn(column)
+                            Values = x.GetPropertiesByColumn(column).ToList()
                         }).ToList());
                 newPropMap.UsingExpression<ICollection<PropertyValue>>(null, null);
 

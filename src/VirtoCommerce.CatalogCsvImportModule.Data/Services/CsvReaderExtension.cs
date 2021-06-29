@@ -11,25 +11,16 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
     {
         public static string Delimiter { get; set; } = ";";
         public static string InnerDelimiter { get; set; } = "__";
-        public static IList<PropertyValue> GetPropertiesByColumn(this IReaderRow reader, string columnName)
+        public static IEnumerable<PropertyValue> GetPropertiesByColumn(this IReaderRow reader, string columnName)
         {
-            var result = new List<PropertyValue>();
             var columnValue = reader.GetField<string>(columnName);
-            foreach(var propertyValue in GetPropertyValue(columnName, columnValue))
-            {
-                result.Add(propertyValue);
-            }
-            return result;
-        }
-        private static IEnumerable<PropertyValue> GetPropertyValue(string columnName, string columnValue)
-        {
             foreach (var value in columnValue.Trim().Split(Delimiter))
             {
                 var multilanguage = value.Contains(InnerDelimiter);
                 var splitedValues = value.Split(InnerDelimiter);
                 var languageCode = splitedValues.First();
                 var propertyValue = multilanguage ? splitedValues.Last() : value;
-                yield return new PropertyValue()
+                yield return new PropertyValue
                 {
                     PropertyName = columnName,
                     Value = propertyValue,
