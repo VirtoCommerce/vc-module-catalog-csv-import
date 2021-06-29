@@ -15,41 +15,28 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             var result = new List<PropertyValue>();
             var columnValue = reader.GetField<string>(columnName);
-            if (columnValue.Contains(Delimiter))
+            foreach(var propertyValue in GetPropertyValue(columnName, columnValue))
             {
-                foreach (var value in columnValue.Trim().Split(Delimiter))
-                {
-                    if (value.Contains(InnerDelimiter))
-                    {
-                        var splitedValues = value.Split(InnerDelimiter);
-                        var languageCode = splitedValues.First();
-                        var propertyValue = splitedValues.Last();
-                        result.Add(new PropertyValue()
-                        {
-                            PropertyName = columnName,
-                            Value = propertyValue,
-                            LanguageCode = languageCode
-                        });
-                    }
-                    else
-                    {
-                        result.Add(new PropertyValue()
-                        {
-                            PropertyName = columnName,
-                            Value = value.Clone()
-                        });
-                    }
-                }
-            }
-            else
-            {
-                result.Add(new PropertyValue
-                {
-                    PropertyName = columnName,
-                    Value = columnValue
-                });
+                result.Add(propertyValue);
             }
             return result;
+        }
+        private static IEnumerable<PropertyValue> GetPropertyValue(string columnName, string columnValue)
+        {
+            foreach (var value in columnValue.Trim().Split(Delimiter))
+            {
+                var multilanguage = value.Contains(InnerDelimiter);
+                var splitedValues = value.Split(InnerDelimiter);
+                var languageCode = splitedValues.First();
+                var propertyValue = multilanguage ? splitedValues.Last() : value;
+                yield return new PropertyValue()
+                {
+                    PropertyName = columnName,
+                    Value = propertyValue,
+                    LanguageCode = multilanguage ? languageCode : string.Empty
+                };
+            }
+            yield break;
         }
     }
 }
