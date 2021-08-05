@@ -101,7 +101,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
         }
 
-        public async Task DoImportAsync(Stream inputStream, CsvImportInfo importInfo, Action<ExportImportProgressInfo> progressCallback)
+        public Task DoImportAsync(Stream inputStream, CsvImportInfo importInfo, Action<ExportImportProgressInfo> progressCallback)
         {
             var csvProducts = new List<CsvProduct>();
 
@@ -121,7 +121,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 {
                     //do nothing
                 };
-                reader.Configuration.TrimOptions = TrimOptions.Trim;
+                reader.Configuration.TrimOptions = string.IsNullOrWhiteSpace(reader.Configuration.Delimiter) ? TrimOptions.None : TrimOptions.Trim;
 
                 while (reader.Read())
                 {
@@ -151,7 +151,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 }
             }
 
-            await DoImport(csvProducts, importInfo, progressInfo, progressCallback);
+            return DoImport(csvProducts, importInfo, progressInfo, progressCallback);
         }
 
         private void ReplaceEmptyStringsWithNull(CsvProduct csvProduct)
