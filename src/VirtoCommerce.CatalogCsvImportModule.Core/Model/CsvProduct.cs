@@ -302,6 +302,18 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             set { SeoInfo.StoreId = value; }
         }
 
+        public string SeoMetaKeywords
+        {
+            get { return SeoInfo.MetaKeywords; }
+            set { SeoInfo.MetaKeywords = value; }
+        }
+
+        public string SeoImageAlternativeText
+        {
+            get { return SeoInfo.ImageAltDescription; }
+            set { SeoInfo.ImageAltDescription = value; }
+        }
+
         public int LineNumber { get; set; }
 
         /// <summary>

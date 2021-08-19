@@ -23,7 +23,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 
             var requiredFields = new List<string>();
             var optionalFields = ReflectionUtility.GetPropertyNames<CsvProduct>(x => x.Name, x => x.Id, x => x.Sku, x => x.CategoryPath, x => x.CategoryId, x => x.MainProductId, x => x.PrimaryImage, x => x.AltImage, x => x.SeoUrl, x => x.SeoTitle,
-                                                                                x => x.SeoDescription, x => x.SeoLanguage, x => x.SeoStore, x => x.Review, x => x.ReviewType, x => x.IsActive, x => x.IsBuyable, x => x.TrackInventory,
+                                                                                x => x.SeoDescription, x => x.SeoLanguage, x => x.SeoStore, x => x.SeoMetaKeywords, x => x.SeoImageAlternativeText, x => x.Review, x => x.ReviewType, x => x.IsActive, x => x.IsBuyable, x => x.TrackInventory,
                                                                                 x => x.PriceId, x => x.SalePrice, x => x.ListPrice, x => x.PriceMinQuantity, x => x.Currency, x => x.PriceListId, x => x.Quantity,
                                                                                 x => x.FulfillmentCenterId, x => x.PackageType, x => x.OuterId, x => x.Priority, x => x.MaxQuantity, x => x.MinQuantity,
                                                                                 x => x.ManufacturerPartNumber, x => x.Gtin, x => x.MeasureUnit, x => x.WeightUnit, x => x.Weight,

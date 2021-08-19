@@ -13,7 +13,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             ObjectId = source.ObjectId;
             ObjectType = source.ObjectType;
             Id = source.Id;
-            
+
             if (PageTitle.IsNullOrEmpty())
             {
                 PageTitle = source.PageTitle;
@@ -22,6 +22,16 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             if (MetaDescription.IsNullOrEmpty())
             {
                 MetaDescription = source.MetaDescription;
+            }
+
+            if (MetaKeywords.IsNullOrEmpty())
+            {
+                MetaKeywords = source.MetaKeywords;
+            }
+
+            if (ImageAltDescription.IsNullOrEmpty())
+            {
+                ImageAltDescription = source.ImageAltDescription;
             }
         }
     }
