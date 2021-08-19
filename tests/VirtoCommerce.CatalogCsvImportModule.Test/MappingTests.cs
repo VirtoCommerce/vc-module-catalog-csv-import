@@ -109,6 +109,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             Assert.Equal("Seo_Descr_Value", product.SeoDescription);
             Assert.Equal("Seo_Descr_Value", product.SeoInfo.MetaDescription);
             Assert.Equal("Seo_Language_Value", product.SeoInfo.LanguageCode);
+            Assert.Equal("Seo_Meta", product.SeoMetaKeywords);
+            Assert.Equal("Seo_Meta", product.SeoInfo.MetaKeywords);
+            Assert.Equal("Seo_Alt_text", product.SeoImageAlternativeText);
+            Assert.Equal("Seo_Alt_text", product.SeoInfo.ImageAltDescription);
+
             Assert.True(csvProducts.Count == 2);
         }
 
