@@ -48,6 +48,17 @@ The system will prompt the user to do the following:
 
 ![Import Report](docs/media/screen-catalog-import.png)
 
+## Model Mappings
+### Seo Info
+|CSV Property Name |Model Property Name|
+|------------------|-------------------|
+|SeoUrl|SemanticUrl|
+|SeoTitle|PageTitle|
+|SeoLanguage|LanguageCode|
+|SeoDescription|MetaDescription|
+|SeoMetaKeywords|MetaKeywords|
+|SeoImageAlternativeText|ImageAltDescription|
+
 # License
 Copyright (c) Virto Solutions LTD.  All rights reserved.
 
