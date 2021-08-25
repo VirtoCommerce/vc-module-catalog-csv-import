@@ -16,6 +16,7 @@ using VirtoCommerce.InventoryModule.Core.Model;
 using VirtoCommerce.InventoryModule.Core.Model.Search;
 using VirtoCommerce.InventoryModule.Core.Services;
 using VirtoCommerce.Platform.Core.Assets;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.PricingModule.Core.Model;
 using VirtoCommerce.PricingModule.Core.Services;
@@ -46,7 +47,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         public async Task DoExportAsync(Stream outStream, CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-
             var progressInfo = new ExportImportProgressInfo
             {
                 Description = "counting products...",
@@ -57,7 +57,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             // It seems we need to read all the products twice. 
             progressInfo.Description = "collecting product properties...";
             progressCallback(progressInfo);
-            await CollectPropertyCsvColumns(exportInfo, progressCallback, progressInfo); // First time to gather all dynamic properties to have full header
+            // First time to gather all dynamic properties to have full header
+            await CollectPropertyCsvColumns(exportInfo, progressCallback, progressInfo); 
 
             progressInfo.Description = "export...";
             progressInfo.ProcessedCount = 0;
@@ -69,10 +70,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             var streamWriter = new StreamWriter(outStream, Encoding.UTF8, 1024, true) { AutoFlush = true };
             using (var csvWriter = new CsvWriter(streamWriter))
             {
-
                 // Fetch page by page
-                var CurrentPageNumber = 0;
-                var PageSize = 50;
+                var currentPageNumber = 0;
+                var pageSize = 50;
                 var hasData = true;
                 while (hasData)
                 {
@@ -84,8 +84,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     }
                     else
                     {
-                        criteria.Skip = CurrentPageNumber * PageSize;
-                        criteria.Take = PageSize;
+                        criteria.Skip = currentPageNumber * pageSize;
+                        criteria.Take = pageSize;
                         var searchResult = await _productSearchService.SearchProductsAsync(criteria);
                         productsIds = searchResult.Results.Select(x => x.Id).ToList();
                         hasData = searchResult.Results.Any();
@@ -94,7 +94,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         progressCallback(progressInfo);
 
                     }
-                    var products = await LoadProducts(productsIds);
+                    var products = await LoadProductsWithVariations(productsIds);
 
                     var allProductIds = products.Select(x => x.Id).ToArray();
 
@@ -122,7 +122,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     };
                     var allProductInventories = (await _inventorySearchService.SearchInventoriesAsync(inventorySearchCriteria)).Results.ToList();
 
-                    if (CurrentPageNumber == 0) //Write header
+                    if (currentPageNumber == 0) //Write header
                     {
                         csvWriter.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
                         csvWriter.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
@@ -150,7 +150,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         }
                     }
 
-                    CurrentPageNumber++;
+                    currentPageNumber++;
                 }
                 progressInfo.Description = "Done.";
                 progressCallback(progressInfo);
@@ -160,8 +160,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private async Task CollectPropertyCsvColumns(CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback, ExportImportProgressInfo progressInfo)
         {
             progressInfo.ProcessedCount = 0;
-            var CurrentPageNumber = 0;
-            var PageSize = 50;
+            var currentPageNumber = 0;
+            var pageSize = 50;
 
             var criteria = ProductSearchCriteriaFactory(exportInfo);
             // Fetch page by page
@@ -176,9 +176,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 }
                 else
                 {
-                    criteria.Skip = CurrentPageNumber * PageSize;
-                    criteria.Take = PageSize;
-                    CurrentPageNumber++;
+                    criteria.Skip = currentPageNumber * pageSize;
+                    criteria.Take = pageSize;
+                    currentPageNumber++;
                     var searchResult = await _productSearchService.SearchProductsAsync(criteria);
                     productsIds = searchResult.Results.Select(x => x.Id).ToList();
                     hasData = searchResult.Results.Any();
@@ -187,7 +187,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     progressInfo.Description = string.Format("collecting props for {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
                     progressCallback(progressInfo);
                 }
-                var products = await LoadProducts(productsIds);
+                var products = await LoadProductsWithVariations(productsIds);
                 exportInfo.Configuration.PropertyCsvColumns = products.SelectMany(x => x.Properties).Select(x => x.Name).Union(exportInfo.Configuration.PropertyCsvColumns).Distinct().ToArray();
             }
         }
@@ -212,7 +212,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private ProductSearchCriteria ProductSearchCriteriaFactory(CsvExportInfo exportInfo)
         {
             ProductSearchCriteria result = null;
-            if (exportInfo.CategoryIds != null && exportInfo.CategoryIds.Any())
+            if (exportInfo.CategoryIds.IsNullOrEmpty())
             {
                 result = new ProductSearchCriteria
                 {
@@ -237,7 +237,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private async Task<int> GetProductsCount(CsvExportInfo exportInfo)
         {
-            if (exportInfo.ProductIds != null && exportInfo.ProductIds.Length > 0)
+            if (!exportInfo.ProductIds.IsNullOrEmpty())
             {
                 return exportInfo.ProductIds.Count();
             }
@@ -247,7 +247,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return (await _productSearchService.SearchProductsAsync(criteria)).TotalCount;
         }
 
-        private async Task<List<CatalogProduct>> LoadProducts(List<string> productIds)
+        private async Task<List<CatalogProduct>> LoadProductsWithVariations(List<string> productIds)
         {
             var result = new List<CatalogProduct>();
             var products = await _productService.GetByIdsAsync(productIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
