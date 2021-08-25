@@ -212,7 +212,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private ProductSearchCriteria ProductSearchCriteriaFactory(CsvExportInfo exportInfo)
         {
             ProductSearchCriteria result = null;
-            if (exportInfo.CategoryIds.IsNullOrEmpty())
+            if (!exportInfo.CategoryIds.IsNullOrEmpty())
             {
                 result = new ProductSearchCriteria
                 {
@@ -222,7 +222,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     SearchInVariations = false,
                 };
             }
-            if ((exportInfo.CategoryIds == null || !exportInfo.CategoryIds.Any()) && (exportInfo.ProductIds == null || !exportInfo.ProductIds.Any()))
+            if (exportInfo.CategoryIds.IsNullOrEmpty() && exportInfo.ProductIds.IsNullOrEmpty())
             {
                 result = new ProductSearchCriteria
                 {
