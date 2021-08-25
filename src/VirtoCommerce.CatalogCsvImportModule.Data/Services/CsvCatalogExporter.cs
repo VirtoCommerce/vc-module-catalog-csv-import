@@ -52,6 +52,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 Description = "counting products...",
                 TotalCount = await GetProductsCount(exportInfo)
             };
+            progressCallback(progressInfo);
 
             // It seems we need to read all the products twice. 
             progressInfo.Description = "collecting product properties...";
