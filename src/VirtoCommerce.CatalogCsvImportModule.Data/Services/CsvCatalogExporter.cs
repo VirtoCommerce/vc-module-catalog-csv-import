@@ -121,13 +121,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     };
                     var allProductInventories = (await _inventorySearchService.SearchInventoriesAsync(inventorySearchCriteria)).Results.ToList();
 
-                    if (CurrentPageNumber == 0) // My
+                    if (CurrentPageNumber == 0) //Write header
                     {
-
                         csvWriter.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
                         csvWriter.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
-
-                        //Write header
+                        
                         csvWriter.WriteHeader<CsvProduct>();
                         csvWriter.NextRecord();
                     }
@@ -150,6 +148,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                             progressCallback(progressInfo);
                         }
                     }
+
                     CurrentPageNumber++;
                 }
                 progressInfo.Description = "Done.";
