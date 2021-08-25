@@ -74,15 +74,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var currentPageNumber = 0;
                 var pageSize = 50;
                 var hasData = true;
+
                 while (hasData)
                 {
                     List<string> productsIds = null;
-                    if (criteria == null)
+
+                    if (!exportInfo.ProductIds.IsNullOrEmpty())
                     { // Just fetch for all the products                    
                         productsIds = new List<string>(exportInfo.ProductIds);
-                        hasData = false;
+                        hasData = criteria != null;
+                        progressInfo.ProcessedCount += productsIds.Count;
                     }
-                    else
+
+                    if (hasData && criteria != null)
                     {
                         criteria.Skip = currentPageNumber * pageSize;
                         criteria.Take = pageSize;
@@ -90,10 +94,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         productsIds = searchResult.Results.Select(x => x.Id).ToList();
                         hasData = searchResult.Results.Any();
                         progressInfo.ProcessedCount += searchResult.Results.Count;
-                        progressInfo.Description = string.Format("Processing {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
-                        progressCallback(progressInfo);
-
                     }
+
+                    progressInfo.Description = string.Format("Processing {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
+                    progressCallback(progressInfo);
+                    
                     var products = await LoadProductsWithVariations(productsIds);
 
                     var allProductIds = products.Select(x => x.Id).ToArray();
@@ -169,12 +174,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             while (hasData)
             {
                 List<string> productsIds = null;
-                if (criteria == null)
+
+                if (!exportInfo.ProductIds.IsNullOrEmpty())
                 { // Just fetch for all the products                    
                     productsIds = new List<string>(exportInfo.ProductIds);
-                    hasData = false;
+                    hasData = criteria != null;
+                    progressInfo.ProcessedCount += productsIds.Count;
                 }
-                else
+
+                if (hasData && criteria != null)
                 {
                     criteria.Skip = currentPageNumber * pageSize;
                     criteria.Take = pageSize;
@@ -182,11 +190,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     var searchResult = await _productSearchService.SearchProductsAsync(criteria);
                     productsIds = searchResult.Results.Select(x => x.Id).ToList();
                     hasData = searchResult.Results.Any();
-
                     progressInfo.ProcessedCount += searchResult.Results.Count;
-                    progressInfo.Description = string.Format("collecting props for {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
-                    progressCallback(progressInfo);
                 }
+
+                progressInfo.Description = string.Format("collecting props for {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
+                progressCallback(progressInfo);
+
                 var products = await LoadProductsWithVariations(productsIds);
                 exportInfo.Configuration.PropertyCsvColumns = products.SelectMany(x => x.Properties).Select(x => x.Name).Union(exportInfo.Configuration.PropertyCsvColumns).Distinct().ToArray();
             }
@@ -237,14 +246,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private async Task<int> GetProductsCount(CsvExportInfo exportInfo)
         {
+            int result = 0;
             if (!exportInfo.ProductIds.IsNullOrEmpty())
             {
-                return exportInfo.ProductIds.Count();
+                result += exportInfo.ProductIds.Count();
             }
             var criteria = ProductSearchCriteriaFactory(exportInfo);
-            criteria.Skip = 0; criteria.Take = 0;
+            if (criteria != null)
+            {
+                criteria.Skip = 0; criteria.Take = 0;
 
-            return (await _productSearchService.SearchProductsAsync(criteria)).TotalCount;
+                result += (await _productSearchService.SearchProductsAsync(criteria)).TotalCount;
+            }
+            return result;
         }
 
         private async Task<List<CatalogProduct>> LoadProductsWithVariations(List<string> productIds)
