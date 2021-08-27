@@ -254,15 +254,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                 throw new InvalidOperationException($"Cannot get catalog with id '{exportInfo.CatalogId}'");
             }
 
-            Action<ExportImportProgressInfo> progressCallback = async x =>
+            void progressCallback(ExportImportProgressInfo x)
             {
                 notifyEvent.InjectFrom(x);
-                await _notifier.SendAsync(notifyEvent);
-            };
+                _notifier.SendAsync(notifyEvent);
+            }
 
             try
             {
-                exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();                    
+                exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
 
                 var fileNameTemplate = await _settingsManager.GetValueAsync(CsvModuleConstants.Settings.General.ExportFileNameTemplate.Name, CsvModuleConstants.Settings.General.ExportFileNameTemplate.DefaultValue.ToString());
                 var fileName = string.Format(fileNameTemplate, DateTime.UtcNow);
