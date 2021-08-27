@@ -271,9 +271,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                 var blobRelativeUrl = Path.Combine("temp", fileName);
 
                 //Upload result csv to blob storage
-                // FlushLessStream wraps BlockBlobWriteStream to not use Flush multiple times.
-                // !!! Call Flush several times on a plain BlockBlobWriteStream will cause stream hang.
-                using (var blobStream = new FlushLessStream(_blobStorageProvider.OpenWrite(blobRelativeUrl)))
+                using (var blobStream = _blobStorageProvider.OpenWrite(blobRelativeUrl))
                 {
                     await _csvExporter.DoExportAsync(blobStream, exportInfo, progressCallback);
                 }
