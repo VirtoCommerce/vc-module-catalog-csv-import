@@ -11,6 +11,7 @@ using VirtoCommerce.CatalogModule.Core.Model;
 using VirtoCommerce.CatalogModule.Core.Model.Search;
 using VirtoCommerce.CatalogModule.Core.Search;
 using VirtoCommerce.CatalogModule.Core.Services;
+using VirtoCommerce.CatalogModule.Data.Caching;
 using VirtoCommerce.CoreModule.Core.Seo;
 using VirtoCommerce.InventoryModule.Core.Model;
 using VirtoCommerce.InventoryModule.Core.Model.Search;
@@ -49,18 +50,18 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             var progressInfo = new ExportImportProgressInfo
             {
-                Description = "counting products...",
+                Description = "Counting products...",
                 TotalCount = await GetProductsCount(exportInfo)
             };
             progressCallback(progressInfo);
 
             // It seems we need to read all the products twice. 
-            progressInfo.Description = "collecting product properties...";
+            progressInfo.Description = "Collecting product properties...";
             progressCallback(progressInfo);
             // First time to gather all dynamic properties to have full header
             await CollectPropertyCsvColumns(exportInfo, progressCallback, progressInfo);
 
-            progressInfo.Description = "export...";
+            progressInfo.Description = "Export...";
             progressInfo.ProcessedCount = 0;
             progressCallback(progressInfo);
 
@@ -101,7 +102,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     progressInfo.ProcessedCount += searchResult.Results.Count;
                     await FetchThere(exportInfo, progressCallback, progressInfo, csvWriter, productsIds);
 
-                    currentPageNumber++;
+                    currentPageNumber++;                    
                 }
                 progressInfo.Description = "Done.";
                 progressCallback(progressInfo);
@@ -109,7 +110,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             async Task FetchThere(CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback, ExportImportProgressInfo progressInfo, CsvWriter csvWriter, List<string> productsIds)
             {
-                progressInfo.Description = string.Format("Processing {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
+                progressInfo.Description = string.Format("Exporting {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
                 progressCallback(progressInfo);
 
                 var products = await LoadProductsWithVariations(productsIds);
@@ -117,8 +118,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var allProductIds = products.Select(x => x.Id).ToArray();
 
                 //Load prices for products
-                progressInfo.Description = "loading prices...";
-                progressCallback(progressInfo);
 
                 var priceEvalContext = new PriceEvaluationContext
                 {
@@ -129,8 +128,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var allProductPrices = (await _pricingService.EvaluateProductPricesAsync(priceEvalContext)).ToList();
 
                 //Load inventories
-                progressInfo.Description = "loading inventory information...";
-                progressCallback(progressInfo);
 
                 var inventorySearchCriteria = new InventorySearchCriteria()
                 {
@@ -158,6 +155,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         progressCallback(progressInfo);
                     }
                 }
+
+                ItemCacheRegion.ExpireRegion();
+                GC.Collect();
             }
         }
 
@@ -196,11 +196,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             async Task FetchThere(CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback, ExportImportProgressInfo progressInfo, List<string> productsIds)
             {
-                progressInfo.Description = string.Format("collecting props for {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
+                progressInfo.Description = string.Format("Collecting props for {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
                 progressCallback(progressInfo);
 
                 var products = await LoadProductsWithVariations(productsIds);
                 exportInfo.Configuration.PropertyCsvColumns = products.SelectMany(x => x.Properties).Select(x => x.Name).Union(exportInfo.Configuration.PropertyCsvColumns).Distinct().ToArray();
+
+                ItemCacheRegion.ExpireRegion();
+                GC.Collect();
             }
         }
 
