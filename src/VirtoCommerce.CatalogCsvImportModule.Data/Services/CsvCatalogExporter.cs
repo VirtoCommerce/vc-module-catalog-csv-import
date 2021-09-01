@@ -156,6 +156,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     }
                 }
 
+                // Need to rewrite with incode caching disable (when it arrived from techdebt)
                 ItemCacheRegion.ExpireRegion();
                 GC.Collect();
             }
@@ -202,6 +203,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var products = await LoadProductsWithVariations(productsIds);
                 exportInfo.Configuration.PropertyCsvColumns = products.SelectMany(x => x.Properties).Select(x => x.Name).Union(exportInfo.Configuration.PropertyCsvColumns).Distinct().ToArray();
 
+                // Need to rewrite with incode caching disable (when it arrived from techdebt)
                 ItemCacheRegion.ExpireRegion();
                 GC.Collect();
             }
