@@ -11,11 +11,13 @@ using VirtoCommerce.CatalogModule.Core.Model;
 using VirtoCommerce.CatalogModule.Core.Model.Search;
 using VirtoCommerce.CatalogModule.Core.Search;
 using VirtoCommerce.CatalogModule.Core.Services;
+using VirtoCommerce.CatalogModule.Data.Caching;
 using VirtoCommerce.CoreModule.Core.Seo;
 using VirtoCommerce.InventoryModule.Core.Model;
 using VirtoCommerce.InventoryModule.Core.Model.Search;
 using VirtoCommerce.InventoryModule.Core.Services;
 using VirtoCommerce.Platform.Core.Assets;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.PricingModule.Core.Model;
 using VirtoCommerce.PricingModule.Core.Services;
@@ -46,24 +48,76 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         public async Task DoExportAsync(Stream outStream, CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-            var prodgressInfo = new ExportImportProgressInfo
+            var progressInfo = new ExportImportProgressInfo
             {
-                Description = "loading products..."
+                Description = "Counting products...",
+                TotalCount = await GetProductsCount(exportInfo)
             };
+            progressCallback(progressInfo);
 
+            // It seems we need to read all the products twice. 
+            progressInfo.Description = "Collecting product properties...";
+            progressCallback(progressInfo);
+            // First time to gather all dynamic properties to have full header
+            await CollectPropertyCsvColumns(exportInfo, progressCallback, progressInfo);
+
+            progressInfo.Description = "Export...";
+            progressInfo.ProcessedCount = 0;
+            progressCallback(progressInfo);
+
+            var criteria = ProductSearchCriteriaFactory(exportInfo);
+
+            // Second time: fetch and save to csv
             var streamWriter = new StreamWriter(outStream, Encoding.UTF8, 1024, true) { AutoFlush = true };
             using (var csvWriter = new CsvWriter(streamWriter))
             {
-                //Notification
-                progressCallback(prodgressInfo);
+                csvWriter.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
+                csvWriter.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
 
-                //Load all products to export
-                var products = await LoadProducts(exportInfo.CatalogId, exportInfo.CategoryIds, exportInfo.ProductIds);
+                csvWriter.WriteHeader<CsvProduct>();
+                csvWriter.NextRecord();
+
+                List<string> productsIds = null;
+
+                if (!exportInfo.ProductIds.IsNullOrEmpty())
+                { // Just fetch for all the products                    
+                    productsIds = new List<string>(exportInfo.ProductIds);
+                    progressInfo.ProcessedCount += productsIds.Count;
+                    await FetchThere(exportInfo, progressCallback, progressInfo, csvWriter, productsIds);
+                }
+
+                // Fetch page by page
+                var currentPageNumber = 0;
+                var pageSize = 50;
+                var hasData = criteria != null;
+
+                while (hasData)
+                {
+
+                    criteria.Skip = currentPageNumber * pageSize;
+                    criteria.Take = pageSize;
+                    var searchResult = await _productSearchService.SearchProductsAsync(criteria);
+                    productsIds = searchResult.Results.Select(x => x.Id).ToList();
+                    hasData = searchResult.Results.Any();
+                    progressInfo.ProcessedCount += searchResult.Results.Count;
+                    await FetchThere(exportInfo, progressCallback, progressInfo, csvWriter, productsIds);
+
+                    currentPageNumber++;                    
+                }
+                progressInfo.Description = "Done.";
+                progressCallback(progressInfo);
+            }
+
+            async Task FetchThere(CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback, ExportImportProgressInfo progressInfo, CsvWriter csvWriter, List<string> productsIds)
+            {
+                progressInfo.Description = string.Format("Exporting {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
+                progressCallback(progressInfo);
+
+                var products = await LoadProductsWithVariations(productsIds);
+
                 var allProductIds = products.Select(x => x.Id).ToArray();
 
                 //Load prices for products
-                prodgressInfo.Description = "loading prices...";
-                progressCallback(prodgressInfo);
 
                 var priceEvalContext = new PriceEvaluationContext
                 {
@@ -74,8 +128,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var allProductPrices = (await _pricingService.EvaluateProductPricesAsync(priceEvalContext)).ToList();
 
                 //Load inventories
-                prodgressInfo.Description = "loading inventory information...";
-                progressCallback(prodgressInfo);
 
                 var inventorySearchCriteria = new InventorySearchCriteria()
                 {
@@ -84,20 +136,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     Take = int.MaxValue,
                 };
                 var allProductInventories = (await _inventorySearchService.SearchInventoriesAsync(inventorySearchCriteria)).Results.ToList();
-
-                //Export configuration
-                exportInfo.Configuration.PropertyCsvColumns = products.SelectMany(x => x.Properties).Select(x => x.Name).Distinct().ToArray();
-
-                csvWriter.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
-                csvWriter.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
-
-                //Write header
-                csvWriter.WriteHeader<CsvProduct>();
-                csvWriter.NextRecord();
-
-                prodgressInfo.TotalCount = products.Count;
-                var notifyProductSizeLimit = 50;
-                var counter = 0;
 
                 //convert to dict for faster search
                 var pricesDict = allProductPrices.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.First());
@@ -113,19 +151,61 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     }
                     catch (Exception ex)
                     {
-                        prodgressInfo.Errors.Add(ex.ToString());
-                        progressCallback(prodgressInfo);
-                    }
-
-                    //Raise notification each notifyProductSizeLimit products
-                    counter++;
-                    prodgressInfo.ProcessedCount = counter;
-                    prodgressInfo.Description = string.Format("{0} of {1} products processed", prodgressInfo.ProcessedCount, prodgressInfo.TotalCount);
-                    if (counter % notifyProductSizeLimit == 0 || counter == prodgressInfo.TotalCount)
-                    {
-                        progressCallback(prodgressInfo);
+                        progressInfo.Errors.Add(ex.ToString());
+                        progressCallback(progressInfo);
                     }
                 }
+
+                // Need to rewrite with incode caching disable (when it arrived from techdebt)
+                ItemCacheRegion.ExpireRegion();
+                GC.Collect();
+            }
+        }
+
+        private async Task CollectPropertyCsvColumns(CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback, ExportImportProgressInfo progressInfo)
+        {
+            List<string> productsIds = null;
+
+            progressInfo.ProcessedCount = 0;
+
+            if (!exportInfo.ProductIds.IsNullOrEmpty())
+            { // Just fetch for all the products                    
+                productsIds = new List<string>(exportInfo.ProductIds);
+                progressInfo.ProcessedCount += productsIds.Count;
+                await FetchThere(exportInfo, progressCallback, progressInfo, productsIds);
+            }
+
+            var currentPageNumber = 0;
+            var pageSize = 50;
+            ProductSearchCriteria criteria = ProductSearchCriteriaFactory(exportInfo);
+            // Fetch page by page
+            var hasData = criteria != null;
+            while (hasData)
+            {
+                criteria.Skip = currentPageNumber * pageSize;
+                criteria.Take = pageSize;
+
+                var searchResult = await _productSearchService.SearchProductsAsync(criteria);
+                productsIds = searchResult.Results.Select(x => x.Id).ToList();
+                hasData = searchResult.Results.Any();
+                progressInfo.ProcessedCount += searchResult.Results.Count;
+
+                await FetchThere(exportInfo, progressCallback, progressInfo, productsIds);
+
+                currentPageNumber++;
+            }
+
+            async Task FetchThere(CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback, ExportImportProgressInfo progressInfo, List<string> productsIds)
+            {
+                progressInfo.Description = string.Format("Collecting props for {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
+                progressCallback(progressInfo);
+
+                var products = await LoadProductsWithVariations(productsIds);
+                exportInfo.Configuration.PropertyCsvColumns = products.SelectMany(x => x.Properties).Select(x => x.Name).Union(exportInfo.Configuration.PropertyCsvColumns).Distinct().ToArray();
+
+                // Need to rewrite with incode caching disable (when it arrived from techdebt)
+                ItemCacheRegion.ExpireRegion();
+                GC.Collect();
             }
         }
 
@@ -146,44 +226,52 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return result;
         }
 
-        private async Task<List<CatalogProduct>> LoadProducts(string catalogId, string[] exportedCategories, string[] exportedProducts)
+        private ProductSearchCriteria ProductSearchCriteriaFactory(CsvExportInfo exportInfo)
+        {
+            ProductSearchCriteria result = null;
+            if (!exportInfo.CategoryIds.IsNullOrEmpty())
+            {
+                result = new ProductSearchCriteria
+                {
+                    CatalogId = exportInfo.CatalogId,
+                    CategoryIds = exportInfo.CategoryIds,
+                    SearchInChildren = true,
+                    SearchInVariations = false,
+                };
+            }
+            if (exportInfo.CategoryIds.IsNullOrEmpty() && exportInfo.ProductIds.IsNullOrEmpty())
+            {
+                result = new ProductSearchCriteria
+                {
+                    CatalogId = exportInfo.CatalogId,
+                    SearchInChildren = true,
+                    SearchInVariations = false,
+                };
+            }
+
+            return result;
+        }
+
+        private async Task<int> GetProductsCount(CsvExportInfo exportInfo)
+        {
+            int result = 0;
+            if (!exportInfo.ProductIds.IsNullOrEmpty())
+            {
+                result += exportInfo.ProductIds.Count();
+            }
+            var criteria = ProductSearchCriteriaFactory(exportInfo);
+            if (criteria != null)
+            {
+                criteria.Skip = 0; criteria.Take = 0;
+
+                result += (await _productSearchService.SearchProductsAsync(criteria)).TotalCount;
+            }
+            return result;
+        }
+
+        private async Task<List<CatalogProduct>> LoadProductsWithVariations(List<string> productIds)
         {
             var result = new List<CatalogProduct>();
-
-            var productIds = new List<string>();
-            if (exportedProducts != null)
-            {
-                productIds = exportedProducts.ToList();
-            }
-            if (exportedCategories != null && exportedCategories.Any())
-            {
-                var criteria = new ProductSearchCriteria
-                {
-                    CatalogId = catalogId,
-                    CategoryIds = exportedCategories,
-                    Skip = 0,
-                    Take = int.MaxValue,
-                    SearchInChildren = true,
-                    SearchInVariations = false,
-                };
-                var searchResult = await _productSearchService.SearchProductsAsync(criteria);
-                productIds.AddRange(searchResult.Results.Select(x => x.Id));
-            }
-
-            if ((exportedCategories == null || !exportedCategories.Any()) && (exportedProducts == null || !exportedProducts.Any()))
-            {
-                var criteria = new ProductSearchCriteria
-                {
-                    CatalogId = catalogId,
-                    SearchInChildren = true,
-                    Skip = 0,
-                    Take = int.MaxValue,
-                    SearchInVariations = false,
-                };
-                var searchResult = await _productSearchService.SearchProductsAsync(criteria);
-                productIds = searchResult.Results.Select(x => x.Id).ToList();
-            }
-
             var products = await _productService.GetByIdsAsync(productIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
             // Variations in products go without properties, only VariationProperties are included. Have to use GetByIdsAsync to receive all properties for variations.
             var variationsIds = products.SelectMany(product => product.Variations.Select(variation => variation.Id));

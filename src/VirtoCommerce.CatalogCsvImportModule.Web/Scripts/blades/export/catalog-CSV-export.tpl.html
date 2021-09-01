@@ -39,6 +39,7 @@
 
 						</div>
 						<div class="block" ng-if="blade.notification.created || blade.notification.finished">
+							<div class="sub-t">{{blade.notification.description}}</div>
 							<p ng-if="blade.notification.created" ng-class="{'no-data': blade.notification.created}" class="text">{{ 'catalogCsvImportModule.blades.catalog-CSV-export.labels.start' | translate }} — <i class="fa fa-clock-o"></i>&nbsp;{{ blade.notification.created | amParse | date:'mediumTime' }}</p>
 							<p ng-if="blade.notification.finished" ng-class="{'no-data': blade.notification.finished}" class="text">{{ 'catalogCsvImportModule.blades.catalog-CSV-export.labels.end' | translate }} — <i class="fa fa-clock-o"></i>&nbsp;{{ blade.notification.finished | amParse | date:'mediumTime' }}</p>
 						</div>

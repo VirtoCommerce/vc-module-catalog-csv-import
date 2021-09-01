@@ -254,46 +254,41 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
                 throw new InvalidOperationException($"Cannot get catalog with id '{exportInfo.CatalogId}'");
             }
 
-            Action<ExportImportProgressInfo> progressCallback = async x =>
+            void progressCallback(ExportImportProgressInfo x)
             {
                 notifyEvent.InjectFrom(x);
-                await _notifier.SendAsync(notifyEvent);
-            };
+                _notifier.SendAsync(notifyEvent);
+            }
 
-            using (var stream = new MemoryStream())
+            try
             {
-                try
+                exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
+
+                var fileNameTemplate = await _settingsManager.GetValueAsync(CsvModuleConstants.Settings.General.ExportFileNameTemplate.Name, CsvModuleConstants.Settings.General.ExportFileNameTemplate.DefaultValue.ToString());
+                var fileName = string.Format(fileNameTemplate, DateTime.UtcNow);
+                fileName = Path.ChangeExtension(fileName, ".csv");
+
+                var blobRelativeUrl = Path.Combine("temp", fileName);
+
+                //Upload result csv to blob storage
+                using (var blobStream = _blobStorageProvider.OpenWrite(blobRelativeUrl))
                 {
-                    exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
-                    await _csvExporter.DoExportAsync(stream, exportInfo, progressCallback);
-
-                    stream.Position = 0;
-                    var fileNameTemplate = await _settingsManager.GetValueAsync(CsvModuleConstants.Settings.General.ExportFileNameTemplate.Name, CsvModuleConstants.Settings.General.ExportFileNameTemplate.DefaultValue.ToString());
-                    var fileName = string.Format(fileNameTemplate, DateTime.UtcNow);
-                    fileName = Path.ChangeExtension(fileName, ".csv");
-
-                    var blobRelativeUrl = Path.Combine("temp", fileName);
-
-                    //Upload result csv to blob storage
-                    using (var blobStream = _blobStorageProvider.OpenWrite(blobRelativeUrl))
-                    {
-                        stream.CopyTo(blobStream);
-                    }
-
-                    //Get a download url
-                    notifyEvent.DownloadUrl = _blobUrlResolver.GetAbsoluteUrl(blobRelativeUrl);
-                    notifyEvent.Description = "Export finished";
+                    await _csvExporter.DoExportAsync(blobStream, exportInfo, progressCallback);
                 }
-                catch (Exception ex)
-                {
-                    notifyEvent.Description = "Export failed";
-                    notifyEvent.Errors.Add(ex.ExpandExceptionMessage());
-                }
-                finally
-                {
-                    notifyEvent.Finished = DateTime.UtcNow;
-                    await _notifier.SendAsync(notifyEvent);
-                }
+
+                //Get a download url
+                notifyEvent.DownloadUrl = _blobUrlResolver.GetAbsoluteUrl(blobRelativeUrl);
+                notifyEvent.Description = "Export finished";
+            }
+            catch (Exception ex)
+            {
+                notifyEvent.Description = "Export failed";
+                notifyEvent.Errors.Add(ex.ExpandExceptionMessage());
+            }
+            finally
+            {
+                notifyEvent.Finished = DateTime.UtcNow;
+                await _notifier.SendAsync(notifyEvent);
             }
         }
 

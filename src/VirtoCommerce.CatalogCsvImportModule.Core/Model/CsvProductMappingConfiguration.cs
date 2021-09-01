@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using VirtoCommerce.Platform.Core.Common;
@@ -15,7 +16,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
         public string Delimiter { get; set; }
         public string[] CsvColumns { get; set; }
         public ICollection<CsvProductPropertyMap> PropertyMaps { get; set; }
-        public string[] PropertyCsvColumns { get; set; }
+        public string[] PropertyCsvColumns { get; set; } = Array.Empty<string>();
 
         public static CsvProductMappingConfiguration GetDefaultConfiguration()
         {
