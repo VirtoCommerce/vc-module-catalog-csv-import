@@ -110,7 +110,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             }
             set
             {
-                Price.MinQuantity = Convert.ToInt32(value);
+                Price.MinQuantity = value.IsNullOrEmpty() ? 1 : Convert.ToInt32(value);
             }
         }
 
@@ -158,7 +158,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             }
             set
             {
-                Inventory.InStockQuantity = Convert.ToInt64(value);
+                Inventory.InStockQuantity = value.IsNullOrEmpty() ? 0 : Convert.ToInt64(value);
             }
         }
 
