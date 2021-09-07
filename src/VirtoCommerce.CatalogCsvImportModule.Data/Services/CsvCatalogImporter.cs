@@ -143,7 +143,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         var error = ex.Message;
                         if (ex.InnerException?.Message != null)
                         {
-                            error += " " + ex.InnerException.Message;
+                            error = $"{error} {ex.InnerException.Message}";
                         }
 
                         if (ex.Data.Contains("CsvHelper"))
