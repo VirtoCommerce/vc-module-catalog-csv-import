@@ -141,6 +141,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     catch (Exception ex)
                     {
                         var error = ex.Message;
+                        if (ex.InnerException?.Message != null)
+                        {
+                            error = $"{error} {ex.InnerException.Message}";
+                        }
+
                         if (ex.Data.Contains("CsvHelper"))
                         {
                             error += ex.Data["CsvHelper"];
@@ -359,7 +364,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             foreach (var dictProperty in csvProducts.SelectMany(x => x.Properties).Where(x => x.Dictionary && x.Values?.Any(v => v != null) == true))
             {
-                foreach (var propertyValue in dictProperty.Values.Where(x => x.Value != null))
+                foreach (var propertyValue in dictProperty.Values.Where(x => !string.IsNullOrWhiteSpace(x.Value?.ToString())))
                 {
                     // VP-5516:
                     // For imported propertyValue the Alias field is empty - need to fill it from value.
