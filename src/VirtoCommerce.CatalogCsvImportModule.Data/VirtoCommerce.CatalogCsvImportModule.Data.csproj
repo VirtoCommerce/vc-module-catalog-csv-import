@@ -14,7 +14,7 @@
         <NoWarn>1701;1702;1705;1591</NoWarn>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="CsvHelper" Version="12.2.2" />
+        <PackageReference Include="CsvHelper" Version="27.1.1" />
         <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
         <PackageReference Include="VirtoCommerce.CatalogModule.Data" Version="3.2.0" />

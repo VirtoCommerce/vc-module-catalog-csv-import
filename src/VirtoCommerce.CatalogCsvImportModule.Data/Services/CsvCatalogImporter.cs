@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -113,15 +114,16 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             var encoding = DetectEncoding(inputStream);
 
-            using (var reader = new CsvReader(new StreamReader(inputStream, encoding)))
+            var readerConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                reader.Configuration.Delimiter = importInfo.Configuration.Delimiter;
-                reader.Configuration.RegisterClassMap(new CsvProductMap(importInfo.Configuration));
-                reader.Configuration.MissingFieldFound = (strings, i, arg3) =>
-                {
-                    //do nothing
-                };
-                reader.Configuration.TrimOptions = string.IsNullOrWhiteSpace(reader.Configuration.Delimiter) ? TrimOptions.None : TrimOptions.Trim;
+                Delimiter = importInfo.Configuration.Delimiter,
+                TrimOptions = string.IsNullOrWhiteSpace(importInfo.Configuration.Delimiter) ? TrimOptions.None : TrimOptions.Trim,
+                MissingFieldFound = args => { }
+            };
+
+            using (var reader = new CsvReader(new StreamReader(inputStream, encoding), readerConfig))
+            {
+                reader.Context.RegisterClassMap(new CsvProductMap(importInfo.Configuration));
 
                 while (reader.Read())
                 {

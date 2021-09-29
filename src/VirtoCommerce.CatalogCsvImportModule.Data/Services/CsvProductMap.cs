@@ -26,7 +26,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     var newMap = MemberMap.CreateGeneric(typeof(CsvProduct), propertyInfo);
 
                     newMap.Data.TypeConverterOptions.CultureInfo = CultureInfo.InvariantCulture;
-                    newMap.Data.TypeConverterOptions.NumberStyle = NumberStyles.Any;
+                    newMap.Data.TypeConverterOptions.NumberStyles = NumberStyles.Any;
                     newMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange(new List<string>() { "yes", "true" });
                     newMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(new List<string>() { "false", "no" });
 
@@ -41,8 +41,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     else if (mappingItem.CustomValue != null)
                     {
                         var typeConverter = TypeDescriptor.GetConverter(propertyInfo.PropertyType);
-                        newMap.Data.ReadingConvertExpression = (Expression<Func<IReaderRow, object>>)(x => typeConverter.ConvertFromString(mappingItem.CustomValue));
-                        newMap.Default(mappingItem.CustomValue);
+                        newMap.Data.ReadingConvertExpression = (Expression<Func<ConvertFromStringArgs, object>>)(x => typeConverter.ConvertFromString(mappingItem.CustomValue));
                     }
                     MemberMaps.Add(newMap);
                 }
@@ -100,11 +99,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var newPropInfo = typeof(CsvProduct).GetProperty(nameof(CsvProduct.Properties));
                 var newPropMap = MemberMap.CreateGeneric(typeof(CsvProduct), newPropInfo);
                 newPropMap.Data.ReadingConvertExpression =
-                    (Expression<Func<IReaderRow, object>>)(x => mappingCfg.PropertyCsvColumns.Select(column =>
+                    (Expression<Func<ConvertFromStringArgs, object>>)(x => mappingCfg.PropertyCsvColumns.Select(column =>
                         (Property)new CsvProperty
                         {
                             Name = column,
-                            Values = x.GetPropertiesByColumn(column).ToList()
+                            Values = x.Row.GetPropertiesByColumn(column).ToList()
                         }).ToList());
                 newPropMap.UsingExpression<ICollection<PropertyValue>>(null, null);
 
@@ -115,7 +114,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
 
             //map line number
-            var lineNumMeber = Map(m => m.LineNumber).ConvertUsing(row => row.Context.RawRow);
+            var lineNumMeber = Map(m => m.LineNumber).Convert(row => row.Row.Parser.RawRow);
             lineNumMeber.Data.Index = ++index;
             lineNumMeber.Ignore(true);
         }
