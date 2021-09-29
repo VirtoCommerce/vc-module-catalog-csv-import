@@ -228,7 +228,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             {
                 try
                 {
-                    await _csvImporter.DoImportAsync(stream, importInfo, progressCallback);//
+                    await _csvImporter.DoImportAsync(stream, importInfo, progressCallback);
                 }
                 catch (Exception ex)
                 {
