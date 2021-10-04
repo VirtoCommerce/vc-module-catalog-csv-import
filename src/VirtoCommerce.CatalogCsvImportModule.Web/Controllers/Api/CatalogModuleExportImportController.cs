@@ -1,9 +1,11 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using CsvHelper;
+using CsvHelper.Configuration;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -144,14 +146,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             result.Delimiter = decodedDelimiter;
 
             //Read csv headers and try to auto map fields by name
-
-            using (var reader = new CsvReader(new StreamReader(_blobStorageProvider.OpenRead(fileUrl))))
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                reader.Configuration.Delimiter = decodedDelimiter;
-
+                Delimiter = decodedDelimiter
+            };
+            using (var reader = new CsvReader(new StreamReader(_blobStorageProvider.OpenRead(fileUrl)), config))
+            {
                 if (await reader.ReadAsync() && reader.ReadHeader())
                 {
-                    result.AutoMap(reader.Context.HeaderRecord);
+                    result.AutoMap(reader.HeaderRecord);
                 }
             }
 
@@ -215,10 +218,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         // Only public methods can be invoked in the background. (Hangfire)
         public async Task BackgroundImport(CsvImportInfo importInfo, ImportNotification notifyEvent)
         {
-            Action<ExportImportProgressInfo> progressCallback = async x =>
+            Action<ExportImportProgressInfo> progressCallback = x =>
             {
                 notifyEvent.InjectFrom(x);
-                await _notifier.SendAsync(notifyEvent);
+                _notifier.SendAsync(notifyEvent);
             };
 
             using (var stream = _blobStorageProvider.OpenRead(importInfo.FileUrl))

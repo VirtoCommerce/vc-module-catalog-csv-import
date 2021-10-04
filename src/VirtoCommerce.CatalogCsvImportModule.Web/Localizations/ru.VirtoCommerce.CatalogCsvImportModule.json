@@ -1,4 +1,4 @@
-﻿{
+{
   "catalogCsvImportModule": {
     "blades": {
       "catalog-CSV-export": {
@@ -61,7 +61,7 @@
           "upload-progress": "Прогресс загрузки",
           "map-columns": "Сопоставление столбцов",
           "define-columns": "Определение сопоставления столбцов",
-          "space": "Пробел",
+          "vertical": "Вертикальная черта",
           "comma": "Запятая",
           "semicolon": "Точка с запятой",
           "tab": "Tab"

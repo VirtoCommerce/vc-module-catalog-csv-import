@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -224,12 +225,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
         {
             using (var sw = new StringWriter())
             {
-                using (var csv = new CsvWriter(sw))
+                var exportInfo = new CsvExportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() };
+                var writerConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    var exportInfo = new CsvExportInfo();
-                    exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
-                    csv.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
-                    csv.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
+                    Delimiter = exportInfo.Configuration.Delimiter
+                };
+
+                using (var csv = new CsvWriter(sw, writerConfig))
+                {
+                    csv.Context.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
 
                     csv.WriteHeader<CsvProduct>();
                     csv.Flush();
@@ -346,16 +350,16 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             using (var fs = File.Open(path, FileMode.Open))
 #pragma warning restore S3966 // Objects should not be disposed more than once
             {
-                using (var reader = new CsvReader(new StreamReader(fs)))
+                var readerConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    reader.Configuration.Delimiter = importInfo.Configuration.Delimiter;
-                    reader.Configuration.RegisterClassMap(new CsvProductMap(importInfo.Configuration));
-                    reader.Configuration.MissingFieldFound = (strings, i, arg3) =>
-                    {
-                        //do nothing
-                    };
-                    reader.Configuration.TrimOptions = TrimOptions.Trim;
-                    reader.Configuration.HeaderValidated = null;
+                    Delimiter = importInfo.Configuration.Delimiter,
+                    TrimOptions = TrimOptions.Trim,
+                    HeaderValidated = null,
+                    MissingFieldFound = args => { }
+                };
+                using (var reader = new CsvReader(new StreamReader(fs), readerConfig))
+                {
+                    reader.Context.RegisterClassMap(new CsvProductMap(importInfo.Configuration));
 
                     while (reader.Read())
                     {
@@ -385,16 +389,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
 
         private CsvProduct ExportAndImportProduct(CatalogProduct product)
         {
-            var exportInfo = new CsvExportInfo();
+            var exportInfo = new CsvExportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() };
             using (var stream = new MemoryStream())
             {
                 var streamWriter = new StreamWriter(stream, Encoding.UTF8, 1024, true) { AutoFlush = true };
-                using (var csvWriter = new CsvWriter(streamWriter))
+                exportInfo.Configuration.PropertyCsvColumns = product.Properties.Select(x => x.Name).Distinct().ToArray();
+                var writerConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
-                    exportInfo.Configuration.PropertyCsvColumns = product.Properties.Select(x => x.Name).Distinct().ToArray();
-                    csvWriter.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
-                    csvWriter.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
+                    Delimiter = exportInfo.Configuration.Delimiter
+                };
+
+                using (var csvWriter = new CsvWriter(streamWriter, writerConfig))
+                {
+                    csvWriter.Context.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
 
                     csvWriter.WriteHeader<CsvProduct>();
                     csvWriter.NextRecord();
@@ -404,15 +411,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                     stream.Position = 0;
                 }
 
-                using (var reader = new CsvReader(new StreamReader(stream, Encoding.UTF8)))
+                var readerConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    reader.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
-                    reader.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
-                    reader.Configuration.MissingFieldFound = (strings, i, arg3) =>
-                    {
-                        //do nothing
-                    };
-                    reader.Configuration.TrimOptions = TrimOptions.Trim;
+                    Delimiter = exportInfo.Configuration.Delimiter,
+                    TrimOptions = TrimOptions.Trim,
+                    MissingFieldFound = args => { }
+                };
+                using (var reader = new CsvReader(new StreamReader(stream, Encoding.UTF8), readerConfig))
+                {
+                    reader.Context.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
                     reader.Read();
                     return reader.GetRecord<CsvProduct>();
                 }

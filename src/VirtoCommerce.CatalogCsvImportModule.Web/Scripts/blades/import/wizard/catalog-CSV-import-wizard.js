@@ -1,4 +1,4 @@
-﻿angular.module('virtoCommerce.catalogCsvImportModule')
+angular.module('virtoCommerce.catalogCsvImportModule')
 .controller('virtoCommerce.catalogCsvImportModule.catalogCSVimportWizardController', ['$scope', '$localStorage', 'platformWebApp.bladeNavigationService', 'FileUploader', 'virtoCommerce.catalogCsvImportModule.import',
     function ($scope, $localStorage, bladeNavigationService, FileUploader, importResource) {
 
@@ -9,7 +9,7 @@
         blade.subtitleVales = { name: blade.catalog.name };
 
         $scope.columnDelimiters = [
-            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.space", value: " " },
+            { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.vertical", value: "|" },
             { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.comma", value: "," },
             { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.semicolon", value: ";" },
             { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.tab", value: "\t" }

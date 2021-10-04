@@ -8,7 +8,7 @@
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="CsvHelper" Version="12.2.2" />
+        <PackageReference Include="CsvHelper" Version="27.1.1" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
         <PackageReference Include="ValueInjecter" Version="3.2.0" />
         <PackageReference Include="VirtoCommerce.CatalogModule.Core" Version="3.2.0" />

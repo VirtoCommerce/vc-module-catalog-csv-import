@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CsvHelper;
+using CsvHelper.Configuration;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
@@ -69,10 +71,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             // Second time: fetch and save to csv
             var streamWriter = new StreamWriter(outStream, Encoding.UTF8, 1024, true) { AutoFlush = true };
-            using (var csvWriter = new CsvWriter(streamWriter))
+
+            var writerConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                csvWriter.Configuration.Delimiter = exportInfo.Configuration.Delimiter;
-                csvWriter.Configuration.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
+                Delimiter = exportInfo.Configuration.Delimiter
+            };
+
+            using (var csvWriter = new CsvWriter(streamWriter, writerConfig))
+            {
+                csvWriter.Context.RegisterClassMap(new CsvProductMap(exportInfo.Configuration));
 
                 csvWriter.WriteHeader<CsvProduct>();
                 csvWriter.NextRecord();
@@ -102,7 +109,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     progressInfo.ProcessedCount += searchResult.Results.Count;
                     await FetchThere(exportInfo, progressCallback, progressInfo, csvWriter, productsIds);
 
-                    currentPageNumber++;                    
+                    currentPageNumber++;
                 }
                 progressInfo.Description = "Done.";
                 progressCallback(progressInfo);
