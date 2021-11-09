@@ -721,11 +721,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         // Combining multiple values ​​into one for non-multivalued properties
                         else if (property.Values.Count > 1)
                         {
-                            var propertyValues = new List<PropertyValue>();
                             var propertyValue = property.Values.FirstOrDefault();
                             propertyValue.Value = string.Join(CsvReaderExtension.Delimiter, property.Values.Select(x => x.Value));
-                            propertyValues.Add(propertyValue);
-                            property.Values = propertyValues;
+                            property.Values = new List<PropertyValue> { propertyValue };
                         }
                     }
                 }
