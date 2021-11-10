@@ -411,11 +411,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 outline.Clear();
                 var productCategoryNames = csvProduct.Category.Path.Split(_categoryDelimiters);
                 string parentCategoryId = null;
+                var count = progressInfo.ProcessedCount;
                 foreach (var categoryName in productCategoryNames)
                 {
                     outline.Append($"\\{categoryName}");
-                    Category category;
-                    if (!cachedCategoryMap.TryGetValue(outline.ToString(), out category))
+                    if (!cachedCategoryMap.TryGetValue(outline.ToString(), out var category))
                     {
                         var searchCriteria = new CategorySearchCriteria
                         {
@@ -424,31 +424,43 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                             SearchOnlyInRoot = parentCategoryId == null,
                             Keyword = categoryName
                         };
+
                         category = (await _categorySearchService.SearchCategoriesAsync(searchCriteria)).Results.FirstOrDefault();
                     }
 
                     if (category == null)
                     {
-                        var code = categoryName.GenerateSlug();
-                        if (string.IsNullOrEmpty(code))
+                        category = new Category
                         {
-                            code = Guid.NewGuid().ToString("N");
-                        }
+                            Name = categoryName,
+                            Code = GenerateSlug(categoryName),
+                            CatalogId = catalog.Id,
+                            ParentId = parentCategoryId
+                        };
 
-                        category = new Category() { Name = categoryName, Code = code, CatalogId = catalog.Id, ParentId = parentCategoryId };
                         await _categoryService.SaveChangesAsync(new[] { category });
 
                         //Raise notification each notifyCategorySizeLimit category
-                        var count = progressInfo.ProcessedCount;
                         progressInfo.Description = $"Creating categories: {++count} created";
                         progressCallback(progressInfo);
                     }
+
                     csvProduct.CategoryId = category.Id;
                     csvProduct.Category = category;
                     parentCategoryId = category.Id;
                     cachedCategoryMap[outline.ToString()] = category;
                 }
             }
+        }
+
+        private string GenerateSlug(string categoryName)
+        {
+            var code = categoryName.GenerateSlug();
+            if (string.IsNullOrEmpty(code))
+            {
+                code = Guid.NewGuid().ToString("N");
+            }
+            return code;
         }
 
         private async Task SaveProducts(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
@@ -717,6 +729,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                             }
 
                             property.Values = parsedValues;
+                        }
+                        // Combining multiple values ​​into one for non-multivalued properties
+                        else if (property.Values.Count > 1)
+                        {
+                            var propertyValue = property.Values.FirstOrDefault();
+                            propertyValue.Value = string.Join(CsvReaderExtension.Delimiter, property.Values.Select(x => x.Value));
+                            property.Values = new List<PropertyValue> { propertyValue };
                         }
                     }
                 }
