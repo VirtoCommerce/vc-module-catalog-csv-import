@@ -19,7 +19,7 @@ using VirtoCommerce.CatalogModule.Core.Model.Search;
 using VirtoCommerce.CatalogModule.Core.Services;
 using VirtoCommerce.CatalogModule.Data.Authorization;
 using VirtoCommerce.CoreModule.Core.Currency;
-using VirtoCommerce.Platform.Core.Assets;
+using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Exceptions;
 using VirtoCommerce.Platform.Core.ExportImport;

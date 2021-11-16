@@ -6,7 +6,7 @@ using Omu.ValueInjecter;
 using VirtoCommerce.CatalogModule.Core.Model;
 using VirtoCommerce.CoreModule.Core.Seo;
 using VirtoCommerce.InventoryModule.Core.Model;
-using VirtoCommerce.Platform.Core.Assets;
+using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.PricingModule.Core.Model;
 

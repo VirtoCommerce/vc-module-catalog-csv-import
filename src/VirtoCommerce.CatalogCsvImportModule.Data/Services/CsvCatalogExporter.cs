@@ -18,7 +18,7 @@ using VirtoCommerce.CoreModule.Core.Seo;
 using VirtoCommerce.InventoryModule.Core.Model;
 using VirtoCommerce.InventoryModule.Core.Model.Search;
 using VirtoCommerce.InventoryModule.Core.Services;
-using VirtoCommerce.Platform.Core.Assets;
+using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.PricingModule.Core.Model;
