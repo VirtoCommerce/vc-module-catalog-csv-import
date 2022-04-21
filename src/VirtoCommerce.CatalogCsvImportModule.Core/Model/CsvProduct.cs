@@ -142,7 +142,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
         {
             get
             {
-                return Inventory.FulfillmentCenterId;
+                return Inventory?.FulfillmentCenterId;
             }
             set
             {
@@ -154,7 +154,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
         {
             get
             {
-                return Inventory.InStockQuantity.ToString();
+                return Inventory?.InStockQuantity.ToString();
             }
             set
             {
