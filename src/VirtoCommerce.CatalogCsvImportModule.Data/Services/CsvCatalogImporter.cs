@@ -699,7 +699,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     csvProduct.Code = _skuGenerator.GenerateSku(csvProduct);
                 }
                 //Properties inheritance
-                var inheritedProperties = (csvProduct.Category != null ? csvProduct.Category.Properties : csvProduct.Catalog.Properties).OrderBy(x => x.Name).ToList();
+                var inheritedProperties = GetInheritedProperties(csvProduct);
 
                 foreach (var property in csvProduct.Properties.ToArray())
                 {
@@ -740,6 +740,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     }
                 }
             }
+        }
+
+        private static List<Property> GetInheritedProperties(CsvProduct csvProduct)
+        {
+            if (csvProduct.Category != null && csvProduct.Category.Properties!=null)
+                return csvProduct.Category.Properties.OrderBy(x => x.Name).ToList();
+            return csvProduct.Catalog.Properties.OrderBy(x => x.Name).ToList();
         }
 
         private static List<PropertyValue> ParseValuesFromMultivalueString(PropertyValue firstPropertyValue, string additionalDelimiter)
