@@ -76,7 +76,7 @@ angular.module('virtoCommerce.catalogCsvImportModule')
                 subtitle: 'catalogCsvImportModule.wizards.catalog-CSV-import-wizard-mapping-step.subtitle',
                 controller: 'virtoCommerce.catalogCsvImportModule.catalogCSVimportWizardMappingStepController',
                 template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/import/wizard/catalog-CSV-import-wizard-mapping-step.tpl.html'
-            };            
+            };
             blade.canImport = true;
             bladeNavigationService.showBlade(newBlade, blade);
         };
