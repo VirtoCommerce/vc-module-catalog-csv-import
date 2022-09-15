@@ -5,6 +5,7 @@
             <form name="mappingForm" class="form">
                 <fieldset ng-init="setForm(mappingForm)">
                     <legend class="ng-binding">{{ 'catalogCsvImportModule.wizards.catalog-CSV-import.labels.auto-mapping' | translate }}</legend>
+                    <div class="table-descr"> {{ 'catalogCsvImportModule.wizards.catalog-CSV-import.labels.auto-mapping-description' | translate }} </div>
                     <div class="form-input" data-role="input-control">
                         <a class="clear text-mini __link" ng-click="clearPropertyCsvColumns()" ng-if="blade.importConfiguration.propertyCsvColumns.length > 0">{{ 'catalogCsvImportModule.commands.clear-all' | translate }}</a>
                         <ui-select multiple ng-model="blade.importConfiguration.propertyCsvColumns">
@@ -18,6 +19,8 @@
                 </fieldset>
             <fieldset>
                 <legend class="ng-binding">{{ 'catalogCsvImportModule.wizards.catalog-CSV-import.labels.chose-map' | translate }}</legend>
+                <div class="table-descr"> {{ 'catalogCsvImportModule.wizards.catalog-CSV-import.labels.chose-map-description' | translate }} </div>
+                <div class="table-descr"><br></div>
                 <div class="table-wrapper">
                     <table class="table hovered">
                         <thead>
