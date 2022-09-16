@@ -1,1 +1,32 @@
-﻿<?xml version="1.0" encoding="utf-8"?><module xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><id>VirtoCommerce.CatalogCsvImportModule</id><version>3.203.0</version><version-tag /><platformVersion>3.200.0</platformVersion><title>Csv Catalog Import Module</title><description>Adds CSV import functionality to catalog</description><authors><author>ksa</author></authors><owners><owner>Virto Commerce</owner></owners><requireLicenseAcceptance>false</requireLicenseAcceptance><copyright>Copyright © 2011-2022 Virto Commerce. All rights reserved</copyright><tags>catalog csv export import</tags><assemblyFile>VirtoCommerce.CatalogCsvImportModule.Web.dll</assemblyFile><moduleType>VirtoCommerce.CatalogCsvImportModule.Web.Module, VirtoCommerce.CatalogCsvImportModule.Web</moduleType><dependencies><dependency id="VirtoCommerce.Core" version="3.200.0" /><dependency id="VirtoCommerce.Catalog" version="3.200.0" /><dependency id="VirtoCommerce.Inventory" version="3.200.0" /><dependency id="VirtoCommerce.Pricing" version="3.200.0" /><dependency id="VirtoCommerce.Store" version="3.200.0" /><dependency id="VirtoCommerce.Assets" version="3.200.0" /></dependencies><groups><group>commerce</group></groups><useFullTypeNameInSwagger>false</useFullTypeNameInSwagger></module>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<module xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <id>VirtoCommerce.CatalogCsvImportModule</id>
+  <version>3.204.0</version>
+  <version-tag />
+  <platformVersion>3.200.0</platformVersion>
+  <title>Csv Catalog Import Module</title>
+  <description>Adds CSV import functionality to catalog</description>
+  <authors>
+    <author>ksa</author>
+  </authors>
+  <owners>
+    <owner>Virto Commerce</owner>
+  </owners>
+  <requireLicenseAcceptance>false</requireLicenseAcceptance>
+  <copyright>Copyright © 2011-2022 Virto Commerce. All rights reserved</copyright>
+  <tags>catalog csv export import</tags>
+  <assemblyFile>VirtoCommerce.CatalogCsvImportModule.Web.dll</assemblyFile>
+  <moduleType>VirtoCommerce.CatalogCsvImportModule.Web.Module, VirtoCommerce.CatalogCsvImportModule.Web</moduleType>
+  <dependencies>
+    <dependency id="VirtoCommerce.Core" version="3.200.0" />
+    <dependency id="VirtoCommerce.Catalog" version="3.200.0" />
+    <dependency id="VirtoCommerce.Inventory" version="3.200.0" />
+    <dependency id="VirtoCommerce.Pricing" version="3.200.0" />
+    <dependency id="VirtoCommerce.Store" version="3.200.0" />
+    <dependency id="VirtoCommerce.Assets" version="3.200.0" />
+  </dependencies>
+  <groups>
+    <group>commerce</group>
+  </groups>
+  <useFullTypeNameInSwagger>false</useFullTypeNameInSwagger>
+</module>
