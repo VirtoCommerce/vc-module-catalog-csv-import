@@ -51,8 +51,10 @@
         "title": "Import catalog from csv",
         "subtitle": "All products will be added to '{{name}}' catalog",
         "labels": {
-          "auto-mapping": "CSV fields automatically mapped to same product properties",
-          "chose-map": "Chose map CSV columns with product fields",
+          "auto-mapping": "Property Field Mapping",
+          "auto-mapping-description": "Select the fields from your CSV file to map against the dynamic product fields. If the property exists in the catalog, it will be linked by name; otherwise, it will be added as a product property as is.",
+          "chose-map": "Product Field Mapping",
+          "chose-map-description": "Select the fields from your CSV file to map against the system product fields.",
           "product-property": "Product property",
           "csv-column": "CSV column",
           "custom-value": "Custom value",
