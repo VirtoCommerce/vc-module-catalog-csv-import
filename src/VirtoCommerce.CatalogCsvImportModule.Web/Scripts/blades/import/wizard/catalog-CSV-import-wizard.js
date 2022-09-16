@@ -47,7 +47,7 @@ angular.module('virtoCommerce.catalogCsvImportModule')
                         angular.extend(data, $localStorage.lastKnownImportData);
                     }
 
-                    blade.importConfiguration = data;
+                    blade.initialImportConfiguration = data;
                     blade.isLoading = false;
                 }, function (error) {
                     bladeNavigationService.setError('Error ' + error.status, blade);
@@ -64,10 +64,11 @@ angular.module('virtoCommerce.catalogCsvImportModule')
         };
 
         $scope.canMapColumns = function () {
-            return blade.importConfiguration && $scope.formScope && $scope.formScope.$valid;
+            return blade.initialImportConfiguration && $scope.formScope && $scope.formScope.$valid;
         }
 
         $scope.openMappingStep = function () {
+            blade.importConfiguration = angular.copy(blade.initialImportConfiguration);
             var newBlade = {
                 id: "importMapping",
                 importConfiguration: blade.importConfiguration,
@@ -76,7 +77,6 @@ angular.module('virtoCommerce.catalogCsvImportModule')
                 controller: 'virtoCommerce.catalogCsvImportModule.catalogCSVimportWizardMappingStepController',
                 template: 'Modules/$(VirtoCommerce.CatalogCsvImportModule)/Scripts/blades/import/wizard/catalog-CSV-import-wizard-mapping-step.tpl.html'
             };
-
             blade.canImport = true;
             bladeNavigationService.showBlade(newBlade, blade);
         };
