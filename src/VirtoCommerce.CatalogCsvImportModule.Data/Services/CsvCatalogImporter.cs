@@ -544,8 +544,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     inventory.BackorderAvailabilityDate = exitsInventory.BackorderAvailabilityDate;
                     inventory.BackorderQuantity = exitsInventory.BackorderQuantity;
                     inventory.InTransit = exitsInventory.InTransit;
-
-                    inventory.InStockQuantity = inventory.InStockQuantity == 0 ? exitsInventory.InStockQuantity : inventory.InStockQuantity;
                 }
             }
             await _inventoryService.SaveChangesAsync(inventories);
