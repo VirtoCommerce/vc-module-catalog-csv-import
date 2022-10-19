@@ -331,7 +331,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private static Property GetMergedProperty(IGrouping<string, Property> propertyGroup)
         {
-            var result = propertyGroup.FirstOrDefault();
+            var result = propertyGroup.First();
 
             foreach (var property in propertyGroup.Skip(1))
             {
@@ -544,8 +544,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     inventory.BackorderAvailabilityDate = exitsInventory.BackorderAvailabilityDate;
                     inventory.BackorderQuantity = exitsInventory.BackorderQuantity;
                     inventory.InTransit = exitsInventory.InTransit;
-
-                    inventory.InStockQuantity = inventory.InStockQuantity == 0 ? exitsInventory.InStockQuantity : inventory.InStockQuantity;
                 }
             }
             await _inventoryService.SaveChangesAsync(inventories);
@@ -733,7 +731,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                         // Combining multiple values ​​into one for non-multivalued properties
                         else if (property.Values.Count > 1)
                         {
-                            var propertyValue = property.Values.FirstOrDefault();
+                            var propertyValue = property.Values.First();
                             propertyValue.Value = string.Join(CsvReaderExtension.Delimiter, property.Values.Select(x => x.Value));
                             property.Values = new List<PropertyValue> { propertyValue };
                         }
