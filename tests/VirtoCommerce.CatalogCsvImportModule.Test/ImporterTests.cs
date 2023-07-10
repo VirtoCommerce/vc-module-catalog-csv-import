@@ -83,7 +83,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var progressInfo = new ExportImportProgressInfo();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), progressInfo, info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -119,7 +119,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
             Assert.True(exportInfo.Errors.Any());
@@ -150,7 +150,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
             mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
@@ -232,7 +232,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var progressInfo = new ExportImportProgressInfo();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), progressInfo, info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -263,7 +263,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Assert.True(product.Category.Id == existingProduct.Category.Id);
@@ -286,7 +286,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Assert.True(product.Name == existingProduct.Name);
@@ -363,7 +363,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
 
             var target = GetImporter();
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -406,7 +406,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -441,7 +441,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
             Assert.True(exportInfo.Errors.Any());
@@ -474,7 +474,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
             mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
@@ -510,7 +510,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             };
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -545,7 +545,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Assert.True(product.SeoInfos.Count == 1);
@@ -576,7 +576,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { product }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Assert.True(product.Reviews.Count == 1);
@@ -604,7 +604,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Assert.True(_savedProducts.Count == 1);
@@ -634,7 +634,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<EditorialReview>[] inspectors = {
@@ -666,7 +666,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<EditorialReview>[] inspectors = {
@@ -699,7 +699,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
 
@@ -737,7 +737,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
 
@@ -773,7 +773,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<SeoInfo>[] inspectors = {
@@ -805,7 +805,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<SeoInfo>[] inspectors = {
@@ -836,7 +836,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<SeoInfo>[] inspectors = {
@@ -932,7 +932,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(list, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, progressInfo, info => { });
+            await target.DoImport(list, GetCsvImportInfo(), progressInfo, info => { });
 
             //Assert
             Action<PropertyValue>[] inspectors = {
@@ -982,7 +982,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<Price>[] inspectors =
@@ -1035,7 +1035,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<Price>[] inspectors =
@@ -1089,7 +1089,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<Price>[] inspectors =
@@ -1127,7 +1127,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             _pricesInternal.Should().HaveCount(2);
@@ -1161,7 +1161,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             _pricesInternal.Should().HaveCount(3);
@@ -1196,7 +1196,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { firstProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             _pricesInternal.Should().HaveCount(2);
@@ -1231,7 +1231,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { firstProduct, secondProduct }, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(new List<CsvProduct> { firstProduct, secondProduct }, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<Price>[] inspectors =
@@ -1272,7 +1272,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var target = GetImporter();
 
             //Act
-            await target.DoImport(list, new CsvImportInfo(), new ExportImportProgressInfo(), info => { });
+            await target.DoImport(list, GetCsvImportInfo(), new ExportImportProgressInfo(), info => { });
 
             //Assert
             Action<CatalogProduct>[] inspectors = {
@@ -1295,7 +1295,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { mainProduct, variationProduct }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { mainProduct, variationProduct }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
             Assert.True(variationProduct.MainProductId == mainProduct.Id);
@@ -1313,7 +1313,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var exportInfo = new ExportImportProgressInfo();
 
             //Act
-            await target.DoImport(new List<CsvProduct> { mainProduct, variationProduct }, new CsvImportInfo { Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration() }, exportInfo, info => { });
+            await target.DoImport(new List<CsvProduct> { mainProduct, variationProduct }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
             Assert.True(variationProduct.MainProductId == mainProduct.Id);
@@ -1326,14 +1326,18 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             #region StoreServise
 
             var storeSearchService = new Mock<IStoreSearchService>();
-            storeSearchService.Setup(x => x.SearchStoresAsync(It.IsAny<StoreSearchCriteria>())).ReturnsAsync(new StoreSearchResult());
+            storeSearchService
+                .Setup(x => x.SearchAsync(It.IsAny<StoreSearchCriteria>(), It.IsAny<bool>()))
+                .ReturnsAsync(new StoreSearchResult());
 
             #endregion
 
             #region CatalogService
 
             var catalogService = new Mock<ICatalogService>();
-            catalogService.Setup(x => x.GetByIdsAsync(It.IsAny<string[]>(), null)).ReturnsAsync(() => new[] { _catalog });
+            catalogService
+                .Setup(x => x.GetAsync(It.IsAny<IList<string>>(), It.IsAny<string>(), It.IsAny<bool>()))
+                .ReturnsAsync(() => new[] { _catalog });
 
             #endregion
 
@@ -1353,11 +1357,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                     return Task.FromResult(cats);
                 });
 
-            categoryService.Setup(x => x.GetByIdsAsync(
-                It.IsAny<string[]>(),
-                It.Is<string>(c => c == CategoryResponseGroup.Full.ToString()),
-                It.Is<string>(id => id == null)))
-                .ReturnsAsync((string[] ids, string group, string catalogId) =>
+            categoryService
+                .Setup(x => x.GetAsync(
+                    It.IsAny<IList<string>>(),
+                    It.Is<string>(c => c == CategoryResponseGroup.Full.ToString()),
+                    It.IsAny<bool>()))
+                .ReturnsAsync((IList<string> ids, string group, bool clone) =>
                 {
                     var result = ids.Select(id => _categoriesInternal.FirstOrDefault(x => x.Id == id));
                     result = result.Where(x => x != null).Select(x => x.Clone() as Category).ToList();
@@ -1377,7 +1382,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             #region ICategorySearchService
 
             var categorySearchService = new Mock<ICategorySearchService>();
-            categorySearchService.Setup(x => x.SearchCategoriesAsync(It.IsAny<CategorySearchCriteria>())).ReturnsAsync((CategorySearchCriteria criteria) =>
+            categorySearchService
+                .Setup(x => x.SearchAsync(It.IsAny<CategorySearchCriteria>(), It.IsAny<bool>()))
+                .ReturnsAsync((CategorySearchCriteria criteria, bool clone) =>
             {
                 var result = new CategorySearchResult();
                 var categories = _categoriesInternal.Where(x => criteria.CatalogIds.Contains(x.CatalogId) || criteria.ObjectIds.Contains(x.Id)).ToList();
@@ -1397,17 +1404,20 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             #region ItemService
 
             var itemService = new Mock<IItemService>();
-            itemService.Setup(x => x.GetByIdsAsync(
-                It.IsAny<string[]>(),
-                It.Is<string>(c => c == ItemResponseGroup.ItemLarge.ToString()),
-                It.Is<string>(id => id == null)))
-                .ReturnsAsync((string[] ids, string group, string catalogId) =>
+            itemService
+                .Setup(x => x.GetAsync(
+                    It.IsAny<IList<string>>(),
+                    It.Is<string>(c => c == ItemResponseGroup.ItemLarge.ToString()),
+                    It.IsAny<bool>()))
+                .ReturnsAsync((IList<string> ids, string group, bool clone) =>
                 {
                     var result = _productsInternal.Where(x => ids.Contains(x.Id));
                     return result.ToArray();
                 });
 
-            itemService.Setup(x => x.SaveChangesAsync(It.IsAny<CatalogProduct[]>())).Callback((CatalogProduct[] products) =>
+            itemService
+                .Setup(x => x.SaveChangesAsync(It.IsAny<IList<CatalogProduct>>()))
+                .Callback((IList<CatalogProduct> products) =>
             {
                 _savedProducts = products.ToList();
             });
@@ -1433,18 +1443,30 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
 
             #region PricingService
 
-            var pricingService = new Mock<IPricingService>();
-            pricingService.Setup(x => x.SavePricesAsync(It.IsAny<Price[]>())).Callback((Price[] prices) =>
-            {
-                _pricesInternal.RemoveAll(x => prices.Any(y => y.Id == x.Id));
-                foreach (var price in prices)
+            var pricingService = new Mock<IPriceService>();
+            pricingService
+                .Setup(x => x.SaveChangesAsync(It.IsAny<IList<Price>>()))
+                .Callback((IList<Price> prices) =>
                 {
-                    if (price.Id == null)
-                        price.Id = Guid.NewGuid().ToString();
-                }
+                    _pricesInternal.RemoveAll(x => prices.Any(y => y.Id == x.Id));
+                    foreach (var price in prices)
+                    {
+                        if (price.Id == null)
+                            price.Id = Guid.NewGuid().ToString();
+                    }
 
-                _pricesInternal.AddRange(prices);
-            });
+                    _pricesInternal.AddRange(prices);
+                });
+            pricingService
+                .Setup(x => x.GetAsync(
+                    It.IsAny<IList<string>>(),
+                    It.IsAny<string>(),
+                    It.IsAny<bool>()))
+                .ReturnsAsync((IList<string> ids, string group, bool clone) =>
+                {
+                    var result = _pricesInternal.Where(x => ids.Contains(x.Id)).ToArray();
+                    return result;
+                });
 
             #endregion
 
@@ -1465,7 +1487,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             #region CommerceService
 
             var commerceService = new Mock<IFulfillmentCenterSearchService>();
-            commerceService.Setup(x => x.SearchCentersAsync(It.IsAny<FulfillmentCenterSearchCriteria>())).ReturnsAsync(() => new FulfillmentCenterSearchResult() { Results = _fulfillmentCentersInternal });
+            commerceService
+                .Setup(x => x.SearchAsync(It.IsAny<FulfillmentCenterSearchCriteria>(), It.IsAny<bool>()))
+                .ReturnsAsync(() => new FulfillmentCenterSearchResult { Results = _fulfillmentCentersInternal });
 
             #endregion
 
@@ -1507,9 +1531,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
 
             #region PricingSearchService
 
-            var pricingSearchService = new Mock<IPricingSearchService>();
-            pricingSearchService.Setup(x => x.SearchPricesAsync(It.IsAny<PricesSearchCriteria>()))
-                .ReturnsAsync((PricesSearchCriteria crietera) =>
+            var pricingSearchService = new Mock<IPriceSearchService>();
+            pricingSearchService
+                .Setup(x => x.SearchAsync(It.IsAny<PricesSearchCriteria>(), It.IsAny<bool>()))
+                .ReturnsAsync((PricesSearchCriteria crietera, bool clone) =>
                 {
                     return new PriceSearchResult
                     {
@@ -1528,7 +1553,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             #region IFulfillmentCenterSearchService
 
             var fulfillmentCenterSearchService = new Mock<IFulfillmentCenterSearchService>();
-            fulfillmentCenterSearchService.Setup(x => x.SearchCentersAsync(It.IsAny<FulfillmentCenterSearchCriteria>())).ReturnsAsync(new FulfillmentCenterSearchResult());
+            fulfillmentCenterSearchService
+                .Setup(x => x.SearchAsync(It.IsAny<FulfillmentCenterSearchCriteria>(), It.IsAny<bool>()))
+                .ReturnsAsync(new FulfillmentCenterSearchResult());
 
             #endregion IFulfillmentCenterSearchService
 
@@ -1798,6 +1825,15 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             existingProduct.CatalogId = _catalog.Id;
 
             return category;
+        }
+
+        private CsvImportInfo GetCsvImportInfo()
+        {
+            return new CsvImportInfo
+            {
+                CatalogId = _catalog.Id,
+                Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration(),
+            };
         }
     }
 }

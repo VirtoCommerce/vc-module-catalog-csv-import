@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using VirtoCommerce.CatalogCsvImportModule.Core;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
@@ -37,8 +38,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private readonly ICategoryService _categoryService;
         private readonly IItemService _productService;
         private readonly ISkuGenerator _skuGenerator;
-        private readonly IPricingService _pricingService;
-        private readonly IPricingSearchService _pricingSearchService;
+        private readonly IPriceService _priceService;
+        private readonly IPriceSearchService _priceSearchService;
         private readonly ISettingsManager _settingsManager;
         private readonly IInventoryService _inventoryService;
         private readonly IFulfillmentCenterSearchService _fulfillmentCenterSearchService;
@@ -56,11 +57,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             ICategoryService categoryService,
             IItemService productService,
             ISkuGenerator skuGenerator,
-            IPricingService pricingService,
+            IPriceService priceService,
             IInventoryService inventoryService,
             IFulfillmentCenterSearchService fulfillmentCenterSearchService,
             Func<ICatalogRepository> catalogRepositoryFactory,
-            IPricingSearchService pricingSearchService,
+            IPriceSearchService priceSearchService,
             ISettingsManager settingsManager,
             IPropertyDictionaryItemSearchService propDictItemSearchService,
             IPropertyDictionaryItemService propDictItemService,
@@ -72,11 +73,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             _categoryService = categoryService;
             _productService = productService;
             _skuGenerator = skuGenerator;
-            _pricingService = pricingService;
+            _priceService = priceService;
             _inventoryService = inventoryService;
             _fulfillmentCenterSearchService = fulfillmentCenterSearchService;
             _catalogRepositoryFactory = catalogRepositoryFactory;
-            _pricingSearchService = pricingSearchService;
+            _priceSearchService = priceSearchService;
             _settingsManager = settingsManager;
             _storeSearchService = storeSearchService;
             _propDictItemSearchService = propDictItemSearchService;
@@ -88,12 +89,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             get
             {
-                if (_createPropertyDictionatyValues == null)
-                {
-                    _createPropertyDictionatyValues = _settingsManager.GetValue(Core.ModuleConstants.Settings.General.CreateDictionaryValues.Name,
-                                                                          (bool)Core.ModuleConstants.Settings.General.CreateDictionaryValues.DefaultValue);
-                }
-
+                _createPropertyDictionatyValues ??= _settingsManager.GetValue<bool>(ModuleConstants.Settings.General.CreateDictionaryValues);
                 return _createPropertyDictionatyValues.Value;
             }
             set
@@ -204,14 +200,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         public async Task DoImport(List<CsvProduct> csvProducts, CsvImportInfo importInfo, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-            var catalog = (await _catalogService.GetByIdsAsync(new[] { importInfo.CatalogId })).FirstOrDefault();
+            var catalog = await _catalogService.GetByIdAsync(importInfo.CatalogId);
 
             if (catalog == null)
             {
                 throw new InvalidOperationException($"Catalog with id \"{importInfo.CatalogId}\" does not exist.");
             }
 
-            _stores.AddRange((await _storeSearchService.SearchStoresAsync(new StoreSearchCriteria { Take = int.MaxValue })).Stores);
+            _stores.AddRange((await _storeSearchService.SearchAsync(new StoreSearchCriteria { Take = int.MaxValue })).Stores);
 
             var contunie = ImportAllowed(csvProducts, progressInfo, progressCallback);
 
@@ -425,7 +421,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                             Keyword = categoryName
                         };
 
-                        category = (await _categorySearchService.SearchCategoriesAsync(searchCriteria)).Results.FirstOrDefault();
+                        category = (await _categorySearchService.SearchAsync(searchCriteria)).Results.FirstOrDefault();
                     }
 
                     if (category == null)
@@ -465,7 +461,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private async Task SaveProducts(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-            var defaultFulfilmentCenter = (await _fulfillmentCenterSearchService.SearchCentersAsync(new FulfillmentCenterSearchCriteria { Take = 1 })).Results.FirstOrDefault();
+            var defaultFulfilmentCenter = (await _fulfillmentCenterSearchService.SearchAsync(new FulfillmentCenterSearchCriteria { Take = 1 })).Results.FirstOrDefault();
 
             var totalProductsCount = csvProducts.Count;
             for (int i = 0; i < totalProductsCount; i += 10)
@@ -580,7 +576,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             var restPrices = prices.Except(pricesWithIds).Except(pricesWithPriceListIds).ToArray();
             mergedPrices.AddRange(await GetMergedPriceDefault(restPrices));
 
-            await _pricingService.SavePricesAsync(mergedPrices.ToArray());
+            await _priceService.SaveChangesAsync(mergedPrices);
         }
 
         private async Task<IList<Price>> GetMergedPriceById(IList<CsvPrice> pricesWithIds)
@@ -591,7 +587,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             var result = new List<Price>();
 
             var pricesIds = pricesWithIds.Select(x => x.Id).ToArray();
-            var existingPricesByIds = await _pricingService.GetPricesByIdAsync(pricesIds);
+            var existingPricesByIds = await _priceService.GetAsync(pricesIds);
             foreach (var price in pricesWithIds)
             {
                 var existPrice = existingPricesByIds.FirstOrDefault(x => x.Id == price.Id);
@@ -622,7 +618,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     Take = int.MaxValue,
                 };
 
-                var searchResult = await _pricingSearchService.SearchPricesAsync(criteria);
+                var searchResult = await _priceSearchService.SearchAsync(criteria);
                 existentPrices.AddRange(searchResult.Results);
             }
 
@@ -654,7 +650,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             };
 
             var result = new List<Price>();
-            var existPrices = (await _pricingSearchService.SearchPricesAsync(criteria)).Results;
+            var existPrices = (await _priceSearchService.SearchAsync(criteria)).Results;
             foreach (var price in restPrices)
             {
                 var existPrice = existPrices.FirstOrDefault(x => x.Currency.EqualsInvariant(price.Currency)
@@ -675,7 +671,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private async Task LoadProductDependencies(IEnumerable<CsvProduct> csvProducts, Catalog catalog, CsvImportInfo importInfo)
         {
             var allCategoriesIds = csvProducts.Select(x => x.CategoryId).Distinct().ToArray();
-            var categoriesMap = (await _categoryService.GetByIdsAsync(allCategoriesIds, CategoryResponseGroup.Full.ToString())).ToDictionary(x => x.Id);
+            var categoriesMap = (await _categoryService.GetAsync(allCategoriesIds, CategoryResponseGroup.Full.ToString())).ToDictionary(x => x.Id);
 
             foreach (var csvProduct in csvProducts)
             {
@@ -742,7 +738,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private static List<Property> GetInheritedProperties(CsvProduct csvProduct)
         {
-            if (csvProduct.Category != null && csvProduct.Category.Properties!=null)
+            if (csvProduct.Category != null && csvProduct.Category.Properties != null)
                 return csvProduct.Category.Properties.OrderBy(x => x.Name).ToList();
             return csvProduct.Catalog.Properties.OrderBy(x => x.Name).ToList();
         }
@@ -778,7 +774,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             //Load exist products
             for (int i = 0; i < nonTransientProducts.Count(); i += 50)
             {
-                alreadyExistProducts.AddRange(await _productService.GetByIdsAsync(nonTransientProducts.Skip(i).Take(50).Select(x => x.Id).ToArray(), ItemResponseGroup.ItemLarge.ToString()));
+                alreadyExistProducts.AddRange(await _productService.GetAsync(nonTransientProducts.Skip(i).Take(50).Select(x => x.Id).ToArray(), ItemResponseGroup.ItemLarge.ToString()));
             }
             //Detect already exist product by Code
             var transientProductsCodes = transientProducts.Select(x => x.Code).Where(x => x != null).Distinct().ToArray();
@@ -788,7 +784,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var foundProducts = products.Select(x => new { x.Id, x.Code }).ToArray();
                 for (int i = 0; i < foundProducts.Count(); i += 50)
                 {
-                    alreadyExistProducts.AddRange(await _productService.GetByIdsAsync(foundProducts.Skip(i).Take(50).Select(x => x.Id).ToArray(), ItemResponseGroup.ItemLarge.ToString()));
+                    alreadyExistProducts.AddRange(await _productService.GetAsync(foundProducts.Skip(i).Take(50).Select(x => x.Id).ToArray(), ItemResponseGroup.ItemLarge.ToString()));
                 }
             }
             foreach (var csvProduct in csvProducts)

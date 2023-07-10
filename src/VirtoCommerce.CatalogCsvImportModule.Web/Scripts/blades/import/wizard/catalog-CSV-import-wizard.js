@@ -6,7 +6,7 @@ angular.module('virtoCommerce.catalogCsvImportModule')
         blade.isLoading = false;
         blade.title = 'catalogCsvImportModule.wizards.catalog-CSV-import.title';
         blade.subtitle = 'catalogCsvImportModule.wizards.catalog-CSV-import.subtitle';
-        blade.subtitleVales = { name: blade.catalog.name };
+        blade.subtitleValues = { name: blade.catalog.name };
 
         $scope.columnDelimiters = [
             { name: "catalogCsvImportModule.wizards.catalog-CSV-import.labels.vertical", value: "|" },
