@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Omu.ValueInjecter;
+using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogCsvImportModule.Web.Model.PushNotifications;
@@ -19,7 +20,6 @@ using VirtoCommerce.CatalogModule.Core.Model.Search;
 using VirtoCommerce.CatalogModule.Core.Services;
 using VirtoCommerce.CatalogModule.Data.Authorization;
 using VirtoCommerce.CoreModule.Core.Currency;
-using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Exceptions;
 using VirtoCommerce.Platform.Core.ExportImport;
@@ -92,23 +92,23 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
             if (!exportInfo.ProductIds.IsNullOrEmpty())
             {
-                var items = await _itemService.GetByIdsAsync(exportInfo.ProductIds, ItemResponseGroup.ItemInfo.ToString());
+                var items = await _itemService.GetAsync(exportInfo.ProductIds, ItemResponseGroup.ItemInfo.ToString());
                 hasPermissions = await CheckCatalogPermission(items, CatalogModuleConstants.Security.Permissions.Read);
             }
 
             if (hasPermissions && !exportInfo.CategoryIds.IsNullOrEmpty())
             {
-                var categories = await _categoryService.GetByIdsAsync(exportInfo.CategoryIds, CategoryResponseGroup.Info.ToString());
+                var categories = await _categoryService.GetAsync(exportInfo.CategoryIds, CategoryResponseGroup.Info.ToString());
                 hasPermissions = await CheckCatalogPermission(categories, CatalogModuleConstants.Security.Permissions.Read);
             }
 
             if (hasPermissions && !exportInfo.CatalogId.IsNullOrEmpty())
             {
-                var catalogs = await _catalogService.GetByIdsAsync(new[] { exportInfo.CatalogId }, CategoryResponseGroup.Info.ToString());
+                var catalog = await _catalogService.GetByIdAsync(exportInfo.CatalogId, CategoryResponseGroup.Info.ToString());
 
-                if (!catalogs.IsNullOrEmpty())
+                if (catalog != null)
                 {
-                    hasPermissions = await CheckCatalogPermission(catalogs.First(), CatalogModuleConstants.Security.Permissions.Read);
+                    hasPermissions = await CheckCatalogPermission(catalog, CatalogModuleConstants.Security.Permissions.Read);
                 }
             }
 
@@ -179,11 +179,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
             if (!importInfo.CatalogId.IsNullOrEmpty())
             {
-                var catalogs = await _catalogService.GetByIdsAsync(new[] { importInfo.CatalogId }, CategoryResponseGroup.Info.ToString());
+                var catalog = await _catalogService.GetByIdAsync(importInfo.CatalogId, CategoryResponseGroup.Info.ToString());
 
-                if (!catalogs.IsNullOrEmpty())
+                if (catalog != null)
                 {
-                    hasPermissions = await CheckCatalogPermission(catalogs.First(), CatalogModuleConstants.Security.Permissions.Update);
+                    hasPermissions = await CheckCatalogPermission(catalog, CatalogModuleConstants.Security.Permissions.Update);
                 }
             }
 
@@ -251,7 +251,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             var currencies = await _currencyService.GetAllCurrenciesAsync();
             var defaultCurrency = currencies.First(x => x.IsPrimary);
             exportInfo.Currency ??= defaultCurrency.Code;
-            var catalog = await _catalogService.GetByIdsAsync(new[] { exportInfo.CatalogId });
+            var catalog = await _catalogService.GetNoCloneAsync(new[] { exportInfo.CatalogId });
             if (catalog == null)
             {
                 throw new InvalidOperationException($"Cannot get catalog with id '{exportInfo.CatalogId}'");
@@ -267,7 +267,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             {
                 exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
 
-                var fileNameTemplate = await _settingsManager.GetValueAsync(CsvModuleConstants.Settings.General.ExportFileNameTemplate.Name, CsvModuleConstants.Settings.General.ExportFileNameTemplate.DefaultValue.ToString());
+                var fileNameTemplate = await _settingsManager.GetValueAsync<string>(CsvModuleConstants.Settings.General.ExportFileNameTemplate);
                 var fileName = string.Format(fileNameTemplate, DateTime.UtcNow);
                 fileName = Path.ChangeExtension(fileName, ".csv");
 

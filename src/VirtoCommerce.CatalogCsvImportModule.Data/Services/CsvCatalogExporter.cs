@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
+using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
@@ -18,7 +19,6 @@ using VirtoCommerce.CoreModule.Core.Seo;
 using VirtoCommerce.InventoryModule.Core.Model;
 using VirtoCommerce.InventoryModule.Core.Model.Search;
 using VirtoCommerce.InventoryModule.Core.Services;
-using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.PricingModule.Core.Model;
@@ -30,20 +30,20 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
     {
         private readonly IProductSearchService _productSearchService;
         private readonly IItemService _productService;
-        private readonly IPricingService _pricingService;
+        private readonly IPricingEvaluatorService _pricingEvaluatorService;
         private readonly IBlobUrlResolver _blobUrlResolver;
         private readonly IInventorySearchService _inventorySearchService;
 
-        public CsvCatalogExporter(IProductSearchService productSearchService,
+        public CsvCatalogExporter(
+            IProductSearchService productSearchService,
             IItemService productService,
-            IPricingService pricingService,
+            IPricingEvaluatorService pricingEvaluatorService,
             IInventorySearchService inventorySearchService,
-            IBlobUrlResolver blobUrlResolver
-            )
+            IBlobUrlResolver blobUrlResolver)
         {
             _productSearchService = productSearchService;
             _productService = productService;
-            _pricingService = pricingService;
+            _pricingEvaluatorService = pricingEvaluatorService;
             _inventorySearchService = inventorySearchService;
             _blobUrlResolver = blobUrlResolver;
         }
@@ -103,7 +103,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                     criteria.Skip = currentPageNumber * pageSize;
                     criteria.Take = pageSize;
-                    var searchResult = await _productSearchService.SearchProductsAsync(criteria);
+                    var searchResult = await _productSearchService.SearchNoCloneAsync(criteria);
                     productsIds = searchResult.Results.Select(x => x.Id).ToList();
                     hasData = searchResult.Results.Any();
                     progressInfo.ProcessedCount += searchResult.Results.Count;
@@ -132,7 +132,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     PricelistIds = exportInfo.PriceListId == null ? null : new[] { exportInfo.PriceListId },
                     Currency = exportInfo.Currency
                 };
-                var allProductPrices = (await _pricingService.EvaluateProductPricesAsync(priceEvalContext)).ToList();
+                var allProductPrices = (await _pricingEvaluatorService.EvaluateProductPricesAsync(priceEvalContext)).ToList();
 
                 //Load inventories
 
@@ -192,7 +192,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 criteria.Skip = currentPageNumber * pageSize;
                 criteria.Take = pageSize;
 
-                var searchResult = await _productSearchService.SearchProductsAsync(criteria);
+                var searchResult = await _productSearchService.SearchNoCloneAsync(criteria);
                 productsIds = searchResult.Results.Select(x => x.Id).ToList();
                 hasData = searchResult.Results.Any();
                 progressInfo.ProcessedCount += searchResult.Results.Count;
@@ -269,9 +269,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             var criteria = ProductSearchCriteriaFactory(exportInfo);
             if (criteria != null)
             {
-                criteria.Skip = 0; criteria.Take = 0;
+                criteria.Skip = 0;
+                criteria.Take = 0;
 
-                result += (await _productSearchService.SearchProductsAsync(criteria)).TotalCount;
+                result += (await _productSearchService.SearchNoCloneAsync(criteria)).TotalCount;
             }
             return result;
         }
@@ -279,10 +280,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private async Task<List<CatalogProduct>> LoadProductsWithVariations(List<string> productIds)
         {
             var result = new List<CatalogProduct>();
-            var products = await _productService.GetByIdsAsync(productIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
+            var products = await _productService.GetAsync(productIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
             // Variations in products go without properties, only VariationProperties are included. Have to use GetByIdsAsync to receive all properties for variations.
             var variationsIds = products.SelectMany(product => product.Variations.Select(variation => variation.Id));
-            var variations = await _productService.GetByIdsAsync(variationsIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
+            var variations = await _productService.GetAsync(variationsIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
 
             foreach (var catalogProduct in products)
             {
