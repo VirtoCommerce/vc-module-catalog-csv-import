@@ -358,7 +358,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             {
                 PropertyIds = allDictPropertyIds,
                 Take = int.MaxValue
-            })).Results;
+            }, false)).Results;
 
             foreach (var dictProperty in csvProducts.SelectMany(x => x.Properties).Where(x => x.Dictionary && x.Values?.Any(v => v != null) == true))
             {
@@ -381,7 +381,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                                 PropertyId = propertyValue.PropertyId
                             };
                             allDictItems.Add(existentDictItem);
-                            await _propDictItemService.SaveChangesAsync(new[] { existentDictItem });
+                            await _propDictItemService.SaveChangesAsync(new List<PropertyDictionaryItem> { existentDictItem });
                         }
                         else
                         {

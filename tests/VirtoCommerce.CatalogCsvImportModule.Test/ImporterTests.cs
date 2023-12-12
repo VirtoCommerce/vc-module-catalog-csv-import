@@ -153,7 +153,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
-            mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
+            mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<List<PropertyDictionaryItem>>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
 
             Assert.True(!exportInfo.Errors.Any());
         }
@@ -477,7 +477,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
-            mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
+            mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<List<PropertyDictionaryItem>>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
             Assert.True(!exportInfo.Errors.Any());
         }
 
@@ -1520,7 +1520,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                     new PropertyDictionaryItem { Id = "TestCategory_ProductProperty_MultivalueDictionary_3", PropertyId = "TestCategory_ProductProperty_MultivalueDictionary", Alias = "3" },
                 };
 
-                propDictItemSearchServiceMock.Setup(x => x.SearchAsync(It.IsAny<PropertyDictionaryItemSearchCriteria>())).ReturnsAsync(new PropertyDictionaryItemSearchResult { Results = registeredPropDictionaryItems.ToList() });
+                propDictItemSearchServiceMock.Setup(x => x.SearchAsync(It.IsAny<PropertyDictionaryItemSearchCriteria>(), false)).ReturnsAsync(new PropertyDictionaryItemSearchResult { Results = registeredPropDictionaryItems.ToList() });
                 propDictItemSearchService = propDictItemSearchServiceMock.Object;
             }
             if (propDictItemService == null)
