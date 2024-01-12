@@ -16,13 +16,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             var catalogProduct = GetCatalogProductWithImage();
             var csvProduct = new CsvProduct()
             {
-                Images = new List<Image>() {new Image() {Id = "", Url = "SameURL"}}
+                Images = new List<Image>() { new Image() { Id = "", Url = "SameURL" } }
             };
             //Act
             csvProduct.MergeFrom(catalogProduct);
 
             //Assets
-            Assert.Equal(1, csvProduct.Images.Count);
+            Assert.Single(csvProduct.Images);
             Assert.NotNull(csvProduct.Images.FirstOrDefault(x => x.Id == "1"));
         }
 

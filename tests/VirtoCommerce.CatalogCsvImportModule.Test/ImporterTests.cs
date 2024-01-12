@@ -93,7 +93,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                 x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_1" && x.Alias == "1")
             };
             Assert.Collection(product.Properties.SelectMany(x => x.Values), inspectors);
-            Assert.True(!progressInfo.Errors.Any());
+            Assert.Empty(progressInfo.Errors);
         }
 
         [Fact]
@@ -122,7 +122,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
-            Assert.True(exportInfo.Errors.Any());
+            Assert.NotEmpty(exportInfo.Errors);
         }
 
         [Fact]
@@ -153,9 +153,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
-            mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
+            mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<List<PropertyDictionaryItem>>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
 
-            Assert.True(!exportInfo.Errors.Any());
+            Assert.Empty(exportInfo.Errors);
         }
 
         [Fact]
@@ -243,7 +243,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                 x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_2" && x.Alias == "2"),
             };
             Assert.Collection(product.Properties.SelectMany(x => x.Values), inspectors);
-            Assert.True(!progressInfo.Errors.Any());
+            Assert.Empty(progressInfo.Errors);
         }
 
         [Fact]
@@ -444,7 +444,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
-            Assert.True(exportInfo.Errors.Any());
+            Assert.NotEmpty(exportInfo.Errors);
         }
 
         [Fact]
@@ -477,8 +477,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
-            mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<PropertyDictionaryItem[]>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
-            Assert.True(!exportInfo.Errors.Any());
+            mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<List<PropertyDictionaryItem>>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
+            Assert.Empty(exportInfo.Errors);
         }
 
         [Fact]
@@ -944,7 +944,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                 x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_2" && x.Alias == "2"),
             };
             Assert.Collection(_savedProducts.FirstOrDefault().Properties.SelectMany(x => x.Values), inspectors);
-            Assert.True(!progressInfo.Errors.Any());
+            Assert.Empty(progressInfo.Errors);
         }
 
         [Fact]
@@ -1520,7 +1520,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                     new PropertyDictionaryItem { Id = "TestCategory_ProductProperty_MultivalueDictionary_3", PropertyId = "TestCategory_ProductProperty_MultivalueDictionary", Alias = "3" },
                 };
 
-                propDictItemSearchServiceMock.Setup(x => x.SearchAsync(It.IsAny<PropertyDictionaryItemSearchCriteria>())).ReturnsAsync(new PropertyDictionaryItemSearchResult { Results = registeredPropDictionaryItems.ToList() });
+                propDictItemSearchServiceMock.Setup(x => x.SearchAsync(It.IsAny<PropertyDictionaryItemSearchCriteria>(), false)).ReturnsAsync(new PropertyDictionaryItemSearchResult { Results = registeredPropDictionaryItems.ToList() });
                 propDictItemSearchService = propDictItemSearchServiceMock.Object;
             }
             if (propDictItemService == null)
