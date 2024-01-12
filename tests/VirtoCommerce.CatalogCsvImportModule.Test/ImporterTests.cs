@@ -93,7 +93,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                 x => Assert.True(x.ValueId == "CatalogProductProperty_2_MultivalueDictionary_1" && x.Alias == "1")
             };
             Assert.Collection(product.Properties.SelectMany(x => x.Values), inspectors);
-            Assert.True(!progressInfo.Errors.Any());
+            Assert.Empty(progressInfo.Errors);
         }
 
         [Fact]
@@ -122,7 +122,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
-            Assert.True(exportInfo.Errors.Any());
+            Assert.NotEmpty(exportInfo.Errors);
         }
 
         [Fact]
@@ -155,7 +155,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             //Assert
             mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<List<PropertyDictionaryItem>>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
 
-            Assert.True(!exportInfo.Errors.Any());
+            Assert.Empty(exportInfo.Errors);
         }
 
         [Fact]
@@ -243,7 +243,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                 x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_2" && x.Alias == "2"),
             };
             Assert.Collection(product.Properties.SelectMany(x => x.Values), inspectors);
-            Assert.True(!progressInfo.Errors.Any());
+            Assert.Empty(progressInfo.Errors);
         }
 
         [Fact]
@@ -444,7 +444,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
-            Assert.True(exportInfo.Errors.Any());
+            Assert.Empty(exportInfo.Errors);
         }
 
         [Fact]
@@ -478,7 +478,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
 
             //Assert
             mockPropDictItemService.Verify(mock => mock.SaveChangesAsync(It.Is<List<PropertyDictionaryItem>>(dictItems => dictItems.Any(dictItem => dictItem.Alias == "NewValue"))), Times.Once());
-            Assert.True(!exportInfo.Errors.Any());
+            Assert.Empty(exportInfo.Errors);
         }
 
         [Fact]
@@ -944,7 +944,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
                 x => Assert.True(x.ValueId == "CatalogProductProperty_1_MultivalueDictionary_2" && x.Alias == "2"),
             };
             Assert.Collection(_savedProducts.FirstOrDefault().Properties.SelectMany(x => x.Values), inspectors);
-            Assert.True(!progressInfo.Errors.Any());
+            Assert.Empty(progressInfo.Errors);
         }
 
         [Fact]
