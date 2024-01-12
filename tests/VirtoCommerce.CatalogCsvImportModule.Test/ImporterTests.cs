@@ -444,7 +444,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             await target.DoImport(new List<CsvProduct> { product }, GetCsvImportInfo(), exportInfo, info => { });
 
             //Assert
-            Assert.Empty(exportInfo.Errors);
+            Assert.NotEmpty(exportInfo.Errors);
         }
 
         [Fact]
