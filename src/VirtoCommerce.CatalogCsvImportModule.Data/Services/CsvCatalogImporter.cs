@@ -207,7 +207,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 throw new InvalidOperationException($"Catalog with id \"{importInfo.CatalogId}\" does not exist.");
             }
 
-            _stores.AddRange((await _storeSearchService.SearchAsync(new StoreSearchCriteria { Take = int.MaxValue })).Stores);
+            _stores.AddRange((await _storeSearchService.SearchAsync(new StoreSearchCriteria { Take = int.MaxValue })).Results);
 
             var contunie = ImportAllowed(csvProducts, progressInfo, progressCallback);
 
