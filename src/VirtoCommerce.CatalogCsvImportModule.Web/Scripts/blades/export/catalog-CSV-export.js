@@ -62,15 +62,9 @@ angular.module('virtoCommerce.catalogCsvImportModule')
             $scope.formScope = form;
         };
 
-        pricelists.search({ take: 1000 }, function (result) {
-            $scope.pricelists = _.filter(result.results,
-                function (x) {
-                    return _.some(x.assignments,
-                        function (y) {
-                            return y.catalogId === blade.catalog.id
-                        })
-                });
-        });
+        $scope.blade.fetchPricelists = function (criteria) {
+            return pricelists.search(criteria);
+        }
 
         $scope.blade.headIcon = 'fa fa-file-archive-o';
 
