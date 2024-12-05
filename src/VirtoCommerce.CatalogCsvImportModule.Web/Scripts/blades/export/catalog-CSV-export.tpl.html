@@ -1,4 +1,4 @@
-﻿<div class="blade-static __bottom">
+<div class="blade-static __bottom">
 	<button class="btn" ng-click="startExport()" ng-disabled="blade.notification">
 		{{ 'catalogCsvImportModule.commands.start-export' | translate }}
 	</button>
@@ -22,14 +22,12 @@
 								</div>
 								<div class="form-group">
 									<label class="form-label">{{ 'catalogCsvImportModule.blades.catalog-CSV-export.labels.select-pricelist' | translate }}</label>
-									<div class="form-input">
-										<ui-select ng-model="blade.pricelistId">
-											<ui-select-match placeholder="{{ 'catalogCsvImportModule.blades.catalog-CSV-export.placeholders.select-pricelist' | translate }}">{{$select.selected.name}}</ui-select-match>
-											<ui-select-choices repeat="x.id as x in pricelists | filter: { name: $select.search }">
-												<span ng-bind-html="x.name | highlight: $select.search"></span>
-											</ui-select-choices>
-										</ui-select>
-									</div>
+                  <div class="form-input">
+                    <ui-scroll-drop-down ng-model="blade.pricelistId"
+                                         data="blade.fetchPricelists(criteria)"
+                                         placeholder="'catalogCsvImportModule.blades.catalog-CSV-export.placeholders.select-pricelist'">
+                    </ui-scroll-drop-down>
+                  </div>
 								</div>
 
 								<p ng-class="{'no-data': blade.notification.description}" ng-if="!blade.notification" class="text">{{ 'catalogCsvImportModule.blades.catalog-CSV-export.labels.note' | translate }}</p>
