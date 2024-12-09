@@ -1,0 +1,118 @@
+{
+  "catalogCsvImportModule": {
+    "blades": {
+      "catalog-CSV-export": {
+        "title": "カタログ {{name}} をCSVにエクスポート",
+        "labels": {
+          "select-fulfillment": "エクスポートされた在庫のフルフィルメントセンターを選択",
+          "select-pricelist": "エクスポートされた価格の価格表を選択",
+          "start": "開始",
+          "end": "終了",
+          "total": "合計数",
+          "processed": "処理済み数",
+          "errors-count": "エラー数",
+          "errors": "エラー",
+          "download-url": "ダウンロードURL",
+          "note": "すべてのカタログ製品情報はCSVファイルにエクスポートされる必要があります。エクスポートが完了するとダウンロードURLが利用可能になります",
+          "caution": "注意:",
+          "caution-description": "スプレッドシートプログラムでCSVファイルを並べ替えると、製品バリアントや画像URLが関連付けられなくなる可能性があります。並べ替えられたCSVファイルをインポートすると、既存の製品が不正なデータで上書きされる可能性があり、復元できません"
+        },
+        "placeholders": {
+          "select-fulfillment": "フルフィルメントを選択するか、デフォルトのままにします...",
+          "select-pricelist": "価格表を選択するか、デフォルトのままにします..."
+        }
+      },
+      "catalog-CSV-import": {
+            "title": "CSVからインポート",
+            "labels": {
+                "select-fulfillment": "エクスポートされた在庫のフルフィルメントセンターを選択",
+                "select-pricelist": "エクスポートされた価格の価格表を選択",
+                "start": "開始",
+                "end": "終了",
+                "total": "合計数",
+                "processed": "処理済み数",
+                "errors-count": "エラー数",
+                "errors": "エラー"
+            }
+        },
+      "history": {
+        "export": {
+            "title": "カタログエクスポートの詳細",
+            "subtitle": "詳細"
+        },
+        "import": {
+            "title": "カタログインポートの詳細",
+            "subtitle": "詳細"
+        }
+      }
+    },
+    "wizards": {
+      "catalog-CSV-import": {
+        "title": "CSVからカタログをインポート",
+        "subtitle": "すべての製品が '{{name}}' カタログに追加されます",
+        "labels": {
+          "auto-mapping": "プロパティフィールドのマッピング",
+          "auto-mapping-description": "CSVファイルからフィールドを選択して動的製品フィールドにマッピングします。カタログにプロパティが存在する場合は、名前でマッピングされます。それ以外の場合は、製品プロパティとしてそのまま追加されます",
+          "chose-map": "製品フィールドのマッピング",
+          "chose-map-description": "CSVファイルからフィールドを選択してシステム製品フィールドにマッピングします",
+          "product-property": "製品プロパティ",
+          "csv-column": "CSV列",
+          "custom-value": "カスタム値",
+          "delimiter": "CSV列の区切り文字",
+          "upload": "CSVファイルをアップロード",
+          "upload-progress": "アップロードの進行状況",
+          "map-columns": "列をマッピング",
+          "define-columns": "列マッピングを定義",
+          "vertical": "垂直",
+          "comma": "カンマ",
+          "semicolon": "セミコロン",
+          "tab": "タブ"
+        },
+        "placeholders": {
+          "delimiter": "選択 ...",
+          "select-column-name": "選択 ...",
+          "select-custom-value": "デフォルト値..."
+        }
+      },
+      "catalog-CSV-import-wizard-mapping-step": {
+        "title": "列のマッピング",
+        "subtitle": "製品プロパティをCSV列に手動でマッピング"
+      }
+    },
+    "commands": {
+      "import": "インポート",
+      "export": "エクスポート",
+      "start-export": "エクスポートを開始",
+      "start-import": "インポートを開始",
+      "clear-all": "すべてクリア"
+    },
+    "services": {
+      "catalog-csv-export": {
+        "name": "VirtoCommerce CSVエクスポート",
+        "description": "VirtoCommerceカタログデータのCSVへのネイティブエクスポート"
+      },
+      "catalog-csv-import": {
+        "name": "VirtoCommerce CSVインポート",
+        "description": "VirtoCommerceカタログデータのCSVからのネイティブインポート"
+      }
+    }
+  },
+  "settings": {
+    "CatalogCsvImport": {
+      "CreateDictionaryValues": {
+        "title": "新しい辞書値を作成",
+        "description": "インポート中に新しいプロパティ辞書値の作成を有効/無効にする"
+      },
+      "ExportFileNameTemplate": {
+        "title": "エクスポートファイル名テンプレート",
+        "description": "エクスポートされたファイル名を生成するために使用されるテンプレート（パターン）を指定します。テンプレートには、ファイル生成のUTC時間を示す '0' などのパラメータを含めることができます"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.CatalogCsvImport": {
+      "title": "CSVカタログインポートモジュール",
+      "description": "カタログにCSVインポート機能を追加"
+    }
+  }
+}

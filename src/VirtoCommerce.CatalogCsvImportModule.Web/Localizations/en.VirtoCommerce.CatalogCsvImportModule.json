@@ -2,7 +2,7 @@
   "catalogCsvImportModule": {
     "blades": {
       "catalog-CSV-export": {
-        "title": "Catalog {{name}} to csv export",
+        "title": "Catalog {{name}} to CSV export",
         "labels": {
           "select-fulfillment": "Select fulfillment center for exported inventory",
           "select-pricelist": "Select price list for exported prices",
@@ -12,18 +12,18 @@
           "processed": "Processed count",
           "errors-count": "Error count",
           "errors": "Errors",
-          "download-url": "Download Url",
-          "note": "All catalog products information should be exported to csv file, download url will be available after export will be finished.",
+          "download-url": "Download URL",
+          "note": "All catalog products information should be exported to CSV file, download URL will be available after export is finished",
           "caution": "Caution:",
-          "caution-description": "Sorting your CSV file in a spreadsheet program can cause product variants or image URLs to become disassociated. Importing a CSV file that has been sorted may overwrite your existing products with bad data, which cannot be recovered."
+          "caution-description": "Sorting your CSV file in a spreadsheet program can cause product variants or image URLs to become disassociated. Importing a sorted CSV file may overwrite your existing products with bad data, which cannot be recovered"
         },
         "placeholders": {
-          "select-fulfillment": "Select fulfillment or leave empty for default...",
-          "select-pricelist": "Select price list or leave empty for default..."
+          "select-fulfillment": "Select fulfillment or leave blank for default...",
+          "select-pricelist": "Select price list or leave blank for default..."
         }
       },
       "catalog-CSV-import": {
-            "title": "Importing from csv",
+            "title": "Importing from CSV",
             "labels": {
                 "select-fulfillment": "Select fulfillment center for exported inventory",
                 "select-pricelist": "Select price list for exported prices",
@@ -37,29 +37,29 @@
         },
       "history": {
         "export": {
-            "title": "catalog export detail",
-            "subtitle": "detail"
+            "title": "Catalog export detail",
+            "subtitle": "Details"
         },
         "import": {
             "title": "catalog import detail",
-            "subtitle": "detail"
+            "subtitle": "Details"
         }
       }
     },
     "wizards": {
       "catalog-CSV-import": {
-        "title": "Import catalog from csv",
+        "title": "Import catalog from CSV",
         "subtitle": "All products will be added to '{{name}}' catalog",
         "labels": {
-          "auto-mapping": "Property Field Mapping",
-          "auto-mapping-description": "Select the fields from your CSV file to map against the dynamic product fields. If the property exists in the catalog, it will be linked by name; otherwise, it will be added as a product property as is.",
-          "chose-map": "Product Field Mapping",
-          "chose-map-description": "Select the fields from your CSV file to map against the system product fields.",
+          "auto-mapping": "Property field mapping",
+          "auto-mapping-description": "Select fields from your CSV file to map to the dynamic product fields. If a property exists in the catalog, it will be mapped by name. Otherwise, it is added as a product property as is",
+          "chose-map": "Product field mapping",
+          "chose-map-description": "Select fields from your CSV file to map to the system product fields",
           "product-property": "Product property",
           "csv-column": "CSV column",
           "custom-value": "Custom value",
-          "delimiter": "Csv column delimiter",
-          "upload": "Upload Csv file",
+          "delimiter": "CSV column delimiter",
+          "upload": "Upload CSV file",
           "upload-progress": "Upload progress",
           "map-columns": "Map columns",
           "define-columns": "Define column mapping",
@@ -76,7 +76,7 @@
       },
       "catalog-CSV-import-wizard-mapping-step": {
         "title": "Column mapping",
-        "subtitle": "Manual map product properties to csv columns"
+        "subtitle": "Manually map product properties to CSV columns"
       }
     },
     "commands": {
@@ -100,18 +100,18 @@
   "settings": {
     "CatalogCsvImport": {
       "CreateDictionaryValues": {
-        "title": "Create new Dictionary Values",
-        "description": "Enable or disable creation of new Property Dictionary Values during import"
+        "title": "Create new dictionary values",
+        "description": "Enable/ disable creation of new property dictionary values during import"
       },
       "ExportFileNameTemplate": {
         "title": "Export file name template",
-        "description": "The template (pattern) that will be used to generate exported file name. Parameters: 0 - date (the UTC time of file generation)."
+        "description": "Specify the template (pattern) used to generate the exported file name. The template can include parameters such as '0' for the UTC time of file generation"
       }
     }
   },
   "module": {
     "VirtoCommerce.CatalogCsvImport": {
-      "title": "Csv Catalog Import Module",
+      "title": "CSV catalog import module",
       "description": "Adds CSV import functionality to catalog"
     }
   }
