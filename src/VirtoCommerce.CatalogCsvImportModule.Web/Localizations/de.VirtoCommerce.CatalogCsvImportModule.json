@@ -2,86 +2,117 @@
   "catalogCsvImportModule": {
     "blades": {
       "catalog-CSV-export": {
-        "title": "Katalog {{name}} in eine csv-Datei exportieren",
+        "title": "Katalog {{name}} zu CSV-Export",
         "labels": {
-          "select-fulfillment": "Fulfillment Center wählen für exportierte Bestand",
-          "select-pricelist": "Preisliste auswählen für exportierte Preise",
-          "start": "Starten",
+          "select-fulfillment": "Wählen Sie das Erfüllungszentrum für exportierte Bestände",
+          "select-pricelist": "Wählen Sie die Preisliste für exportierte Preise",
+          "start": "Start",
           "end": "Ende",
-          "total": "- Zählung gesamt",
-          "processed": "Verarbeitet zählen",
-          "errors-count": "Anzahl der Fehler",
+          "total": "Gesamtanzahl",
+          "processed": "Verarbeitete Anzahl",
+          "errors-count": "Fehleranzahl",
           "errors": "Fehler",
-          "download-url": "Herunterladung-URL",
-          "note": "Alle Kataloge Produkte Informationen sollten in csv-Datei exportiert werden, Herunterladung-URL wird verfügbar sein, nachdem der Export abgeschlossen ist.",
+          "download-url": "Download-URL",
+          "note": "Alle Katalogproduktinformationen sollten in eine CSV-Datei exportiert werden, die Download-URL wird nach Abschluss des Exports verfügbar sein",
           "caution": "Vorsicht:",
-          "caution-description": "Die Sortierung Ihrer CSV-Datei in einem Tabellenkalkulationsprogramm kann dazu führen, dass Produktvarianten oder Bild-URLs disassoziiert werden. Das Importieren einer CSV-Datei, die sortiert wurde, kann Ihre vorhandenen Produkte mit schlechten Daten überschreiben, die nicht wiederhergestellt werden können."
+          "caution-description": "Das Sortieren Ihrer CSV-Datei in einem Tabellenkalkulationsprogramm kann dazu führen, dass Produktvarianten oder Bild-URLs nicht mehr zugeordnet sind. Das Importieren einer sortierten CSV-Datei kann Ihre vorhandenen Produkte mit fehlerhaften Daten überschreiben, die nicht wiederhergestellt werden können"
         },
         "placeholders": {
-          "select-fulfillment": "Wählen Sie Erfüllung oder lassen Sie es leer für Standard...",
-          "select-pricelist": "Preisliste auswählen oder lassen Sie es leer für Standard..."
+          "select-fulfillment": "Wählen Sie das Erfüllungszentrum oder lassen Sie es leer für Standard...",
+          "select-pricelist": "Wählen Sie die Preisliste oder lassen Sie es leer für Standard..."
         }
       },
       "catalog-CSV-import": {
-        "title": "Aus CSV importieren",
-        "labels": {
-          "select-fulfillment": "Erfüllungszentrum wählen für exportierte Bestand",
-          "select-pricelist": "Preisliste auswählen für exportierte Preise",
-          "start": "Starten",
-          "end": "Ende",
-          "total": "- Zählung gesamt",
-          "processed": "Verarbeitet zählen",
-          "errors-count": "Anzahl der Fehler",
-          "errors": "Fehler"
+            "title": "Import aus CSV",
+            "labels": {
+                "select-fulfillment": "Wählen Sie das Erfüllungszentrum für exportierte Bestände",
+                "select-pricelist": "Wählen Sie die Preisliste für exportierte Preise",
+                "start": "Start",
+                "end": "Ende",
+                "total": "Gesamtanzahl",
+                "processed": "Verarbeitete Anzahl",
+                "errors-count": "Fehleranzahl",
+                "errors": "Fehler"
+            }
+        },
+      "history": {
+        "export": {
+            "title": "Katalogexportdetails",
+            "subtitle": "Details"
+        },
+        "import": {
+            "title": "Katalogimportdetails",
+            "subtitle": "Details"
         }
       }
     },
     "wizards": {
       "catalog-CSV-import": {
-        "title": "Katalog importieren von csv",
-        "subtitle": "Alle Produkte werden in '{{name}}' Katalog hinzugefügt werden.",
+        "title": "Katalog aus CSV importieren",
+        "subtitle": "Alle Produkte werden dem '{{name}}' Katalog hinzugefügt",
         "labels": {
-          "auto-mapping": "CSV-Felder automatisch zugeordnet zu gleichen Produkteigenschaften",
-          "chose-map": "Wählen Karte CSV-Spalten mit Produkt Felder",
+          "auto-mapping": "Eigenschaftsfeldzuordnung",
+          "auto-mapping-description": "Wählen Sie Felder aus Ihrer CSV-Datei aus, um sie den dynamischen Produktfeldern zuzuordnen. Wenn eine Eigenschaft im Katalog vorhanden ist, wird sie nach Namen zugeordnet. Andernfalls wird sie als Produkteigenschaft hinzugefügt",
+          "chose-map": "Produktfeldzuordnung",
+          "chose-map-description": "Wählen Sie Felder aus Ihrer CSV-Datei aus, um sie den Systemproduktfeldern zuzuordnen",
           "product-property": "Produkteigenschaft",
           "csv-column": "CSV-Spalte",
           "custom-value": "Benutzerdefinierter Wert",
-          "delimiter": "Csv-Spalte Trennzeichen",
-          "upload": "Hochladen von CSV-Datei",
-          "upload-progress": "Hochladen Fortschritte",
-          "map-columns": "Karte Spalten",
+          "delimiter": "CSV-Spaltentrennzeichen",
+          "upload": "CSV-Datei hochladen",
+          "upload-progress": "Upload-Fortschritt",
+          "map-columns": "Spalten zuordnen",
           "define-columns": "Spaltenzuordnung definieren",
-          "vertical": "Vertikale linie",
+          "vertical": "Vertikal",
           "comma": "Komma",
           "semicolon": "Semikolon",
-          "tab": "Registerkarte"
+          "tab": "Tabulator"
         },
         "placeholders": {
-          "delimiter": "Wählen Sie aus...",
-          "select-column-name": "Wählen Sie aus...",
+          "delimiter": "Wählen ...",
+          "select-column-name": "Wählen ...",
           "select-custom-value": "Standardwert..."
         }
       },
       "catalog-CSV-import-wizard-mapping-step": {
         "title": "Spaltenzuordnung",
-        "subtitle": "Manuelle Karte Produkt Eigenschaften zu CSV-Spalten"
+        "subtitle": "Produktmerkmale manuell CSV-Spalten zuordnen"
       }
     },
     "commands": {
-      "import": "Import",
-      "export": "Export",
+      "import": "Importieren",
+      "export": "Exportieren",
       "start-export": "Export starten",
-      "start-import": "Import starten"
+      "start-import": "Import starten",
+      "clear-all": "Alles löschen"
     },
     "services": {
       "catalog-csv-export": {
         "name": "VirtoCommerce CSV-Export",
-        "description": "Native VirtoCommerce Katalog Datenexport in CSV"
+        "description": "Nativer VirtoCommerce Katalogdatenexport zu CSV"
       },
       "catalog-csv-import": {
         "name": "VirtoCommerce CSV-Import",
-        "description": "Native VirtoCommerce Katalog Datenimport aus CSV"
+        "description": "Nativer VirtoCommerce Katalogdatenimport aus CSV"
       }
+    }
+  },
+  "settings": {
+    "CatalogCsvImport": {
+      "CreateDictionaryValues": {
+        "title": "Neue Wörterbuchwerte erstellen",
+        "description": "Erstellung neuer Eigenschaftswörterbuchwerte während des Imports aktivieren/deaktivieren"
+      },
+      "ExportFileNameTemplate": {
+        "title": "Exportdateinamen-Vorlage",
+        "description": "Geben Sie die Vorlage (Muster) an, die zur Generierung des exportierten Dateinamens verwendet wird. Die Vorlage kann Parameter wie '0' für die UTC-Zeit der Dateierstellung enthalten"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.CatalogCsvImport": {
+      "title": "CSV-Katalogimportmodul",
+      "description": "Fügt dem Katalog CSV-Importfunktionalität hinzu"
     }
   }
 }

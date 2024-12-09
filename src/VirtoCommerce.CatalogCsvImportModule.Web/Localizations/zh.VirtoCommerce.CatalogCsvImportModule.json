@@ -1,0 +1,118 @@
+{
+  "catalogCsvImportModule": {
+    "blades": {
+      "catalog-CSV-export": {
+        "title": "将目录 {{name}} 导出为 CSV",
+        "labels": {
+          "select-fulfillment": "选择导出库存的履行中心",
+          "select-pricelist": "选择导出价格的价格表",
+          "start": "开始",
+          "end": "结束",
+          "total": "总计",
+          "processed": "已处理计数",
+          "errors-count": "错误计数",
+          "errors": "错误",
+          "download-url": "下载 URL",
+          "note": "所有目录产品信息应导出到 CSV 文件，导出完成后将提供下载 URL",
+          "caution": "注意：",
+          "caution-description": "在电子表格程序中排序 CSV 文件可能导致产品变体或图像 URL 失去关联。导入排序后的 CSV 文件可能会用错误的数据覆盖现有产品，这些数据无法恢复"
+        },
+        "placeholders": {
+          "select-fulfillment": "选择履行或留空以使用默认值...",
+          "select-pricelist": "选择价格表或留空以使用默认值..."
+        }
+      },
+      "catalog-CSV-import": {
+            "title": "从 CSV 导入",
+            "labels": {
+                "select-fulfillment": "选择导出库存的履行中心",
+                "select-pricelist": "选择导出价格的价格表",
+                "start": "开始",
+                "end": "结束",
+                "total": "总计",
+                "processed": "已处理计数",
+                "errors-count": "错误计数",
+                "errors": "错误"
+            }
+        },
+      "history": {
+        "export": {
+            "title": "目录导出详情",
+            "subtitle": "详情"
+        },
+        "import": {
+            "title": "目录导入详情",
+            "subtitle": "详情"
+        }
+      }
+    },
+    "wizards": {
+      "catalog-CSV-import": {
+        "title": "从 CSV 导入目录",
+        "subtitle": "所有产品将被添加到 '{{name}}' 目录",
+        "labels": {
+          "auto-mapping": "属性字段映射",
+          "auto-mapping-description": "选择 CSV 文件中的字段以映射到动态产品字段。如果目录中存在属性，则按名称映射。否则，将其作为产品属性添加",
+          "chose-map": "产品字段映射",
+          "chose-map-description": "选择 CSV 文件中的字段以映射到系统产品字段",
+          "product-property": "产品属性",
+          "csv-column": "CSV 列",
+          "custom-value": "自定义值",
+          "delimiter": "CSV 列分隔符",
+          "upload": "上传 CSV 文件",
+          "upload-progress": "上传进度",
+          "map-columns": "映射列",
+          "define-columns": "定义列映射",
+          "vertical": "垂直",
+          "comma": "逗号",
+          "semicolon": "分号",
+          "tab": "制表符"
+        },
+        "placeholders": {
+          "delimiter": "选择 ...",
+          "select-column-name": "选择 ...",
+          "select-custom-value": "默认值..."
+        }
+      },
+      "catalog-CSV-import-wizard-mapping-step": {
+        "title": "列映射",
+        "subtitle": "手动将产品属性映射到 CSV 列"
+      }
+    },
+    "commands": {
+      "import": "导入",
+      "export": "导出",
+      "start-export": "开始导出",
+      "start-import": "开始导入",
+      "clear-all": "清除所有"
+    },
+    "services": {
+      "catalog-csv-export": {
+        "name": "VirtoCommerce CSV 导出",
+        "description": "VirtoCommerce 目录数据的本地 CSV 导出"
+      },
+      "catalog-csv-import": {
+        "name": "VirtoCommerce CSV 导入",
+        "description": "VirtoCommerce 目录数据的本地 CSV 导入"
+      }
+    }
+  },
+  "settings": {
+    "CatalogCsvImport": {
+      "CreateDictionaryValues": {
+        "title": "创建新字典值",
+        "description": "启用/禁用在导入期间创建新的属性字典值"
+      },
+      "ExportFileNameTemplate": {
+        "title": "导出文件名模板",
+        "description": "指定用于生成导出文件名的模板（模式）。模板可以包括诸如文件生成的 UTC 时间的 '0' 之类的参数"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.CatalogCsvImport": {
+      "title": "CSV 目录导入模块",
+      "description": "为目录添加 CSV 导入功能"
+    }
+  }
+}
