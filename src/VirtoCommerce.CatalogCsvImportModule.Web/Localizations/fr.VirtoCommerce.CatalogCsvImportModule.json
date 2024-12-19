@@ -1,0 +1,118 @@
+{
+  "catalogCsvImportModule": {
+    "blades": {
+      "catalog-CSV-export": {
+        "title": "Exporter le catalogue {{name}} en CSV",
+        "labels": {
+          "select-fulfillment": "Sélectionnez le centre de traitement pour l'inventaire exporté",
+          "select-pricelist": "Sélectionnez la liste de prix pour les prix exportés",
+          "start": "Début",
+          "end": "Fin",
+          "total": "Nombre total",
+          "processed": "Nombre traité",
+          "errors-count": "Nombre d'erreurs",
+          "errors": "Erreurs",
+          "download-url": "URL de téléchargement",
+          "note": "Toutes les informations sur les produits du catalogue doivent être exportées dans un fichier CSV, l'URL de téléchargement sera disponible une fois l'exportation terminée",
+          "caution": "Attention :",
+          "caution-description": "Le tri de votre fichier CSV dans un programme de feuille de calcul peut entraîner la dissociation des variantes de produits ou des URL d'images. L'importation d'un fichier CSV trié peut écraser vos produits existants avec des données incorrectes, qui ne peuvent pas être récupérées"
+        },
+        "placeholders": {
+          "select-fulfillment": "Sélectionnez le centre de traitement ou laissez vide pour le défaut...",
+          "select-pricelist": "Sélectionnez la liste de prix ou laissez vide pour le défaut..."
+        }
+      },
+      "catalog-CSV-import": {
+            "title": "Importer depuis CSV",
+            "labels": {
+                "select-fulfillment": "Sélectionnez le centre de traitement pour l'inventaire exporté",
+                "select-pricelist": "Sélectionnez la liste de prix pour les prix exportés",
+                "start": "Début",
+                "end": "Fin",
+                "total": "Nombre total",
+                "processed": "Nombre traité",
+                "errors-count": "Nombre d'erreurs",
+                "errors": "Erreurs"
+            }
+        },
+      "history": {
+        "export": {
+            "title": "Détail de l'exportation du catalogue",
+            "subtitle": "Détails"
+        },
+        "import": {
+            "title": "Détail de l'importation du catalogue",
+            "subtitle": "Détails"
+        }
+      }
+    },
+    "wizards": {
+      "catalog-CSV-import": {
+        "title": "Importer le catalogue depuis CSV",
+        "subtitle": "Tous les produits seront ajoutés au catalogue '{{name}}'",
+        "labels": {
+          "auto-mapping": "Mappage des champs de propriété",
+          "auto-mapping-description": "Sélectionnez les champs de votre fichier CSV à mapper aux champs de produit dynamiques. Si une propriété existe dans le catalogue, elle sera mappée par nom. Sinon, elle est ajoutée en tant que propriété de produit telle quelle",
+          "chose-map": "Mappage des champs de produit",
+          "chose-map-description": "Sélectionnez les champs de votre fichier CSV à mapper aux champs de produit du système",
+          "product-property": "Propriété du produit",
+          "csv-column": "Colonne CSV",
+          "custom-value": "Valeur personnalisée",
+          "delimiter": "Délimiteur de colonne CSV",
+          "upload": "Télécharger le fichier CSV",
+          "upload-progress": "Progression du téléchargement",
+          "map-columns": "Mapper les colonnes",
+          "define-columns": "Définir le mappage des colonnes",
+          "vertical": "Vertical",
+          "comma": "Virgule",
+          "semicolon": "Point-virgule",
+          "tab": "Tabulation"
+        },
+        "placeholders": {
+          "delimiter": "Sélectionner ...",
+          "select-column-name": "Sélectionner ...",
+          "select-custom-value": "Valeur par défaut..."
+        }
+      },
+      "catalog-CSV-import-wizard-mapping-step": {
+        "title": "Mappage des colonnes",
+        "subtitle": "Mapper manuellement les propriétés du produit aux colonnes CSV"
+      }
+    },
+    "commands": {
+      "import": "Importer",
+      "export": "Exporter",
+      "start-export": "Démarrer l'exportation",
+      "start-import": "Démarrer l'importation",
+      "clear-all": "Tout effacer"
+    },
+    "services": {
+      "catalog-csv-export": {
+        "name": "Exportation CSV de VirtoCommerce",
+        "description": "Exportation native des données de catalogue VirtoCommerce en CSV"
+      },
+      "catalog-csv-import": {
+        "name": "Importation CSV de VirtoCommerce",
+        "description": "Importation native des données de catalogue VirtoCommerce depuis CSV"
+      }
+    }
+  },
+  "settings": {
+    "CatalogCsvImport": {
+      "CreateDictionaryValues": {
+        "title": "Créer de nouvelles valeurs de dictionnaire",
+        "description": "Activer/désactiver la création de nouvelles valeurs de dictionnaire de propriétés lors de l'importation"
+      },
+      "ExportFileNameTemplate": {
+        "title": "Modèle de nom de fichier d'exportation",
+        "description": "Spécifiez le modèle (schéma) utilisé pour générer le nom du fichier exporté. Le modèle peut inclure des paramètres tels que '0' pour l'heure UTC de génération du fichier"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.CatalogCsvImport": {
+      "title": "Module d'importation de catalogue CSV",
+      "description": "Ajoute la fonctionnalité d'importation CSV au catalogue"
+    }
+  }
+}
