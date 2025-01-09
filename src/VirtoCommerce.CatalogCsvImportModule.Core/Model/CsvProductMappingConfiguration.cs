@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using VirtoCommerce.Platform.Core.Common;
@@ -9,30 +8,32 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
     {
         public CsvProductMappingConfiguration()
         {
-            PropertyMaps = new List<CsvProductPropertyMap>();
+            PropertyMaps = [];
         }
 
         public string ETag { get; set; }
         public string Delimiter { get; set; }
         public string[] CsvColumns { get; set; }
         public ICollection<CsvProductPropertyMap> PropertyMaps { get; set; }
-        public string[] PropertyCsvColumns { get; set; } = Array.Empty<string>();
+        public string[] PropertyCsvColumns { get; set; } = [];
 
         public static CsvProductMappingConfiguration GetDefaultConfiguration()
         {
             var retVal = new CsvProductMappingConfiguration { Delimiter = ";" };
 
-            var requiredFields = new List<string>();
             var optionalFields = ReflectionUtility.GetPropertyNames<CsvProduct>(x => x.Name, x => x.Id, x => x.Sku, x => x.CategoryPath, x => x.CategoryId, x => x.MainProductId, x => x.PrimaryImage, x => x.AltImage, x => x.SeoUrl, x => x.SeoTitle,
                                                                                 x => x.SeoDescription, x => x.SeoLanguage, x => x.SeoStore, x => x.SeoMetaKeywords, x => x.SeoImageAlternativeText, x => x.Review, x => x.ReviewType, x => x.IsActive, x => x.IsBuyable, x => x.TrackInventory,
                                                                                 x => x.PriceId, x => x.SalePrice, x => x.ListPrice, x => x.PriceMinQuantity, x => x.Currency, x => x.PriceListId, x => x.Quantity,
                                                                                 x => x.FulfillmentCenterId, x => x.PackageType, x => x.OuterId, x => x.Priority, x => x.MaxQuantity, x => x.MinQuantity,
                                                                                 x => x.ManufacturerPartNumber, x => x.Gtin, x => x.MeasureUnit, x => x.WeightUnit, x => x.Weight,
                                                                                 x => x.Height, x => x.Length, x => x.Width, x => x.TaxType, x => x.ProductType, x => x.ShippingType,
-                                                                                x => x.Vendor, x => x.DownloadType, x => x.DownloadExpiration, x => x.HasUserAgreement, x => x.MaxNumberOfDownload, x => x.StartDate, x => x.EndDate);
+                                                                                x => x.Vendor, x => x.DownloadType, x => x.DownloadExpiration, x => x.HasUserAgreement, x => x.MaxNumberOfDownload, x => x.StartDate, x => x.EndDate,
+                                                                                x => x.ProductConfigurationId, x => x.ProductConfigurationIsActive, x => x.ProductConfigurationProductId,
+                                                                                x => x.ProductConfigurationSectionId, x => x.ProductConfigurationSectionName, x => x.ProductConfigurationSectionDescription, x => x.ProductConfigurationSectionIsRequired, x => x.ProductConfigurationSectionDisplayOrder,
+                                                                                x => x.ProductConfigurationOptionId, x => x.ProductConfigurationOptionQuantity);
 
-            retVal.PropertyMaps = requiredFields.Select(x => new CsvProductPropertyMap { EntityColumnName = x, CsvColumnName = x, IsRequired = true }).ToList();
-            retVal.PropertyMaps.AddRange(optionalFields.Select(x => new CsvProductPropertyMap { EntityColumnName = x, CsvColumnName = x, IsRequired = false }));
+            retVal.PropertyMaps = optionalFields.Select(x => new CsvProductPropertyMap { EntityColumnName = x, CsvColumnName = x }).ToList();
+
             return retVal;
         }
 
@@ -57,7 +58,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 {
                     propertyMap.CsvColumnName = null;
                 }
-
             }
 
             //All not mapped properties may be a product property

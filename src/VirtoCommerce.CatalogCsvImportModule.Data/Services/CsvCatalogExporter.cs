@@ -11,6 +11,7 @@ using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Core.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
+using VirtoCommerce.CatalogModule.Core.Model.Configuration;
 using VirtoCommerce.CatalogModule.Core.Model.Search;
 using VirtoCommerce.CatalogModule.Core.Search;
 using VirtoCommerce.CatalogModule.Core.Services;
@@ -33,19 +34,22 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private readonly IPricingEvaluatorService _pricingEvaluatorService;
         private readonly IBlobUrlResolver _blobUrlResolver;
         private readonly IInventorySearchService _inventorySearchService;
+        private readonly IProductConfigurationSearchService _configurationSearchService;
 
         public CsvCatalogExporter(
             IProductSearchService productSearchService,
             IItemService productService,
             IPricingEvaluatorService pricingEvaluatorService,
             IInventorySearchService inventorySearchService,
-            IBlobUrlResolver blobUrlResolver)
+            IBlobUrlResolver blobUrlResolver,
+            IProductConfigurationSearchService configurationSearchService)
         {
             _productSearchService = productSearchService;
             _productService = productService;
             _pricingEvaluatorService = pricingEvaluatorService;
             _inventorySearchService = inventorySearchService;
             _blobUrlResolver = blobUrlResolver;
+            _configurationSearchService = configurationSearchService;
         }
 
         public async Task DoExportAsync(Stream outStream, CsvExportInfo exportInfo, Action<ExportImportProgressInfo> progressCallback)
@@ -67,8 +71,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             progressInfo.ProcessedCount = 0;
             progressCallback(progressInfo);
 
-            var criteria = ProductSearchCriteriaFactory(exportInfo);
-
             // Second time: fetch and save to csv
             var streamWriter = new StreamWriter(outStream, Encoding.UTF8, 1024, true) { AutoFlush = true };
 
@@ -87,7 +89,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 List<string> productsIds = null;
 
                 if (!exportInfo.ProductIds.IsNullOrEmpty())
-                { // Just fetch for all the products                    
+                {
+                    // Just fetch for all the products
                     productsIds = new List<string>(exportInfo.ProductIds);
                     progressInfo.ProcessedCount += productsIds.Count;
                     await FetchThere(exportInfo, progressCallback, progressInfo, csvWriter, productsIds);
@@ -96,13 +99,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 // Fetch page by page
                 var currentPageNumber = 0;
                 var pageSize = 50;
+                var criteria = ProductSearchCriteriaFactory(exportInfo);
                 var hasData = criteria != null;
 
                 while (hasData)
                 {
-
                     criteria.Skip = currentPageNumber * pageSize;
                     criteria.Take = pageSize;
+
                     var searchResult = await _productSearchService.SearchNoCloneAsync(criteria);
                     productsIds = searchResult.Results.Select(x => x.Id).ToList();
                     hasData = searchResult.Results.Any();
@@ -111,6 +115,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                     currentPageNumber++;
                 }
+
                 progressInfo.Description = "Done.";
                 progressCallback(progressInfo);
             }
@@ -120,39 +125,51 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 progressInfo.Description = string.Format("Exporting {0} of {1} products...", progressInfo.ProcessedCount, progressInfo.TotalCount);
                 progressCallback(progressInfo);
 
-                var products = await LoadProductsWithVariations(productsIds);
+                // Load products configurations
+                var productConfigurations = (await _configurationSearchService.SearchNoCloneAsync(new ProductConfigurationSearchCriteria { ProductIds = productsIds })).Results;
+                var productAsOptionIds = productConfigurations.SelectMany(c => c.Sections.SelectMany(s => s.Options.Select(o => o.ProductId)));
 
+                productsIds.AddRange(productAsOptionIds);
+                var products = await LoadProductsWithVariations(productsIds);
                 var allProductIds = products.Select(x => x.Id).ToArray();
 
-                //Load prices for products
-
+                // Load prices for products
                 var priceEvalContext = new PriceEvaluationContext
                 {
                     ProductIds = allProductIds,
-                    PricelistIds = exportInfo.PriceListId == null ? null : new[] { exportInfo.PriceListId },
+                    PricelistIds = exportInfo.PriceListId == null ? null : [exportInfo.PriceListId],
                     Currency = exportInfo.Currency
                 };
-                var allProductPrices = (await _pricingEvaluatorService.EvaluateProductPricesAsync(priceEvalContext)).ToList();
+                var allProductPrices = (await _pricingEvaluatorService.EvaluateProductPricesAsync(priceEvalContext));
 
-                //Load inventories
-
+                // Load inventories
                 var inventorySearchCriteria = new InventorySearchCriteria()
                 {
                     ProductIds = allProductIds,
-                    FulfillmentCenterIds = string.IsNullOrWhiteSpace(exportInfo.FulfilmentCenterId) ? Array.Empty<string>() : new[] { exportInfo.FulfilmentCenterId },
+                    FulfillmentCenterIds = string.IsNullOrWhiteSpace(exportInfo.FulfilmentCenterId) ? Array.Empty<string>() : [exportInfo.FulfilmentCenterId],
                     Take = int.MaxValue,
                 };
-                var allProductInventories = (await _inventorySearchService.SearchInventoriesAsync(inventorySearchCriteria)).Results.ToList();
+                var allProductInventories = (await _inventorySearchService.SearchInventoriesAsync(inventorySearchCriteria)).Results;
 
-                //convert to dict for faster search
+                // Convert to dict for faster search
                 var pricesDict = allProductPrices.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.First());
                 var inventoriesDict = allProductInventories.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.First());
+                var usedConfigurations = new List<(ProductConfiguration, CatalogProduct)>();
 
-                foreach (var product in products)
+                foreach (var productId in productsIds)
                 {
                     try
                     {
-                        var csvProducts = MakeMultipleExportProducts(product, pricesDict, inventoriesDict);
+                        var product = products.Single(x => x.Id == productId);
+                        // We need to find the configuration where the product like an option. There may be duplicate products in options of different configurations
+                        var configuration = productConfigurations.Where(x => !usedConfigurations.Contains((x, product))).FirstOrDefault(c => c.Sections.Any(s => s.Options.Any(o => o.ProductId == product.Id)));
+
+                        if (configuration != null)
+                        {
+                            usedConfigurations.Add((configuration, product));
+                        }
+
+                        var csvProducts = MakeMultipleExportProducts(product, pricesDict, inventoriesDict, configuration);
 
                         csvWriter.WriteRecords(csvProducts);
                     }
@@ -176,17 +193,19 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             progressInfo.ProcessedCount = 0;
 
             if (!exportInfo.ProductIds.IsNullOrEmpty())
-            { // Just fetch for all the products                    
+            {
+                // Just fetch for all the products
                 productsIds = new List<string>(exportInfo.ProductIds);
                 progressInfo.ProcessedCount += productsIds.Count;
                 await FetchThere(exportInfo, progressCallback, progressInfo, productsIds);
             }
 
+            // Fetch page by page
             var currentPageNumber = 0;
             var pageSize = 50;
-            ProductSearchCriteria criteria = ProductSearchCriteriaFactory(exportInfo);
-            // Fetch page by page
+            var criteria = ProductSearchCriteriaFactory(exportInfo);
             var hasData = criteria != null;
+
             while (hasData)
             {
                 criteria.Skip = currentPageNumber * pageSize;
@@ -216,7 +235,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
         }
 
-        private List<CsvProduct> MakeMultipleExportProducts(CatalogProduct product, Dictionary<string, Price> prices, Dictionary<string, InventoryInfo> inventories)
+        private List<CsvProduct> MakeMultipleExportProducts(CatalogProduct product, Dictionary<string, Price> prices, Dictionary<string, InventoryInfo> inventories, ProductConfiguration productConfiguration)
         {
             var result = new List<CsvProduct>();
 
@@ -225,7 +244,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             foreach (var seoInfo in product.SeoInfos.Any() ? product.SeoInfos : new List<SeoInfo>() { null })
             {
-                var csvProduct = new CsvProduct(product, _blobUrlResolver, price, inventoryInfo, seoInfo);
+                var csvProduct = new CsvProduct(product, _blobUrlResolver, price, inventoryInfo, seoInfo, productConfiguration);
 
                 result.Add(csvProduct);
             }
@@ -233,9 +252,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return result;
         }
 
-        private ProductSearchCriteria ProductSearchCriteriaFactory(CsvExportInfo exportInfo)
+        private static ProductSearchCriteria ProductSearchCriteriaFactory(CsvExportInfo exportInfo)
         {
             ProductSearchCriteria result = null;
+
             if (!exportInfo.CategoryIds.IsNullOrEmpty())
             {
                 result = new ProductSearchCriteria
@@ -246,6 +266,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     SearchInVariations = false,
                 };
             }
+
             if (exportInfo.CategoryIds.IsNullOrEmpty() && exportInfo.ProductIds.IsNullOrEmpty())
             {
                 result = new ProductSearchCriteria
@@ -261,11 +282,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private async Task<int> GetProductsCount(CsvExportInfo exportInfo)
         {
-            int result = 0;
+            var result = 0;
             if (!exportInfo.ProductIds.IsNullOrEmpty())
             {
-                result += exportInfo.ProductIds.Count();
+                result += exportInfo.ProductIds.Length;
             }
+
             var criteria = ProductSearchCriteriaFactory(exportInfo);
             if (criteria != null)
             {
@@ -274,16 +296,17 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
                 result += (await _productSearchService.SearchNoCloneAsync(criteria)).TotalCount;
             }
+
             return result;
         }
 
         private async Task<List<CatalogProduct>> LoadProductsWithVariations(List<string> productIds)
         {
             var result = new List<CatalogProduct>();
-            var products = await _productService.GetAsync(productIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
+            var products = await _productService.GetAsync(productIds, ItemResponseGroup.ItemLarge.ToString());
             // Variations in products go without properties, only VariationProperties are included. Have to use GetByIdsAsync to receive all properties for variations.
-            var variationsIds = products.SelectMany(product => product.Variations.Select(variation => variation.Id));
-            var variations = await _productService.GetAsync(variationsIds.Distinct().ToArray(), ItemResponseGroup.ItemLarge.ToString());
+            var variationsIds = products.SelectMany(product => product.Variations.Select(variation => variation.Id)).ToArray();
+            var variations = await _productService.GetAsync(variationsIds, ItemResponseGroup.ItemLarge.ToString());
 
             foreach (var catalogProduct in products)
             {

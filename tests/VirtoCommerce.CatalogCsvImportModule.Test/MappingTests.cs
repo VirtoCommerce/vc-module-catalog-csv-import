@@ -405,7 +405,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
 
                     csvWriter.WriteHeader<CsvProduct>();
                     csvWriter.NextRecord();
-                    var csvProduct = new CsvProduct(product, null, null, null, null);
+                    var csvProduct = new CsvProduct(product, null, null, null, null, null);
                     csvWriter.WriteRecord(csvProduct);
                     csvWriter.Flush();
                     stream.Position = 0;

@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Omu.ValueInjecter;
+using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.CatalogModule.Core.Model;
+using VirtoCommerce.CatalogModule.Core.Model.Configuration;
 using VirtoCommerce.CoreModule.Core.Seo;
 using VirtoCommerce.InventoryModule.Core.Model;
-using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.PricingModule.Core.Model;
 
@@ -16,28 +17,36 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
     {
         private readonly string[] _csvCellDelimiter = { "--", "|" };
         private readonly IBlobUrlResolver _blobUrlResolver;
+
         public CsvProduct()
         {
-            SeoInfos = new List<SeoInfo>();
-            Reviews = new List<EditorialReview>();
-            Properties = new List<Property>();
-            Images = new List<Image>();
-            Assets = new List<Asset>();
+            SeoInfos = [];
+            Properties = [];
+            Images = [];
+            Assets = [];
+
             Price = new CsvPrice { Currency = "USD" };
-            Prices = new List<Price> { Price };
-            Inventory = new InventoryInfo();
+            Prices = [Price];
+
             EditorialReview = new EditorialReview();
-            Reviews = new List<EditorialReview> { EditorialReview };
+            Reviews = [EditorialReview];
+
             SeoInfo = new CsvSeoInfo { ObjectType = typeof(CatalogProduct).Name };
-            SeoInfos = new List<SeoInfo> { SeoInfo };
+            SeoInfos = [SeoInfo];
+
+            Inventory = new InventoryInfo();
+            ProductConfiguration = new ProductConfiguration();
+            ProductConfigurationSection = new ProductConfigurationSection();
+            ProductConfigurationOption = new ProductConfigurationOption();
         }
 
-        public CsvProduct(CatalogProduct product, IBlobUrlResolver blobUrlResolver, Price price, InventoryInfo inventory, SeoInfo seoInfo)
+        public CsvProduct(CatalogProduct product, IBlobUrlResolver blobUrlResolver, Price price, InventoryInfo inventory, SeoInfo seoInfo, ProductConfiguration productConfiguration)
             : this()
         {
             _blobUrlResolver = blobUrlResolver;
 
             this.InjectFrom(product);
+
             Properties = product.Properties;
             Images = product.Images;
             Assets = product.Assets;
@@ -46,41 +55,47 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             SeoInfos = product.SeoInfos;
             Reviews = product.Reviews;
             Associations = product.Associations;
+
             if (price != null)
             {
                 Price = price;
             }
+
             if (inventory != null)
             {
                 Inventory = inventory;
             }
+
             if (seoInfo != null)
             {
                 SeoInfo = seoInfo;
             }
+
+            ProductConfiguration = productConfiguration;
+            var option = productConfiguration?.Sections.SelectMany(s => s.Options.Where(o => o.ProductId == product.Id)).First();
+            ProductConfigurationOption = option;
+            var section = productConfiguration?.Sections.First(s => s.Id == option.SectionId);
+            ProductConfigurationSection = section;
         }
+
         public Price Price { get; set; }
         public InventoryInfo Inventory { get; set; }
         public EditorialReview EditorialReview { get; set; }
         public SeoInfo SeoInfo { get; set; }
         public IList<Price> Prices { get; set; }
+        public ProductConfiguration ProductConfiguration { get; set; }
+        public ProductConfigurationSection ProductConfigurationSection { get; set; }
+        public ProductConfigurationOption ProductConfigurationOption { get; set; }
+
         public string PriceId
         {
-            get
-            {
-                return Price.Id;
-            }
-            set
-            {
-                Price.Id = value;
-            }
+            get { return Price.Id; }
+            set { Price.Id = value; }
         }
+
         public string SalePrice
         {
-            get
-            {
-                return Price.Sale?.ToString(CultureInfo.InvariantCulture);
-            }
+            get { return Price.Sale?.ToString(CultureInfo.InvariantCulture); }
             set
             {
                 if (!string.IsNullOrEmpty(value))
@@ -92,74 +107,38 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 
         public string ListPrice
         {
-            get
-            {
-                return Price.List.ToString(CultureInfo.InvariantCulture);
-            }
-            set
-            {
-                Price.List = string.IsNullOrEmpty(value) ? 0 : Convert.ToDecimal(value, CultureInfo.InvariantCulture);
-            }
+            get { return Price.List.ToString(CultureInfo.InvariantCulture); }
+            set { Price.List = string.IsNullOrEmpty(value) ? 0 : Convert.ToDecimal(value, CultureInfo.InvariantCulture); }
         }
 
         public string PriceMinQuantity
         {
-            get
-            {
-                return Price.MinQuantity.ToString(CultureInfo.InvariantCulture);
-            }
-            set
-            {
-                Price.MinQuantity = value.IsNullOrEmpty() ? 1 : Convert.ToInt32(value);
-            }
+            get { return Price.MinQuantity.ToString(CultureInfo.InvariantCulture); }
+            set { Price.MinQuantity = value.IsNullOrEmpty() ? 1 : Convert.ToInt32(value); }
         }
 
         public string Currency
         {
-            get
-            {
-                return Price.Currency;
-            }
-            set
-            {
-                Price.Currency = value;
-            }
+            get { return Price.Currency; }
+            set { Price.Currency = value; }
         }
 
         public string PriceListId
         {
-            get
-            {
-                return Price.PricelistId;
-            }
-            set
-            {
-                Price.PricelistId = value;
-            }
+            get { return Price.PricelistId; }
+            set { Price.PricelistId = value; }
         }
 
         public string FulfillmentCenterId
         {
-            get
-            {
-                return Inventory?.FulfillmentCenterId;
-            }
-            set
-            {
-                Inventory.FulfillmentCenterId = value;
-            }
+            get { return Inventory?.FulfillmentCenterId; }
+            set { Inventory.FulfillmentCenterId = value; }
         }
 
         public string Quantity
         {
-            get
-            {
-                return Inventory?.InStockQuantity.ToString();
-            }
-            set
-            {
-                Inventory.InStockQuantity = value.IsNullOrEmpty() ? 0 : Convert.ToInt64(value);
-            }
+            get { return Inventory?.InStockQuantity.ToString(); }
+            set { Inventory.InStockQuantity = value.IsNullOrEmpty() ? 0 : Convert.ToInt64(value); }
         }
 
         public string PrimaryImage
@@ -227,16 +206,11 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 }
             }
         }
+
         public string Sku
         {
-            get
-            {
-                return Code;
-            }
-            set
-            {
-                Code = value?.Trim();
-            }
+            get { return Code; }
+            set { Code = value?.Trim(); }
         }
 
         public string ParentSku { get; set; }
@@ -250,10 +224,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 
                 return Category.Path;
             }
-            set
-            {
-                Category = new Category { Path = value };
-            }
+            set { Category = new Category { Path = value }; }
         }
 
         public string ReviewType
@@ -316,9 +287,68 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
 
         public int LineNumber { get; set; }
 
+        public string ProductConfigurationId
+        {
+            get { return ProductConfiguration?.Id; }
+            set { ProductConfiguration.Id = value; }
+        }
+
+        public string ProductConfigurationIsActive
+        {
+            get { return ProductConfiguration?.IsActive.ToString(); }
+            set { ProductConfiguration.IsActive = !value.IsNullOrEmpty() && Convert.ToBoolean(value); }
+        }
+
+        public string ProductConfigurationProductId
+        {
+            get { return ProductConfiguration?.ProductId; }
+            set { ProductConfiguration.ProductId = value; }
+        }
+
+        public string ProductConfigurationSectionId
+        {
+            get { return ProductConfigurationSection?.Id; }
+            set { ProductConfigurationSection.Id = value; }
+        }
+
+        public string ProductConfigurationSectionName
+        {
+            get { return ProductConfigurationSection?.Name; }
+            set { ProductConfigurationSection.Name = value; }
+        }
+
+        public string ProductConfigurationSectionDescription
+        {
+            get { return ProductConfigurationSection?.Description; }
+            set { ProductConfigurationSection.Description = value; }
+        }
+
+        public string ProductConfigurationSectionIsRequired
+        {
+            get { return ProductConfigurationSection?.IsRequired.ToString(); }
+            set { ProductConfigurationSection.IsRequired = !value.IsNullOrEmpty() && Convert.ToBoolean(value); }
+        }
+
+        public string ProductConfigurationSectionDisplayOrder
+        {
+            get { return ProductConfigurationSection?.DisplayOrder.ToString(); }
+            set { ProductConfigurationSection.DisplayOrder = value.IsNullOrEmpty() ? 0 : Convert.ToInt32(value); }
+        }
+
+        public string ProductConfigurationOptionId
+        {
+            get { return ProductConfigurationOption?.Id; }
+            set { ProductConfigurationOption.Id = value; }
+        }
+
+        public string ProductConfigurationOptionQuantity
+        {
+            get { return ProductConfigurationOption?.Quantity.ToString(); }
+            set { ProductConfigurationOption.Quantity = value.IsNullOrEmpty() ? 0 : Convert.ToInt32(value); }
+        }
+
         /// <summary>
         /// Merge from other product, without any deletion, only update and create allowed
-        ///
         /// </summary>
         /// <param name="product"></param>
         public void MergeFrom(CatalogProduct product)

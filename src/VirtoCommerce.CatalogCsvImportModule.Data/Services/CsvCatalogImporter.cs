@@ -157,7 +157,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return DoImport(csvProducts, importInfo, progressInfo, progressCallback);
         }
 
-        private void ReplaceEmptyStringsWithNull(CsvProduct csvProduct)
+        private static void ReplaceEmptyStringsWithNull(CsvProduct csvProduct)
         {
             csvProduct.Id = string.IsNullOrEmpty(csvProduct.Id) ? null : csvProduct.Id;
             csvProduct.OuterId = string.IsNullOrEmpty(csvProduct.OuterId) ? null : csvProduct.OuterId;
@@ -167,10 +167,22 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             csvProduct.PriceListId = string.IsNullOrEmpty(csvProduct.PriceListId) ? null : csvProduct.PriceListId;
             csvProduct.FulfillmentCenterId = string.IsNullOrEmpty(csvProduct.FulfillmentCenterId) ? null : csvProduct.FulfillmentCenterId;
             csvProduct.PackageType = string.IsNullOrEmpty(csvProduct.PackageType) ? null : csvProduct.PackageType;
-            csvProduct.Reviews = csvProduct.Reviews.Where(x => !string.IsNullOrEmpty(x.Content) && !string.IsNullOrEmpty(x.ReviewType)).ToList();
+
+            csvProduct.ProductConfigurationId = string.IsNullOrEmpty(csvProduct.ProductConfigurationId) ? null : csvProduct.ProductConfigurationId;
+            csvProduct.ProductConfigurationProductId = string.IsNullOrEmpty(csvProduct.ProductConfigurationProductId) ? null : csvProduct.ProductConfigurationProductId;
+            csvProduct.ProductConfigurationIsActive = string.IsNullOrEmpty(csvProduct.ProductConfigurationIsActive) ? null : csvProduct.ProductConfigurationIsActive;
+
+            csvProduct.ProductConfigurationSectionId = string.IsNullOrEmpty(csvProduct.ProductConfigurationSectionId) ? null : csvProduct.ProductConfigurationSectionId;
+            csvProduct.ProductConfigurationSectionName = string.IsNullOrEmpty(csvProduct.ProductConfigurationSectionName) ? null : csvProduct.ProductConfigurationSectionName;
+            csvProduct.ProductConfigurationSectionDescription = string.IsNullOrEmpty(csvProduct.ProductConfigurationSectionDescription) ? null : csvProduct.ProductConfigurationSectionDescription;
+            csvProduct.ProductConfigurationSectionDisplayOrder = string.IsNullOrEmpty(csvProduct.ProductConfigurationSectionDisplayOrder) ? null : csvProduct.ProductConfigurationSectionDisplayOrder;
+            csvProduct.ProductConfigurationSectionIsRequired = string.IsNullOrEmpty(csvProduct.ProductConfigurationSectionIsRequired) ? null : csvProduct.ProductConfigurationSectionIsRequired;
+
+            csvProduct.ProductConfigurationOptionId = string.IsNullOrEmpty(csvProduct.ProductConfigurationOptionId) ? null : csvProduct.ProductConfigurationOptionId;
+            csvProduct.ProductConfigurationOptionQuantity = string.IsNullOrEmpty(csvProduct.ProductConfigurationOptionQuantity) ? null : csvProduct.ProductConfigurationOptionQuantity;
         }
 
-        private Encoding DetectEncoding(Stream stream)
+        private static Encoding DetectEncoding(Stream stream)
         {
             var encoding = Encoding.UTF8;
 
@@ -186,7 +198,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return encoding;
         }
 
-        private Encoding GetEncodingFromString(string encoding)
+        private static Encoding GetEncodingFromString(string encoding)
         {
             try
             {
@@ -200,48 +212,42 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         public async Task DoImport(List<CsvProduct> csvProducts, CsvImportInfo importInfo, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-            var catalog = await _catalogService.GetByIdAsync(importInfo.CatalogId);
-
-            if (catalog == null)
-            {
-                throw new InvalidOperationException($"Catalog with id \"{importInfo.CatalogId}\" does not exist.");
-            }
+            var catalog = await _catalogService.GetByIdAsync(importInfo.CatalogId) ?? throw new InvalidOperationException($"Catalog with id \"{importInfo.CatalogId}\" does not exist.");
 
             _stores.AddRange((await _storeSearchService.SearchAsync(new StoreSearchCriteria { Take = int.MaxValue })).Results);
 
-            var contunie = ImportAllowed(csvProducts, progressInfo, progressCallback);
-
-            if (!contunie)
-                return;
-
-            csvProducts = MergeCsvProducts(csvProducts, catalog);
-
-            await MergeFromAlreadyExistProducts(csvProducts, catalog);
-
-            await SaveCategoryTree(catalog, csvProducts, progressInfo, progressCallback);
-
-            await LoadProductDependencies(csvProducts, catalog, importInfo);
-            await ResolvePropertyDictionaryItems(csvProducts, progressInfo, progressCallback);
-
-            //take parentless prodcuts and save them first
-            progressInfo.TotalCount = csvProducts.Count;
-
-            var mainProcuts = csvProducts.Where(x => x.MainProduct == null).ToList();
-            await SaveProducts(mainProcuts, progressInfo, progressCallback);
-
-            //prepare and save variations (needed to be able to save variation with SKU as MainProductId)
-            var variations = csvProducts.Except(mainProcuts).ToList();
-
-            foreach (var variation in variations.Where(x => x.MainProductId == null))
+            if (ImportAllowed(csvProducts, progressInfo, progressCallback))
             {
-                variation.MainProductId = variation.MainProduct.Id;
-            }
+                csvProducts = MergeCsvProducts(csvProducts, catalog);
 
-            await SaveProducts(variations, progressInfo, progressCallback);
+                await MergeFromAlreadyExistProducts(csvProducts, catalog);
+
+                await SaveCategoryTree(csvProducts, catalog, progressInfo, progressCallback);
+
+                await LoadProductDependencies(csvProducts, catalog, importInfo);
+
+                await ResolvePropertyDictionaryItems(csvProducts, progressInfo, progressCallback);
+
+                // Take parentless prodcuts and save them first
+                progressInfo.TotalCount = csvProducts.Count;
+
+                var mainProcuts = csvProducts.Where(x => x.MainProduct == null).ToList();
+                await SaveProducts(mainProcuts, progressInfo, progressCallback);
+
+                // Prepare and save variations (needed to be able to save variation with SKU as MainProductId)
+                var variations = csvProducts.Except(mainProcuts).ToList();
+
+                foreach (var variation in variations.Where(x => x.MainProductId == null))
+                {
+                    variation.MainProductId = variation.MainProduct.Id;
+                }
+
+                await SaveProducts(variations, progressInfo, progressCallback);
+            }
         }
 
 
-        //Is it allowed to continue
+        // Is it allowed to continue
         private bool ImportAllowed(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
             progressInfo.Description = "Check product...";
@@ -249,7 +255,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return SeoAllowed(csvProducts, progressInfo, progressCallback);
         }
 
-        private List<CsvProduct> MergeCsvProducts(List<CsvProduct> csvProducts, Catalog catalog)
+        private static List<CsvProduct> MergeCsvProducts(List<CsvProduct> csvProducts, Catalog catalog)
         {
             var mergedCsvProducts = new List<CsvProduct>();
 
@@ -276,24 +282,26 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
 
             mergedCsvProducts.AddRange(csvProducts);
+
             return mergedCsvProducts;
         }
 
-        private CsvProduct MergeCsvProductsGroup(List<CsvProduct> csvProducts)
+        private static CsvProduct MergeCsvProductsGroup(List<CsvProduct> csvProducts)
         {
             var firstProduct = csvProducts.FirstOrDefault();
-            if (firstProduct == null)
-                return null;
 
-            firstProduct.Reviews = csvProducts.SelectMany(x => x.Reviews).ToList();
-            firstProduct.SeoInfos = csvProducts.SelectMany(x => x.SeoInfos).ToList();
-            firstProduct.Properties = csvProducts.SelectMany(x => x.Properties).ToList();
-            firstProduct.Prices = csvProducts.SelectMany(x => x.Prices).ToList();
+            if (firstProduct != null)
+            {
+                firstProduct.Reviews = csvProducts.SelectMany(x => x.Reviews).ToList();
+                firstProduct.SeoInfos = csvProducts.SelectMany(x => x.SeoInfos).ToList();
+                firstProduct.Properties = csvProducts.SelectMany(x => x.Properties).ToList();
+                firstProduct.Prices = csvProducts.SelectMany(x => x.Prices).ToList();
+            }
 
             return firstProduct;
         }
 
-        private void MergeCsvProductComplexObjects(List<CsvProduct> csvProducts, string defaultLanguge)
+        private static void MergeCsvProductComplexObjects(List<CsvProduct> csvProducts, string defaultLanguge)
         {
             foreach (var csvProduct in csvProducts)
             {
@@ -318,7 +326,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 csvProduct.Properties = csvProduct.Properties
                     .Where(property => property.Values?.Any(propertyValue => !string.IsNullOrEmpty(propertyValue.Value?.ToString())) == true)
                     .GroupBy(x => x.Name)
-                    .Select(propertyGroup => GetMergedProperty(propertyGroup))
+                    .Select(GetMergedProperty)
                     .ToList();
 
                 csvProduct.Prices = csvProduct.Prices.Where(x => x.EffectiveValue > 0).GroupBy(x => new { x.Currency, x.PricelistId, x.MinQuantity }).Select(g => g.FirstOrDefault()).ToList();
@@ -343,7 +351,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return result;
         }
 
-        private string GetDefaultLanguage(Catalog catalog)
+        private static string GetDefaultLanguage(Catalog catalog)
         {
             return catalog.DefaultLanguage != null ? catalog.DefaultLanguage.LanguageCode : "en-US";
         }
@@ -397,7 +405,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         /// <summary>
         /// Try to find (create if not) categories for products with Category.Path
         /// </summary>
-        private async Task SaveCategoryTree(Catalog catalog, IEnumerable<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
+        private async Task SaveCategoryTree(IEnumerable<CsvProduct> csvProducts, Catalog catalog, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
             var cachedCategoryMap = new Dictionary<string, Category>();
             var outline = new StringBuilder();
@@ -434,7 +442,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                             ParentId = parentCategoryId
                         };
 
-                        await _categoryService.SaveChangesAsync(new[] { category });
+                        await _categoryService.SaveChangesAsync([category]);
 
                         //Raise notification each notifyCategorySizeLimit category
                         progressInfo.Description = $"Creating categories: {++count} created";
@@ -682,8 +690,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                     csvProduct.Category = categoriesMap[csvProduct.CategoryId];
                 }
 
-                //Try to set parent relations
-                //By id or code reference
+                // Try to set parent relations
+                // By id or code reference
                 var parentProduct = csvProducts.FirstOrDefault(x => !string.IsNullOrEmpty(csvProduct.MainProductId) && (x.Id.EqualsInvariant(csvProduct.MainProductId) || x.Code.EqualsInvariant(csvProduct.MainProductId)));
                 csvProduct.MainProduct = parentProduct;
                 csvProduct.MainProductId = parentProduct != null ? parentProduct.Id : null;
@@ -692,12 +700,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 {
                     csvProduct.Code = _skuGenerator.GenerateSku(csvProduct);
                 }
-                //Properties inheritance
+                // Properties inheritance
                 var inheritedProperties = GetInheritedProperties(csvProduct);
 
                 foreach (var property in csvProduct.Properties.ToArray())
                 {
-                    //Try to find property for product
+                    // Try to find property for product
                     var inheritedProperty = inheritedProperties.FirstOrDefault(x => x.Name.EqualsInvariant(property.Name));
                     if (inheritedProperty != null)
                     {
@@ -712,7 +720,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                             propertyValue.PropertyId = inheritedProperty.Id;
                         }
 
-                        //Try to split the one value to multiple values for Multivalue properties
+                        // Try to split the one value to multiple values for Multivalue properties
                         if (inheritedProperty.Multivalue)
                         {
                             var parsedValues = new List<PropertyValue>();
@@ -764,29 +772,31 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             return result;
         }
 
-        //Merge importing products with already exist to prevent erasing already exist data, import should only update or create data
+        // Merge importing products with already exist to prevent erasing already exist data, import should only update or create data
         private async Task MergeFromAlreadyExistProducts(IEnumerable<CsvProduct> csvProducts, Catalog catalog)
         {
             var transientProducts = csvProducts.Where(x => x.IsTransient()).ToArray();
             var nonTransientProducts = csvProducts.Where(x => !x.IsTransient()).ToArray();
 
+            // Load exist products
             var alreadyExistProducts = new List<CatalogProduct>();
-            //Load exist products
-            for (int i = 0; i < nonTransientProducts.Count(); i += 50)
+            for (var i = 0; i < nonTransientProducts.Length; i += 50)
             {
                 alreadyExistProducts.AddRange(await _productService.GetAsync(nonTransientProducts.Skip(i).Take(50).Select(x => x.Id).ToArray(), ItemResponseGroup.ItemLarge.ToString()));
             }
-            //Detect already exist product by Code
+
+            // Detect already exist product by Code
             var transientProductsCodes = transientProducts.Select(x => x.Code).Where(x => x != null).Distinct().ToArray();
             using (var repository = _catalogRepositoryFactory())
             {
                 var products = repository.Items.Where(x => x.CatalogId == catalog.Id && transientProductsCodes.Contains(x.Code));
                 var foundProducts = products.Select(x => new { x.Id, x.Code }).ToArray();
-                for (int i = 0; i < foundProducts.Count(); i += 50)
+                for (var i = 0; i < foundProducts.Length; i += 50)
                 {
                     alreadyExistProducts.AddRange(await _productService.GetAsync(foundProducts.Skip(i).Take(50).Select(x => x.Id).ToArray(), ItemResponseGroup.ItemLarge.ToString()));
                 }
             }
+
             foreach (var csvProduct in csvProducts)
             {
                 var existProduct = csvProduct.IsTransient() ? alreadyExistProducts.FirstOrDefault(x => x.Code.EqualsInvariant(csvProduct.Code)) : alreadyExistProducts.FirstOrDefault(x => x.Id == csvProduct.Id);
@@ -801,12 +811,14 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private bool SeoAllowed(List<CsvProduct> csvProducts, ExportImportProgressInfo progressInfo, Action<ExportImportProgressInfo> progressCallback)
         {
-            bool isCompleted = true;
+            var isCompleted = true;
 
             foreach (var product in csvProducts)
             {
                 if (!CorrectProduct(product))
+                {
                     isCompleted = false;
+                }
             }
 
             progressCallback(progressInfo);
@@ -815,7 +827,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             bool CorrectProduct(CsvProduct product)
             {
-                //check seoinfo storeif if specified
+                // Check seoinfo storeif if specified
                 if (!string.IsNullOrEmpty(product.SeoStore))
                 {
                     var result = _stores.Any(x => x.Id == product.SeoStore);
