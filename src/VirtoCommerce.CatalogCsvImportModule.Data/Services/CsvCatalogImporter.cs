@@ -168,33 +168,65 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             csvProduct.FulfillmentCenterId = string.IsNullOrEmpty(csvProduct.FulfillmentCenterId) ? null : csvProduct.FulfillmentCenterId;
             csvProduct.PackageType = string.IsNullOrEmpty(csvProduct.PackageType) ? null : csvProduct.PackageType;
             csvProduct.Reviews = csvProduct.Reviews.Where(x => !string.IsNullOrEmpty(x.Content) && !string.IsNullOrEmpty(x.ReviewType)).ToList();
+
+            csvProduct.CreateImagesFromFlatData();
         }
 
-        private Encoding DetectEncoding(Stream stream)
+        public static Encoding DetectEncoding(Stream stream)
         {
-            var encoding = Encoding.UTF8;
+            ArgumentNullException.ThrowIfNull(stream);
 
-            var cdet = new Ude.CharsetDetector();
-            cdet.Feed(stream);
-            cdet.DataEnd();
-            if (cdet.Charset != null)
+            if (!stream.CanSeek)
             {
-                encoding = GetEncodingFromString(cdet.Charset);
+                throw new ArgumentException("Stream must support seeking.", nameof(stream));
             }
 
-            stream.Position = 0;
-            return encoding;
-        }
+            // Save the current position of the stream to reset later
+            var originalPosition = stream.Position;
 
-        private Encoding GetEncodingFromString(string encoding)
-        {
             try
             {
-                return Encoding.GetEncoding(encoding);
-            }
-            catch
-            {
+                // Read the first few bytes to check for a BOM
+                var bom = new byte[4];
+                var bytesRead = stream.Read(bom, 0, bom.Length);
+
+                // UTF-8 BOM (EF BB BF)
+                if (bytesRead >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
+                {
+                    return Encoding.UTF8;
+                }
+
+                // UTF-16 LE BOM (FF FE)
+                if (bytesRead >= 2 && bom[0] == 0xFF && bom[1] == 0xFE)
+                {
+                    return Encoding.Unicode;
+                }
+
+                // UTF-16 BE BOM (FE FF)
+                if (bytesRead >= 2 && bom[0] == 0xFE && bom[1] == 0xFF)
+                {
+                    return Encoding.BigEndianUnicode;
+                }
+
+                // UTF-32 LE BOM (FF FE 00 00)
+                if (bytesRead >= 4 && bom[0] == 0xFF && bom[1] == 0xFE && bom[2] == 0x00 && bom[3] == 0x00)
+                {
+                    return Encoding.UTF32;
+                }
+
+                // UTF-32 BE BOM (00 00 FE FF)
+                if (bytesRead >= 4 && bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == 0xFE && bom[3] == 0xFF)
+                {
+                    return new UTF32Encoding(bigEndian: true, byteOrderMark: true);
+                }
+
+                // Default to UTF-8 if no BOM is found
                 return Encoding.UTF8;
+            }
+            finally
+            {
+                // Reset the stream position to the original state
+                stream.Position = originalPosition;
             }
         }
 
@@ -212,7 +244,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             var contunie = ImportAllowed(csvProducts, progressInfo, progressCallback);
 
             if (!contunie)
+            {
                 return;
+            }
 
             csvProducts = MergeCsvProducts(csvProducts, catalog);
 
@@ -283,7 +317,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             var firstProduct = csvProducts.FirstOrDefault();
             if (firstProduct == null)
+            {
                 return null;
+            }
 
             firstProduct.Reviews = csvProducts.SelectMany(x => x.Reviews).ToList();
             firstProduct.SeoInfos = csvProducts.SelectMany(x => x.SeoInfos).ToList();
@@ -582,7 +618,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private async Task<IList<Price>> GetMergedPriceById(IList<CsvPrice> pricesWithIds)
         {
             if (!pricesWithIds.Any())
+            {
                 return new List<Price>();
+            }
 
             var result = new List<Price>();
 
@@ -604,7 +642,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private async Task<IList<Price>> GetMergedPriceByPriceList(IList<CsvPrice> pricesWithPriceListIds)
         {
             if (!pricesWithPriceListIds.Any())
+            {
                 return new List<Price>();
+            }
 
             var existentPrices = new List<Price>();
 
@@ -641,7 +681,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private async Task<IList<Price>> GetMergedPriceDefault(IList<CsvPrice> restPrices)
         {
             if (!restPrices.Any())
+            {
                 return new List<Price>();
+            }
 
             var criteria = new PricesSearchCriteria
             {
@@ -739,7 +781,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private static List<Property> GetInheritedProperties(CsvProduct csvProduct)
         {
             if (csvProduct.Category != null && csvProduct.Category.Properties != null)
+            {
                 return csvProduct.Category.Properties.OrderBy(x => x.Name).ToList();
+            }
             return csvProduct.Catalog.Properties.OrderBy(x => x.Name).ToList();
         }
 
@@ -806,7 +850,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             foreach (var product in csvProducts)
             {
                 if (!CorrectProduct(product))
+                {
                     isCompleted = false;
+                }
             }
 
             progressCallback(progressInfo);

@@ -76,6 +76,17 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             _csvImporter = csvImporter;
         }
 
+        [HttpGet]
+        [Route("export/mappingconfiguration")]
+        public ActionResult<CsvProductMappingConfiguration> GetExportMappingConfiguration([FromQuery] string delimiter = ";")
+        {
+            var result = CsvProductMappingConfiguration.GetDefaultConfiguration();
+            var decodedDelimiter = HttpUtility.UrlDecode(delimiter);
+            result.Delimiter = decodedDelimiter;
+
+            return Ok(result);
+        }
+
         /// <summary>
         /// Start catalog data export process.
         /// </summary>
@@ -139,7 +150,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         /// <returns></returns>
         [HttpGet]
         [Route("import/mappingconfiguration")]
-        public async Task<ActionResult<CsvProductMappingConfiguration>> GetMappingConfiguration([FromQuery] string fileUrl, [FromQuery] string delimiter = ";")
+        public async Task<ActionResult<CsvProductMappingConfiguration>> GetImportMappingConfiguration([FromQuery] string fileUrl, [FromQuery] string delimiter = ";")
         {
             var result = CsvProductMappingConfiguration.GetDefaultConfiguration();
             var decodedDelimiter = HttpUtility.UrlDecode(delimiter);
@@ -265,7 +276,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
             try
             {
-                exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
+                if (exportInfo.Configuration == null)
+                {
+                    exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
+                }
 
                 var fileNameTemplate = await _settingsManager.GetValueAsync<string>(CsvModuleConstants.Settings.General.ExportFileNameTemplate);
                 var fileName = string.Format(fileNameTemplate, DateTime.UtcNow);
