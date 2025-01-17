@@ -173,9 +173,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                     var primaryImage = Images.OrderBy(x => x.SortOrder).FirstOrDefault();
                     if (primaryImage != null)
                     {
-                        _primaryImage = _blobUrlResolver != null ?
-                            _blobUrlResolver.GetAbsoluteUrl(primaryImage.Url) :
-                            primaryImage.Url;
+                        _primaryImage = _blobUrlResolver != null
+                            ? _blobUrlResolver.GetAbsoluteUrl(primaryImage.Url)
+                            : primaryImage.Url;
                     }
                 }
                 return _primaryImage;
