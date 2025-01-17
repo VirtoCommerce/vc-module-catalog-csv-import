@@ -216,9 +216,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 if (Images != null && _altImage == null)
                 {
                     var altImageUrls = Images
-                        .Where(x => x.SortOrder > 0)
                         .OrderBy(x => x.SortOrder)
                         .Select(x => _blobUrlResolver != null ? _blobUrlResolver.GetAbsoluteUrl(x.Url) : x.Url)
+                        .Skip(1)
                         .ToArray();
 
                     _altImage = string.Join(_csvCellDelimiter[1], altImageUrls);
@@ -242,9 +242,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 if (Images != null && _altImageGroup == null)
                 {
                     var altImageGroups = Images
-                        .Where(x => x.SortOrder > 0)
                         .OrderBy(x => x.SortOrder)
                         .Select(x => x.Group)
+                        .Skip(1)
                         .ToArray();
 
                     _altImageGroup = string.Join(_csvCellDelimiter[1], altImageGroups);
