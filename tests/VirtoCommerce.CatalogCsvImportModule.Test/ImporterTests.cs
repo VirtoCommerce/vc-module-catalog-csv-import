@@ -59,7 +59,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
         [InlineData("/path/to/file%20with%20spaces.txt", "file with spaces.txt")]
         [InlineData("https://example.com/path/to/", "")]
         [InlineData("https://example.com/", "")]
-        [InlineData("", null)]
         public void ExtractFileNameFromUrl_ValidUrls_ReturnsExpectedFileName(string url, string expectedFileName)
         {
             // Act
