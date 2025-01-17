@@ -11,7 +11,7 @@ public static class UrlHelper
         {
             if (!uri.IsAbsoluteUri)
             {
-                uri = new Uri(new Uri("http://dummy-base/"), url);
+                uri = new Uri(new Uri("https://dummy-base/"), url);
             }
 
             // Get the file name from the path
