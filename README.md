@@ -5,15 +5,61 @@
 CSV Catalog Export and Import Module is a module for Virto Commerce platform that allows to export and import catalog data in CSV format.
 
 ## Overview
-The CSV Catalog Export and Import Module Enables seamless export and import of catalog data in CSV format, simplifying data management and integration with external systems.
+The CSV Catalog Export and Import Module facilitates the following capabilities: exporting catalog data to CSV format, 
+importing catalog data from CSV format, simplifying bulk operations through export, update, and re-import workflows.
+
+By leveraging this module, category managers can efficiently manage large sets of catalog data and ensure consistency across systems.
 
 ## Features
-1. Export catalog data to CSV format.
-1. Import catalog data from CSV format.
-1. Export and Import dynamic properties.
-1. Export and Import multiple product images: urls and groups.
-1. Configurable property mapping for import.
-1. Can be configured to create a new dictionary items automatically during import.
+1. Export Catalog Data to CSV: Extract product and category information into CSV format for easy editing and sharing.
+1. Import Catalog Data from CSV: Bring updated or new catalog data into the platform from CSV files.
+1. Dynamic Properties Support: Export and import dynamic properties seamlessly.
+1. Multiple Product Images: Manage image URLs and groups during export and import.
+1. Configurable Property Mapping: Define custom mappings for CSV columns during import.
+1. Customizable Column Delimiter: Choose a delimiter for CSV files to suit your needs.
+1. Create New Dictionary Values: Optionally allow the creation of new dictionary values during import (default: disabled).
+1. Bulk Update Ready: Simplify bulk updates by exporting data, modifying it in bulk, and importing the updated data back.
+
+## Scenarious
+
+### Export products
+
+1. Open the Catalog module, select either categories or products and click `Export` button.
+
+![Step 1 - Initiate Export](docs/media/csv-export-01.png)
+
+2. Select column delimiter, fullfilment center and pricelist and click `Export` button.
+
+![Step 2 - Configure Export Options](docs/media/csv-export-02.png)
+
+3. Wait for the export to complete and download the CSV file.
+
+![Step 3 - Complete Export](docs/media/csv-export-03.png)
+
+4. Open CSV file in Excel or any other editor.
+
+![Step 4 - View results](docs/media/csv-export-04.png)
+
+### Import products
+
+1. Open the Catalog module, select category and click 'Import' button.
+
+![Step 1 - Initiate Import](docs/media/csv-import-01.png)
+
+2. Select CSV column delimiter, upload CSV file and click 'Map columns' button.
+
+![Step 2 - Prepare for Import](docs/media/csv-import-02.png)
+
+3. Run the import process.
+
+## Settings
+
+The module includes configurable settings to enhance user control:
+
+* Dictionary Value Creation: Enable or disable the ability to create new dictionary values during import.
+* Output File Name: Customize the name of the exported file.
+
+![Settings](docs/media/csv-import-export-settings.png)
 
 
 ## References
