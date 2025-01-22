@@ -259,29 +259,29 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         // Only public methods can be invoked in the background. (Hangfire)
         public async Task BackgroundExport(CsvExportInfo exportInfo, ExportNotification notifyEvent)
         {
-            var currencies = await _currencyService.GetAllCurrenciesAsync();
-            var defaultCurrency = currencies.FirstOrDefault(x => x.IsPrimary);
-
-            if (defaultCurrency == null)
-            {
-                throw new ArgumentNullException("Primary currency not found");
-            }
-
-            exportInfo.Currency ??= defaultCurrency.Code;
-            var catalog = await _catalogService.GetNoCloneAsync(new[] { exportInfo.CatalogId });
-            if (catalog == null)
-            {
-                throw new InvalidOperationException($"Cannot get catalog with id '{exportInfo.CatalogId}'");
-            }
-
-            void progressCallback(ExportImportProgressInfo x)
-            {
-                notifyEvent.InjectFrom(x);
-                _notifier.SendAsync(notifyEvent);
-            }
-
             try
             {
+                var currencies = await _currencyService.GetAllCurrenciesAsync();
+                var defaultCurrency = currencies.FirstOrDefault(x => x.IsPrimary);
+
+                if (defaultCurrency == null)
+                {
+                    throw new ArgumentNullException("Primary currency not found");
+                }
+
+                exportInfo.Currency ??= defaultCurrency.Code;
+                var catalog = await _catalogService.GetNoCloneAsync(new[] { exportInfo.CatalogId });
+                if (catalog == null)
+                {
+                    throw new InvalidOperationException($"Cannot get catalog with id '{exportInfo.CatalogId}'");
+                }
+
+                void progressCallback(ExportImportProgressInfo x)
+                {
+                    notifyEvent.InjectFrom(x);
+                    _notifier.SendAsync(notifyEvent);
+                }
+
                 if (exportInfo.Configuration == null)
                 {
                     exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
