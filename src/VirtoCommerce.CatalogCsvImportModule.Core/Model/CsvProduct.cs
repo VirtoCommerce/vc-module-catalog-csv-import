@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Omu.ValueInjecter;
+using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.CatalogModule.Core.Model;
 using VirtoCommerce.CoreModule.Core.Seo;
 using VirtoCommerce.InventoryModule.Core.Model;
-using VirtoCommerce.AssetsModule.Core.Assets;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.PricingModule.Core.Model;
 
@@ -38,6 +38,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             _blobUrlResolver = blobUrlResolver;
 
             this.InjectFrom(product);
+
             Properties = product.Properties;
             Images = product.Images;
             Assets = product.Assets;
@@ -162,71 +163,102 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             }
         }
 
+        private string _primaryImage;
         public string PrimaryImage
         {
             get
             {
-                var retVal = string.Empty;
-                if (Images != null)
+                if (Images != null && _primaryImage == null)
                 {
                     var primaryImage = Images.OrderBy(x => x.SortOrder).FirstOrDefault();
                     if (primaryImage != null)
                     {
-                        retVal = _blobUrlResolver != null ? _blobUrlResolver.GetAbsoluteUrl(primaryImage.Url) : primaryImage.Url;
+                        _primaryImage = _blobUrlResolver != null
+                            ? _blobUrlResolver.GetAbsoluteUrl(primaryImage.Url)
+                            : primaryImage.Url;
                     }
                 }
-                return retVal;
+                return _primaryImage;
             }
 
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    Images.Add(new Image
-                    {
-                        Url = value,
-                        SortOrder = 0,
-                        Group = "images",
-                        Name = value.Split('/').Last()
-                    });
-                }
+                _primaryImage = value;
             }
         }
 
+        private string _primaryImageGroup;
+        public string PrimaryImageGroup
+        {
+            get
+            {
+                if (Images != null && _primaryImageGroup == null)
+                {
+                    var primaryImage = Images.OrderBy(x => x.SortOrder).FirstOrDefault();
+                    if (primaryImage != null)
+                    {
+                        _primaryImageGroup = primaryImage.Group;
+                    }
+                }
+                return _primaryImageGroup;
+            }
+            set
+            {
+                _primaryImageGroup = value;
+            }
+        }
+
+        private string _altImage;
         public string AltImage
         {
             get
             {
-                var retVal = string.Empty;
-                if (Images != null)
+                if (Images != null && _altImage == null)
                 {
-                    var primaryImage = Images.OrderBy(x => x.SortOrder).Skip(1).FirstOrDefault();
-                    if (primaryImage != null)
-                    {
-                        retVal = _blobUrlResolver != null ? _blobUrlResolver.GetAbsoluteUrl(primaryImage.Url) : primaryImage.Url;
-                    }
+                    var altImageUrls = Images
+                        .OrderBy(x => x.SortOrder)
+                        .Select(x => _blobUrlResolver != null ? _blobUrlResolver.GetAbsoluteUrl(x.Url) : x.Url)
+                        .Skip(1)
+                        .ToArray();
+
+                    _altImage = string.Join(_csvCellDelimiter[1], altImageUrls);
+
                 }
-                return retVal;
+                return _altImage;
             }
 
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    var altImages = value.Split(_csvCellDelimiter, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (string url in altImages)
-                    {
-                        Images.Add(new Image
-                        {
-                            Url = url,
-                            SortOrder = 1,
-                            Group = "images",
-                            Name = url.Split('/').Last()
-                        });
-                    }
-                }
+                _altImage = value;
             }
         }
+
+        private string _altImageGroup;
+
+        public string AltImageGroup
+        {
+            get
+            {
+                if (Images != null && _altImageGroup == null)
+                {
+                    var altImageGroups = Images
+                        .OrderBy(x => x.SortOrder)
+                        .Select(x => x.Group)
+                        .Skip(1)
+                        .ToArray();
+
+                    _altImageGroup = string.Join(_csvCellDelimiter[1], altImageGroups);
+
+                }
+                return _altImageGroup;
+            }
+
+            set
+            {
+                _altImageGroup = value;
+            }
+        }
+
         public string Sku
         {
             get
@@ -246,7 +278,9 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
             get
             {
                 if (Category == null)
+                {
                     return null;
+                }
 
                 return Category.Path;
             }
@@ -466,6 +500,42 @@ namespace VirtoCommerce.CatalogCsvImportModule.Core.Model
                 }
             }
             SeoInfos = SeoInfos.Where(x => !x.SemanticUrl.IsNullOrEmpty()).Concat(product.SeoInfos).ToList();
+        }
+
+
+        public void CreateImagesFromFlatData()
+        {
+            var imageUrls = new List<string>();
+            var imageGropus = new List<string>();
+
+            if (!string.IsNullOrEmpty(PrimaryImage))
+            {
+                imageUrls.Add(PrimaryImage);
+                imageGropus.Add(PrimaryImageGroup);
+            }
+
+            if (!string.IsNullOrEmpty(AltImage))
+            {
+                imageUrls.AddRange(AltImage.Split(_csvCellDelimiter, StringSplitOptions.RemoveEmptyEntries));
+                imageGropus.AddRange(AltImageGroup.Split(_csvCellDelimiter, StringSplitOptions.RemoveEmptyEntries));
+            }
+
+            // Fill imageGropus with empty strings if its length is less than imageUrls
+            while (imageGropus.Count < imageUrls.Count)
+            {
+                imageGropus.Add(string.Empty);
+            }
+
+            var index = 0;
+            var images = imageUrls.Zip(imageGropus, (url, group) => new Image
+            {
+                Url = url,
+                Group = string.IsNullOrEmpty(group) ? "images" : group,
+                SortOrder = index++,
+                Name = UrlHelper.ExtractFileNameFromUrl(url)
+            });
+
+            this.Images.AddRange(images);
         }
     }
 }

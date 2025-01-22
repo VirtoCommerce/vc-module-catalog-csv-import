@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
+using VirtoCommerce.CatalogCsvImportModule.Core;
 using VirtoCommerce.CatalogCsvImportModule.Core.Model;
 using VirtoCommerce.CatalogCsvImportModule.Data.Services;
 using VirtoCommerce.CatalogModule.Core.Model;
@@ -47,6 +48,28 @@ namespace VirtoCommerce.CatalogCsvImportModule.Tests
             // To fix the error:  'Cyrillic' is not a supported encoding name. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method. (Parameter 'name')
             // https://github.com/dotnet/runtime/issues/17516
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+
+        [Theory]
+        [InlineData("https://example.com/path/to/file.txt", "file.txt")]
+        [InlineData("https://example.com/path/to/file.txt?query=param", "file.txt")]
+        [InlineData("https://example.com/path/to/file.txt#fragment", "file.txt")]
+        [InlineData("https://example.com/path/to/file%20with%20spaces.txt", "file with spaces.txt")]
+        [InlineData("/path/to/file.txt", "file.txt")]
+        [InlineData("/path/to/file%20with%20spaces.txt", "file with spaces.txt")]
+        [InlineData("https://example.com/path/to/", "")]
+        [InlineData("https://example.com/", "")]
+        public void ExtractFileNameFromUrl_ValidUrls_ReturnsExpectedFileName(string url, string expectedFileName)
+        {
+            // Act
+            string result = null;
+            if (!string.IsNullOrEmpty(url))
+            {
+                result = UrlHelper.ExtractFileNameFromUrl(url);
+            }
+
+            // Assert
+            Assert.Equal(expectedFileName, result);
         }
 
         [Fact]

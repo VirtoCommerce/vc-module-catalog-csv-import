@@ -14,17 +14,17 @@
     <dependency id="VirtoCommerce.Store" version="3.809.0" />
   </dependencies>
 
-  <title>Csv Catalog Import Module</title>
-  <description>Adds CSV import functionality to catalog</description>
+  <title>CSV Catalog Export and Import Module</title>
+  <description>Enables seamless export and import of catalog data in CSV format, simplifying data management and integration with external systems.</description>
   <authors>
-    <author>ksa</author>
+    <author>Konstantin Savosteev</author>
   </authors>
   <owners>
     <owner>Virto Commerce</owner>
   </owners>
   <projectUrl>https://github.com/VirtoCommerce/vc-module-catalog-csv-import</projectUrl>
   <requireLicenseAcceptance>false</requireLicenseAcceptance>
-  <copyright>Copyright © 2011-2024 Virto Commerce. All rights reserved</copyright>
+  <copyright>Copyright © 2011-2025 Virto Commerce. All rights reserved</copyright>
   <tags>catalog csv export import</tags>
   <assemblyFile>VirtoCommerce.CatalogCsvImportModule.Web.dll</assemblyFile>
   <moduleType>VirtoCommerce.CatalogCsvImportModule.Web.Module, VirtoCommerce.CatalogCsvImportModule.Web</moduleType>

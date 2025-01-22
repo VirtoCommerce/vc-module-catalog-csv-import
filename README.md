@@ -1,74 +1,82 @@
-# Catalog CSV Import module
+# CSV Catalog Export and Import Module
 
 [![CI status](https://github.com/VirtoCommerce/vc-module-catalog-csv-import/workflows/Module%20CI/badge.svg?branch=dev)](https://github.com/VirtoCommerce/vc-module-catalog-csv-import/actions?query=workflow%3A"Module+CI") [![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-catalog-csv-import&metric=alert_status&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-catalog-csv-import) [![Reliability rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-catalog-csv-import&metric=reliability_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-catalog-csv-import) [![Security rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-catalog-csv-import&metric=security_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-catalog-csv-import) [![Sqale rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-catalog-csv-import&metric=sqale_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-catalog-csv-import)
 
-Catalog CSV Import module
+CSV Catalog Export and Import Module is a module for Virto Commerce platform that allows to export and import catalog data in CSV format.
 
-# Installation
-Installing the module:
-* Automatically: in VC Manager go to Configuration -> Modules -> Catalog CSV Import module -> Install
-* Manually: download module zip package from https://github.com/VirtoCommerce/vc-module-catalog-csv-import/releases. In VC Manager go to Configuration -> Modules -> Advanced -> upload module package -> Install.
+## Overview
+The CSV Catalog Export and Import Module facilitates the following capabilities: exporting catalog data to CSV format, 
+importing catalog data from CSV format, simplifying bulk operations through export, update, and re-import workflows.
 
-# Settings
+By leveraging this module, category managers can efficiently manage large sets of catalog data and ensure consistency across systems.
 
-Before starting using the Import functionality, the admin should set the 'Create new dictionary values' for Import Module. In order to set this parameter, the user should go through the following steps:
+## Features
+1. Export Catalog Data to CSV: Extract product and category information into CSV format for easy editing and sharing.
+1. Import Catalog Data from CSV: Bring updated or new catalog data into the platform from CSV files.
+1. Dynamic Properties Support: Export and import dynamic properties seamlessly.
+1. Multiple Product Images: Manage image URLs and groups during export and import.
+1. Configurable Property Mapping: Define custom mappings for CSV columns during import.
+1. Customizable Column Delimiter: Choose a delimiter for CSV files to suit your needs.
+1. Create New Dictionary Values: Optionally allow the creation of new dictionary values during import (default: disabled).
+1. Bulk Update Ready: Simplify bulk updates by exporting data, modifying it in bulk, and importing the updated data back.
 
-1. Open Settings→select CSVCatalogImport→select General;
-1. The system will open the 'Settings values' blade;
-1. The user switches on  the 'Create new dictionary value' switch and saves the changes;  
-1. The system will save the changes and enable creation of new Property Dictionary Values during data import.
+## Scenarious
 
-![Fig. Settings](docs/media/screen-settings.png)
-![Fig. Setting values](docs/media/screen-setting-values.png)
+### Export products
 
-## Catalog Import
+1. Open the Catalog module, select either categories or products and click `Export` button.
 
-### Scenario
+![Step 1 - Initiate Export](docs/media/csv-export-01.png)
 
-1. The user opens Catalog module→ selects a Catalog and clicks 'Import';
-![Catalog Import](docs/media/screen-select-catalog-to-import.png)
-1. The system will open the Import types blade and allows the user to select CSV import format;
-1. The user opens the next blade.
-The system will prompt the user to do the following:
+2. Select column delimiter, fullfilment center and pricelist and click `Export` button.
 
-     1. Select delimeter from drop down;
-     1. Upload a CSV file;
-     1. Map columns;
+![Step 2 - Configure Export Options](docs/media/csv-export-02.png)
 
-1. The user selects the delimeter, uploads the file and selects 'Map columns;
-![Fig. Upload file](docs/media/screen-upload-file.png)
-1. The system will display the next blade - Columns mapping;
-1. The system automatically maps the CSV fields to to the same product properties;
-![Mapping](docs/media/screen-mapping.png)
-1. The user confirms the mapping results by clicking the 'OK' button;
-1. The system will display the 'Import catalog from csv' blade and the 'Start Import' button will become active;
-1. The user starts the import by clicking the 'Start Import' button;
-1. The import report will be generated by the system once the import is completed;
-1. The Import report should display the following information:
+3. Wait for the export to complete and download the CSV file.
 
-![Import Report](docs/media/screen-catalog-import.png)
+![Step 3 - Complete Export](docs/media/csv-export-03.png)
 
-## Model Mappings
-### Seo Info
-|CSV Property Name |Model Property Name|
-|------------------|-------------------|
-|SeoUrl|SemanticUrl|
-|SeoTitle|PageTitle|
-|SeoLanguage|LanguageCode|
-|SeoDescription|MetaDescription|
-|SeoMetaKeywords|MetaKeywords|
-|SeoImageAlternativeText|ImageAltDescription|
+4. Open CSV file in Excel or any other editor.
 
-# License
+![Step 4 - View results](docs/media/csv-export-04.png)
+
+### Import products
+
+1. Open the Catalog module, select category and click 'Import' button.
+
+![Step 1 - Initiate Import](docs/media/csv-import-01.png)
+
+2. Select CSV column delimiter, upload CSV file and click 'Map columns' button.
+
+![Step 2 - Prepare for Import](docs/media/csv-import-02.png)
+
+3. Run the import process.
+
+## Settings
+
+The module includes configurable settings to enhance user control:
+
+* Dictionary Value Creation: Enable or disable the ability to create new dictionary values during import.
+* Output File Name: Customize the name of the exported file.
+
+![Settings](docs/media/csv-import-export-settings.png)
+
+
+## References
+* Home: https://virtocommerce.com
+* Documantation: https://docs.virtocommerce.org
+* Community: https://www.virtocommerce.org
+* [Download Latest Release](https://github.com/VirtoCommerce/vc-module-catalog-csv-import/releases)
+
+## License
 Copyright (c) Virto Solutions LTD.  All rights reserved.
 
-Licensed under the Virto Commerce Open Software License (the "License"); you
+This software is licensed under the Virto Commerce Open Software License (the "License"); you
 may not use this file except in compliance with the License. You may
-obtain a copy of the License at
+obtain a copy of the License at http://virtocommerce.com/opensourcelicense.
 
-http://virtocommerce.com/opensourcelicense
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
+Unless required by the applicable law or agreed to in written form, the software
+distributed under the License is provided on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
 implied.
+

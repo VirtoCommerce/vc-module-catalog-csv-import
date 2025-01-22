@@ -76,6 +76,17 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
             _csvImporter = csvImporter;
         }
 
+        [HttpGet]
+        [Route("export/mappingconfiguration")]
+        public ActionResult<CsvProductMappingConfiguration> GetExportMappingConfiguration([FromQuery] string delimiter = ";")
+        {
+            var result = CsvProductMappingConfiguration.GetDefaultConfiguration();
+            var decodedDelimiter = HttpUtility.UrlDecode(delimiter);
+            result.Delimiter = decodedDelimiter;
+
+            return Ok(result);
+        }
+
         /// <summary>
         /// Start catalog data export process.
         /// </summary>
@@ -139,7 +150,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         /// <returns></returns>
         [HttpGet]
         [Route("import/mappingconfiguration")]
-        public async Task<ActionResult<CsvProductMappingConfiguration>> GetMappingConfiguration([FromQuery] string fileUrl, [FromQuery] string delimiter = ";")
+        public async Task<ActionResult<CsvProductMappingConfiguration>> GetImportMappingConfiguration([FromQuery] string fileUrl, [FromQuery] string delimiter = ";")
         {
             var result = CsvProductMappingConfiguration.GetDefaultConfiguration();
             var decodedDelimiter = HttpUtility.UrlDecode(delimiter);
@@ -248,24 +259,33 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         // Only public methods can be invoked in the background. (Hangfire)
         public async Task BackgroundExport(CsvExportInfo exportInfo, ExportNotification notifyEvent)
         {
-            var currencies = await _currencyService.GetAllCurrenciesAsync();
-            var defaultCurrency = currencies.First(x => x.IsPrimary);
-            exportInfo.Currency ??= defaultCurrency.Code;
-            var catalog = await _catalogService.GetNoCloneAsync(new[] { exportInfo.CatalogId });
-            if (catalog == null)
-            {
-                throw new InvalidOperationException($"Cannot get catalog with id '{exportInfo.CatalogId}'");
-            }
-
-            void progressCallback(ExportImportProgressInfo x)
-            {
-                notifyEvent.InjectFrom(x);
-                _notifier.SendAsync(notifyEvent);
-            }
-
             try
             {
-                exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
+                var currencies = await _currencyService.GetAllCurrenciesAsync();
+                var defaultCurrency = currencies.FirstOrDefault(x => x.IsPrimary);
+
+                if (defaultCurrency == null)
+                {
+                    throw new ArgumentNullException("Primary currency not found");
+                }
+
+                exportInfo.Currency ??= defaultCurrency.Code;
+                var catalog = await _catalogService.GetNoCloneAsync(new[] { exportInfo.CatalogId });
+                if (catalog == null)
+                {
+                    throw new InvalidOperationException($"Cannot get catalog with id '{exportInfo.CatalogId}'");
+                }
+
+                void progressCallback(ExportImportProgressInfo x)
+                {
+                    notifyEvent.InjectFrom(x);
+                    _notifier.SendAsync(notifyEvent);
+                }
+
+                if (exportInfo.Configuration == null)
+                {
+                    exportInfo.Configuration = CsvProductMappingConfiguration.GetDefaultConfiguration();
+                }
 
                 var fileNameTemplate = await _settingsManager.GetValueAsync<string>(CsvModuleConstants.Settings.General.ExportFileNameTemplate);
                 var fileName = string.Format(fileNameTemplate, DateTime.UtcNow);
