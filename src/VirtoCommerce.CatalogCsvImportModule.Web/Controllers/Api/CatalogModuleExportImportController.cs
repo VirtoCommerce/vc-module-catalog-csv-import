@@ -260,7 +260,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
         public async Task BackgroundExport(CsvExportInfo exportInfo, ExportNotification notifyEvent)
         {
             var currencies = await _currencyService.GetAllCurrenciesAsync();
-            var defaultCurrency = currencies.First(x => x.IsPrimary);
+            var defaultCurrency = currencies.FirstOrDefault(x => x.IsPrimary);
+
+            if (defaultCurrency == null)
+            {
+                throw new ArgumentNullException("Primary currency not found");
+            }
+
             exportInfo.Currency ??= defaultCurrency.Code;
             var catalog = await _catalogService.GetNoCloneAsync(new[] { exportInfo.CatalogId });
             if (catalog == null)
