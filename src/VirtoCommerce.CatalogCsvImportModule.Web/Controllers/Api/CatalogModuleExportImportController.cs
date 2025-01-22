@@ -266,7 +266,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Web.Controllers.Api
 
                 if (defaultCurrency == null)
                 {
-                    throw new ArgumentNullException("Primary currency not found");
+                    throw new InvalidOperationException("Primary currency not found");
                 }
 
                 exportInfo.Currency ??= defaultCurrency.Code;
