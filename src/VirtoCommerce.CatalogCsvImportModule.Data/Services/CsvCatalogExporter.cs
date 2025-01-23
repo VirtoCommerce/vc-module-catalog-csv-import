@@ -34,6 +34,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         private readonly IBlobUrlResolver _blobUrlResolver;
         private readonly IInventorySearchService _inventorySearchService;
 
+        private const int _batchSize = 50;
+
         public CsvCatalogExporter(
             IProductSearchService productSearchService,
             IItemService productService,
@@ -84,32 +86,43 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 csvWriter.WriteHeader<CsvProduct>();
                 csvWriter.NextRecord();
 
-                List<string> productsIds = null;
-
                 if (!exportInfo.ProductIds.IsNullOrEmpty())
-                { // Just fetch for all the products                    
-                    productsIds = new List<string>(exportInfo.ProductIds);
-                    progressInfo.ProcessedCount += productsIds.Count;
-                    await FetchThere(exportInfo, progressCallback, progressInfo, csvWriter, productsIds);
+                {
+                    // Fetch products by page
+                    var totalProducts = exportInfo.ProductIds.Length;
+
+                    for (var skip = 0; skip < totalProducts; skip += _batchSize)
+                    {
+                        var productsIds = exportInfo.ProductIds.Skip(skip).Take(_batchSize).ToList();
+                        progressInfo.ProcessedCount += productsIds.Count;
+
+                        await FetchThere(exportInfo, progressCallback, progressInfo, csvWriter, productsIds);
+                    }
                 }
 
                 // Fetch page by page
-                var currentPageNumber = 0;
-                var pageSize = 50;
-                var hasData = criteria != null;
-
-                while (hasData)
+                if (criteria != null)
                 {
+                    var skip = 0;
 
-                    criteria.Skip = currentPageNumber * pageSize;
-                    criteria.Take = pageSize;
-                    var searchResult = await _productSearchService.SearchNoCloneAsync(criteria);
-                    productsIds = searchResult.Results.Select(x => x.Id).ToList();
-                    hasData = searchResult.Results.Any();
-                    progressInfo.ProcessedCount += searchResult.Results.Count;
-                    await FetchThere(exportInfo, progressCallback, progressInfo, csvWriter, productsIds);
+                    while (true)
+                    {
+                        criteria.Skip = skip;
+                        criteria.Take = _batchSize;
 
-                    currentPageNumber++;
+                        var searchResult = await _productSearchService.SearchNoCloneAsync(criteria);
+                        if (!searchResult.Results.Any())
+                        {
+                            break;
+                        }
+
+                        var productsIds = searchResult.Results.Select(x => x.Id).ToList();
+                        progressInfo.ProcessedCount += searchResult.Results.Count;
+
+                        await FetchThere(exportInfo, progressCallback, progressInfo, csvWriter, productsIds);
+
+                        skip += _batchSize;
+                    }
                 }
                 progressInfo.Description = "Done.";
                 progressCallback(progressInfo);
@@ -125,7 +138,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var allProductIds = products.Select(x => x.Id).ToArray();
 
                 //Load prices for products
-
                 var priceEvalContext = new PriceEvaluationContext
                 {
                     ProductIds = allProductIds,
@@ -135,7 +147,6 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
                 var allProductPrices = (await _pricingEvaluatorService.EvaluateProductPricesAsync(priceEvalContext)).ToList();
 
                 //Load inventories
-
                 var inventorySearchCriteria = new InventorySearchCriteria()
                 {
                     ProductIds = allProductIds,
@@ -183,14 +194,13 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             }
 
             var currentPageNumber = 0;
-            var pageSize = 50;
-            ProductSearchCriteria criteria = ProductSearchCriteriaFactory(exportInfo);
+            var criteria = ProductSearchCriteriaFactory(exportInfo);
             // Fetch page by page
             var hasData = criteria != null;
             while (hasData)
             {
-                criteria.Skip = currentPageNumber * pageSize;
-                criteria.Take = pageSize;
+                criteria.Skip = currentPageNumber * _batchSize;
+                criteria.Take = _batchSize;
 
                 var searchResult = await _productSearchService.SearchNoCloneAsync(criteria);
                 productsIds = searchResult.Results.Select(x => x.Id).ToList();
@@ -261,10 +271,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
         private async Task<int> GetProductsCount(CsvExportInfo exportInfo)
         {
-            int result = 0;
+            var result = 0;
             if (!exportInfo.ProductIds.IsNullOrEmpty())
             {
-                result += exportInfo.ProductIds.Count();
+                result += exportInfo.ProductIds.Length;
             }
             var criteria = ProductSearchCriteriaFactory(exportInfo);
             if (criteria != null)
