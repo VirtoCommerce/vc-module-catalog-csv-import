@@ -22,7 +22,7 @@
   <owners>
     <owner>Virto Commerce</owner>
   </owners>
-  <projectUrl>https://github.com/VirtoCommerce/vc-module-catalog-csv-import</projectUrl>
+  <projectUrl>https://github.com/VirtoCommerce/vc-module-catalog-csv-export-import</projectUrl>
   <requireLicenseAcceptance>false</requireLicenseAcceptance>
   <copyright>Copyright © 2011-2025 Virto Commerce. All rights reserved</copyright>
   <tags>catalog csv export import</tags>
