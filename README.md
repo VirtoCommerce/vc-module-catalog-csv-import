@@ -20,7 +20,7 @@ By leveraging this module, category managers can efficiently manage large sets o
 1. Create New Dictionary Values: Optionally allow the creation of new dictionary values during import (default: disabled).
 1. Bulk Update Ready: Simplify bulk updates by exporting data, modifying it in bulk, and importing the updated data back.
 
-## Scenarious
+## Scenarios
 
 ### Export products
 
@@ -64,7 +64,7 @@ The module includes configurable settings to enhance user control:
 
 ## References
 * Home: https://virtocommerce.com
-* Documantation: https://docs.virtocommerce.org
+* Documentation: https://docs.virtocommerce.org/platform/user-guide/catalog-csv-export-import/overview/
 * Community: https://www.virtocommerce.org
 * [Download Latest Release](https://github.com/VirtoCommerce/vc-module-catalog-csv-import/releases)
 
