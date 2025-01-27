@@ -1,6 +1,5 @@
 // Remove this file after deriving IInventorySearchService from ISearchService<>.
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using VirtoCommerce.InventoryModule.Core.Model;
 using VirtoCommerce.InventoryModule.Core.Model.Search;
@@ -39,7 +38,7 @@ public static class InventorySearchServiceExtensions
             var searchResult = await searchService.SearchInventoriesAsync(searchCriteria);
 
             if (searchCriteria.Take == 0 ||
-                searchResult.Results.Any())
+                searchResult.Results.Count > 0)
             {
                 yield return searchResult;
             }

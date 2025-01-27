@@ -65,7 +65,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             progressInfo.ProcessedCount = 0;
             progressCallback(progressInfo);
 
-            await ProcessProductsByPage(exportInfo, progressInfo, progressCallback, "Collecting properties for {0} of {1} products...",
+            await ProcessProductsByPage(exportInfo, progressInfo, progressCallback,
+                "Collecting properties for {0} of {1} products...",
                 products => CollectCsvColumns(exportInfo, products));
 
             // Second time: fetch and save products to CSV file
@@ -75,7 +76,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
 
             var writerConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                Delimiter = exportInfo.Configuration.Delimiter
+                Delimiter = exportInfo.Configuration.Delimiter,
             };
 
             var streamWriter = new StreamWriter(outStream, Encoding.UTF8, 1024, true) { AutoFlush = true };
@@ -85,7 +86,8 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             csvWriter.WriteHeader<CsvProduct>();
             await csvWriter.NextRecordAsync();
 
-            await ProcessProductsByPage(exportInfo, progressInfo, progressCallback, "Exporting {0} of {1} products...",
+            await ProcessProductsByPage(exportInfo, progressInfo, progressCallback,
+                "Exporting {0} of {1} products...",
                 products => ExportProducts(exportInfo, progressInfo, progressCallback, csvWriter, products));
 
             progressInfo.Description = "Done.";
@@ -124,12 +126,12 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             var productIds = products.Select(x => x.Id).ToArray();
 
             // Load prices
-            var priceEvalContext = AbstractTypeFactory<PriceEvaluationContext>.TryCreateInstance();
-            priceEvalContext.ProductIds = productIds;
-            priceEvalContext.PricelistIds = exportInfo.PriceListId == null ? null : [exportInfo.PriceListId];
-            priceEvalContext.Currency = exportInfo.Currency;
+            var priceEvaluationContext = AbstractTypeFactory<PriceEvaluationContext>.TryCreateInstance();
+            priceEvaluationContext.ProductIds = productIds;
+            priceEvaluationContext.PricelistIds = exportInfo.PriceListId == null ? null : [exportInfo.PriceListId];
+            priceEvaluationContext.Currency = exportInfo.Currency;
 
-            var allProductPrices = await _pricingEvaluatorService.EvaluateProductPricesAsync(priceEvalContext);
+            var allPrices = await _pricingEvaluatorService.EvaluateProductPricesAsync(priceEvaluationContext);
 
             // Load inventories
             var inventorySearchCriteria = AbstractTypeFactory<InventorySearchCriteria>.TryCreateInstance();
@@ -137,23 +139,23 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             inventorySearchCriteria.FulfillmentCenterIds = string.IsNullOrWhiteSpace(exportInfo.FulfilmentCenterId) ? null : [exportInfo.FulfilmentCenterId];
             inventorySearchCriteria.Take = _batchSize;
 
-            var allProductInventories = await _inventorySearchService.SearchAllNoCloneAsync(inventorySearchCriteria);
+            var allInventories = await _inventorySearchService.SearchAllNoCloneAsync(inventorySearchCriteria);
 
             // Convert to dictionary for faster search
-            var prices = allProductPrices.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.First());
-            var inventories = allProductInventories.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.First());
+            var pricesByProductIds = allPrices.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.First());
+            var inventoriesByProductIds = allInventories.GroupBy(x => x.ProductId).ToDictionary(x => x.Key, x => x.First());
 
             foreach (var product in products)
             {
                 try
                 {
-                    var price = prices.GetValueSafe(product.Id);
-                    var inventoryInfo = inventories.GetValueSafe(product.Id);
+                    var price = pricesByProductIds.GetValueSafe(product.Id);
+                    var inventory = inventoriesByProductIds.GetValueSafe(product.Id);
                     var seoInfos = product.SeoInfos.Count > 0 ? product.SeoInfos : [null];
 
                     foreach (var seoInfo in seoInfos)
                     {
-                        var csvProduct = new CsvProduct(product, _blobUrlResolver, price, inventoryInfo, seoInfo);
+                        var csvProduct = new CsvProduct(product, _blobUrlResolver, price, inventory, seoInfo);
                         await csvWriter.WriteRecordsAsync([csvProduct]);
                     }
                 }
@@ -178,12 +180,10 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
             {
                 await foreach (var searchResult in _productSearchService.SearchBatchesNoCloneAsync(criteria))
                 {
-                    var productIds = searchResult.Results.Select(x => x.Id).ToList();
+                    var productIds = searchResult.Results.Select(x => x.Id).ToArray();
                     await ProcessProducts(productIds);
                 }
             }
-
-            return;
 
             async Task ProcessProducts(IList<string> productIds)
             {
@@ -219,7 +219,7 @@ namespace VirtoCommerce.CatalogCsvImportModule.Data.Services
         {
             result = null;
 
-            if (exportInfo.CategoryIds?.Length > 0)
+            if (!exportInfo.CategoryIds.IsNullOrEmpty())
             {
                 result = AbstractTypeFactory<ProductSearchCriteria>.TryCreateInstance();
                 result.CatalogId = exportInfo.CatalogId;
