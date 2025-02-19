@@ -69,7 +69,7 @@ The module includes configurable settings to enhance user control:
 * [Installation](https://docs.virtocommerce.org/platform/user-guide/modules-installation/)
 * [Home](https://virtocommerce.com)
 * [Community](https://www.virtocommerce.org)
-* [Download latest release](https://github.com/VirtoCommerce/vc-module-catalog-csv-import/releases)
+* [Download latest release](https://github.com/VirtoCommerce/vc-module-catalog-csv-import/releases/latest)
 
 ## License
 Copyright (c) Virto Solutions LTD.  All rights reserved.
