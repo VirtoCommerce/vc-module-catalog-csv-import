@@ -10,7 +10,7 @@ The CSV Catalog Export and Import module is a module for Virto Commerce platform
 * **Import catalog data from CSV**: Bring updated or new catalog data into the platform from CSV files.
 * **Dynamic properties support**: Export and import dynamic properties seamlessly.
 * **Multiple product images**: Manage image URLs and groups during export and import.
-* **Configurable property mapping: Define custom mappings for CSV columns during import.
+* **Configurable property mapping**: Define custom mappings for CSV columns during import.
 * **Customizable column delimiter**: Choose a delimiter for CSV files to suit your needs.
 * **Create new dictionary values**: Optionally allow the creation of new dictionary values during import (default: disabled).
 * **Bulk update ready**: Simplify bulk updates by exporting data, modifying it in bulk, and importing the updated data back.
