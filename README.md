@@ -2,23 +2,18 @@
 
 [![CI status](https://github.com/VirtoCommerce/vc-module-catalog-csv-export-import/workflows/Module%20CI/badge.svg?branch=dev)](https://github.com/VirtoCommerce/vc-module-catalog-csv-export-import/actions?query=workflow%3A"Module+CI") [![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-catalog-csv-export-import&metric=alert_status&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-catalog-csv-export-import) [![Reliability rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-catalog-csv-export-import&metric=reliability_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-catalog-csv-export-import) [![Security rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-catalog-csv-export-import&metric=security_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-catalog-csv-export-import) [![Sqale rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-catalog-csv-export-import&metric=sqale_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-catalog-csv-export-import)
 
-CSV Catalog Export and Import Module is a module for Virto Commerce platform that allows to export and import catalog data in CSV format.
+The CSV Catalog Export and Import module is a module for Virto Commerce platform that allows to export and import catalog data in CSV format. By leveraging this module, category managers can efficiently manage large sets of catalog data and ensure consistency across systems.
 
-## Overview
-The CSV Catalog Export and Import Module facilitates the following capabilities: exporting catalog data to CSV format, 
-importing catalog data from CSV format, simplifying bulk operations through export, update, and re-import workflows.
+## Key features
 
-By leveraging this module, category managers can efficiently manage large sets of catalog data and ensure consistency across systems.
-
-## Features
-1. Export Catalog Data to CSV: Extract product and category information into CSV format for easy editing and sharing.
-1. Import Catalog Data from CSV: Bring updated or new catalog data into the platform from CSV files.
-1. Dynamic Properties Support: Export and import dynamic properties seamlessly.
-1. Multiple Product Images: Manage image URLs and groups during export and import.
-1. Configurable Property Mapping: Define custom mappings for CSV columns during import.
-1. Customizable Column Delimiter: Choose a delimiter for CSV files to suit your needs.
-1. Create New Dictionary Values: Optionally allow the creation of new dictionary values during import (default: disabled).
-1. Bulk Update Ready: Simplify bulk updates by exporting data, modifying it in bulk, and importing the updated data back.
+* **Export catalog data to CSV**: Extract product and category information into CSV format for easy editing and sharing.
+* **Import catalog data from CSV**: Bring updated or new catalog data into the platform from CSV files.
+* **Dynamic properties support**: Export and import dynamic properties seamlessly.
+* **Multiple product images**: Manage image URLs and groups during export and import.
+* **Configurable property mapping**: Define custom mappings for CSV columns during import.
+* **Customizable column delimiter**: Choose a delimiter for CSV files to suit your needs.
+* **Create new dictionary values**: Optionally allow the creation of new dictionary values during import (default: disabled).
+* **Bulk update ready**: Simplify bulk updates by exporting data, modifying it in bulk, and importing the updated data back.
 
 ## Scenarios
 
@@ -28,7 +23,7 @@ By leveraging this module, category managers can efficiently manage large sets o
 
 ![Step 1 - Initiate Export](docs/media/csv-export-01.png)
 
-2. Select column delimiter, fullfilment center and pricelist and click `Export` button.
+2. Select column delimiter, fulfillment center and pricelist and click `Export` button.
 
 ![Step 2 - Configure Export Options](docs/media/csv-export-02.png)
 
@@ -56,17 +51,25 @@ By leveraging this module, category managers can efficiently manage large sets o
 
 The module includes configurable settings to enhance user control:
 
-* Dictionary Value Creation: Enable or disable the ability to create new dictionary values during import.
-* Output File Name: Customize the name of the exported file.
+* **Dictionary value creation**: Enable or disable the ability to create new dictionary values during import.
+* **Output file name**: Customize the name of the exported file.
 
 ![Settings](docs/media/csv-import-export-settings.png)
 
+## Documentation
+
+* [Catalog CSV Export and Import module user documentation](https://docs.virtocommerce.org/platform/user-guide/catalog-csv-export-import/overview/)
+* [REST API](https://virtostart-demo-admin.govirto.com/docs/index.html?urls.primaryName=VirtoCommerce.CatalogCsvImportModule)
+* [View on GitHub](https://github.com/VirtoCommerce/vc-module-catalog-csv-export-import/)
+
 
 ## References
-* Home: https://virtocommerce.com
-* Documentation: https://docs.virtocommerce.org/platform/user-guide/catalog-csv-export-import/overview/
-* Community: https://www.virtocommerce.org
-* [Download Latest Release](https://github.com/VirtoCommerce/vc-module-catalog-csv-import/releases)
+
+* [Deployment](https://docs.virtocommerce.org/platform/developer-guide/Tutorials-and-How-tos/Tutorials/deploy-module-from-source-code/)
+* [Installation](https://docs.virtocommerce.org/platform/user-guide/modules-installation/)
+* [Home](https://virtocommerce.com)
+* [Community](https://www.virtocommerce.org)
+* [Download latest release](https://github.com/VirtoCommerce/vc-module-catalog-csv-import/releases/latest)
 
 ## License
 Copyright (c) Virto Solutions LTD.  All rights reserved.
